@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema({
   },
   redeemedUsers: [
     {
-      type: Mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
   ],

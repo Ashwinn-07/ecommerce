@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StyleCraft - Sign Up</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+      }
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      .outer-wrappers {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        display: flex;
+        align-items: stretch;
+      }
+
+      .image-section {
+        background-color: #f0f0f0;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 50%;
+      }
+
+      .image-section h1 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .image-section img {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      .logo img {
+        width: 150px;
+        height: auto;
+        display: block;
+        margin: 20px auto;
+      }
+
+      .form-section {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 10px;
+        width: 400px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .google-signup {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      .google-signup img {
+        width: 20px;
+        margin-right: 10px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-section p {
+        text-align: center;
+        color: #888;
+        margin: 1rem 0;
+      }
+
+      form input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 1rem;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+      }
+
+      form button {
+        width: 100%;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      form button:hover {
+        background-color: #ddd;
+      }
+
+      .form-section a {
+        color: #000;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .form-section a:hover {
+        text-decoration: underline;
+      }
+      .error-message {
+        color: #dc143c;
+        font-size: 0.75rem;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="outer-wrappers">
+      <div class="container">
+        <div class="image-section">
+          <div class="logo">
+            <img src="/img/logo.png" alt="male fashion logo" />
+          </div>
+
+          <img src="/img/banner/banner-1.jpg" alt="Fashion Image" />
+        </div>
+        <div class="form-section">
+          <h2>Create Account</h2>
+          <button class="google-signup">
+            <img src="/logo/google.png" alt="Google Logo" />
+            Sign Up With Google
+          </button>
+          <p>- OR -</p>
+          <form id="signform" method="POST" action="/signup">
+            <div class="form-group">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Full Name"
+              />
+              <div id="error1" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Email Address"
+              />
+              <div id="error2" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Password"
+              />
+              <div id="error3" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+              <input
+                type="password"
+                id="confirm-password"
+                name="cPassword"
+                placeholder="Confirm Password"
+              />
+              <div id="error4" class="error-message"></div>
+            </div>
+
+            <button type="submit">Create Account</button>
+          </form>
+          <p>Already have an Account? <a href="#">Log in</a></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const nameId = document.getElementById("name");
+      const emailId = document.getElementById("email");
+      const passId = document.getElementById("password");
+      const cpassId = document.getElementById("confirm-password");
+      const error1 = document.getElementById("error1");
+      const error2 = document.getElementById("error2");
+      const error3 = document.getElementById("error3");
+      const error4 = document.getElementById("error4");
+      const signform = document.getElementById("signform");
+
+      function nameValidateChecking(e) {
+        const nameVal = nameId.value;
+        const namePattern = /^[A-Za-z\s]+$/;
+
+        if (nameVal.trim() === "") {
+          error1.style.display = "block";
+          error1.innerHTML = "Please enter a valid name";
+        } else if (!namePattern.test(nameVal)) {
+          error1.style.display = "block";
+          error1.innerHTML = "Name can only contain alphabets and spaces";
+        } else {
+          error1.style.display = "none";
+          error1.innerHTML = "";
+        }
+      }
+      function emailValidateChecking() {
+        const emailVal = emailId.value;
+        const emailPattern =
+          /^[a-zA-Z0-9]+([._-][0-9a-zA-Z]+)*@[a-zA-Z0-9]+([.-][0-9a-zA-Z]+)*\.[a-zA-Z]{2,}$/;
+
+        if (emailVal === "") {
+          error2.style.display = "block";
+          error2.innerHTML = "Please enter your email address";
+        } else if (!emailPattern.test(emailVal)) {
+          error2.style.display = "block";
+          error2.innerHTML = "Invalid format";
+        } else {
+          error2.style.display = "none";
+          error2.innerHTML = "";
+        }
+      }
+      function passValidateChecking() {
+        const passVal = passId.value;
+        const cpassVal = cpassId.value;
+        const alpha = /[a-zA-z]/;
+        const digit = /\d/;
+
+        if (passVal.length < 8) {
+          error3.style.display = "block";
+          error3.innerHTML = "Password must contain atleast 8 characters";
+        } else if (!alpha.test(passVal) || !digit.test(passVal)) {
+          error3.style.display = "block";
+          error3.innerHTML = "passsword should contain alphabets and letters";
+        } else {
+          error3.style.display = "none";
+          error3.style.display = "";
+        }
+
+        if (passVal !== cpassVal) {
+          error4.style.display = "block";
+          error4.innerHTML = "Passwords do not match";
+        } else {
+          error4.style.display = "none";
+          error4.innerHTML = "";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        signform.addEventListener("submit", function (e) {
+          nameValidateChecking();
+          emailValidateChecking();
+          passValidateChecking();
+
+          if (
+            !nameId ||
+            !emailId ||
+            !passId ||
+            !error1 ||
+            !error2 ||
+            !error3 ||
+            !error4 ||
+            !signform
+          ) {
+            console.error("one or more elements not found");
+          }
+          if (
+            error1.innerHTML ||
+            error2.innerHTML ||
+            error3.innerHTML ||
+            error4.innerHTML
+          ) {
+            e.preventDefault();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
