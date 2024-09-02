@@ -6,8 +6,12 @@ dotenv.config();
 
 const loadHomepage = async (req, res) => {
   try {
-    console.log("rendering home");
-    return res.render("home");
+    const userId = req.session.user;
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId);
+    }
+    res.render("home", { user });
   } catch (error) {
     console.log("homepage not found");
     res.status(500).send("server error");
@@ -43,7 +47,7 @@ async function sendVerificationEmail(email, otp) {
       to: email,
       subject: "Verify your account",
       text: `your otp is {otp}`,
-      html: `<b>Your OTP : {otp}</b>`,
+      html: `<b>Your OTP : {otp} </b>`,
     });
     return info.accepted.length > 0;
   } catch (error) {
@@ -146,10 +150,64 @@ const resendOtp = async (req, res) => {
   }
 };
 
+const loadLogin = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.render("login");
+    } else {
+      res.redirect("/");
+    }
+  } catch (error) {
+    console.log("page not found");
+    res.status(500).send("server error");
+  }
+};
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const findUser = await User.findOne({ isAdmin: 0, email: email });
+    if (!findUser) {
+      return res.render("login", { message: "User not found" });
+    }
+    if (findUser.isBlocked) {
+      return res.render("login", { message: "User is blocked by the Admin" });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, findUser.password);
+
+    if (!passwordMatch) {
+      return res.render("login", { message: "Password is incorrect" });
+    }
+
+    req.session.user = findUser._id;
+    res.redirect("/");
+  } catch (error) {
+    console.error("login error", error);
+    res.render("login", { message: "An error occured while logging in" });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.log("error destroying session", err.message);
+      }
+      return res.redirect("login");
+    });
+  } catch (error) {
+    console.log("logout error", error);
+  }
+};
+
 module.exports = {
   loadHomepage,
   loadSignup,
   signup,
   verifyOtp,
   resendOtp,
+  loadLogin,
+  login,
+  logout,
 };
