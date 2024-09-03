@@ -70,7 +70,143 @@ const addProducts = async (req, res) => {
   }
 };
 
+const getAllProducts = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const page = req.query.page || 1;
+    const limit = 4;
+
+    const productData = await Product.find({
+      productName: { $regex: new RegExp(".*" + search + ".*", "i") },
+    })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .populate("category")
+      .exec();
+
+    const count = await Product.find({
+      productName: { $regex: new RegExp(".*" + search + ".*", "i") },
+    }).countDocuments();
+
+    const category = await Category.find({ isListed: true });
+
+    if (category) {
+      res.render("products", {
+        data: productData,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        cat: category,
+      });
+    } else {
+      res.status(400).json("cannot fetch products");
+    }
+  } catch (error) {
+    console.error("an error occured", error);
+  }
+};
+
+const blockProduct = async (req, res) => {
+  try {
+    let id = req.query.id;
+    await Product.updateOne({ _id: id }, { $set: { isBlocked: true } });
+    res.redirect("/admin/products");
+  } catch (error) {
+    console.error("an error blocking product", error);
+  }
+};
+const unblockProduct = async (req, res) => {
+  try {
+    let id = req.query.id;
+    await Product.updateOne({ _id: id }, { $set: { isBlocked: false } });
+    res.redirect("/admin/products");
+  } catch (error) {
+    console.error("an error unblocking product", error);
+  }
+};
+
+const getEditProduct = async (req, res) => {
+  try {
+    const id = req.query.id;
+    const product = await Product.findOne({ _id: id });
+    const category = await Category.findOne({});
+    res.render("edit-product", {
+      product: product,
+      cat: category,
+    });
+  } catch (error) {
+    console.error("an error occured", error);
+  }
+};
+
+const editProduct = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const product = await Product.findOne({ _id: id });
+    const data = req.body;
+    const existingProduct = await Product.findOne({
+      productName: data.productName,
+      _id: { $ne: id },
+    });
+    if (existingProduct) {
+      return res.status(400).json({ error: "product already exists" });
+    }
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      for (let i = 0; i < req.files.length; i++) {
+        images.push(req.files[i].filename);
+      }
+    }
+    const updateFields = {
+      productName: data.productName,
+      description: data.description,
+      category: product.category,
+      regularPrice: data.regularPrice,
+      salePrice: data.salePrice,
+      quantity: data.quantity,
+      size: data.size,
+      color: data.color,
+    };
+    if (req.files.length > 0) {
+      updateFields.$push = { productImage: { $each: images } };
+    }
+    await Product.findByIdAndUpdate(id, updateFields, { new: true });
+    res.redirect("/admin/products");
+  } catch (error) {
+    console.error("error editing product", error);
+  }
+};
+
+const deleteSingleImage = async (req, res) => {
+  try {
+    const { imageNameToServer, productIdToServer } = req.body;
+    const product = await Product.findByIdAndUpdate(productIdToServer, {
+      $pull: { productImage: imageNameToServer },
+    });
+    const imagePath = path.join(
+      "public",
+      "uploads",
+      "re-image",
+      imageNameToServer
+    );
+    if (fs.existsSync(imagePath)) {
+      await fs.unlinkSync(imagePath);
+      console.log("image deleted successfully");
+    } else {
+      console.log("Image not found");
+    }
+    res.send({ status: true });
+  } catch (error) {
+    console.error("an error occured", error);
+  }
+};
+
 module.exports = {
   getProductAddPage,
   addProducts,
+  getAllProducts,
+  blockProduct,
+  unblockProduct,
+  getEditProduct,
+  editProduct,
+  deleteSingleImage,
 };
