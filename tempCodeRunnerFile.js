@@ -7,6 +7,8 @@ const session = require("express-session");
 const passport = require("./config/passport");
 const db = require("./config/db");
 const userRouter = require("./routes/userRouter");
+const adminRouter = require("./routes/adminRouter");
+const demoRouter = require("./routes/demoRouter");
 db();
 
 app.use(express.json());
@@ -36,6 +38,8 @@ app.set("views", [
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", userRouter);
+app.use("/admin", adminRouter);
+app.use("/demoUser", demoRouter);
 
 app.listen(process.env.PORT, () => {
   console.log("server up!");

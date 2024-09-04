@@ -1,5 +1,8 @@
 const User = require("../../models/userSchema");
+const Product = require("../../models/productSchema");
+const Category = require("../../models/categorySchema");
 const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -46,8 +49,8 @@ async function sendVerificationEmail(email, otp) {
       from: process.env.NODEMAILER_EMAIL,
       to: email,
       subject: "Verify your account",
-      text: `your otp is {otp}`,
-      html: `<b>Your OTP : {otp} </b>`,
+      text: `your otp is ${otp}`,
+      html: `<b>Your OTP : ${otp} </b>`,
     });
     return info.accepted.length > 0;
   } catch (error) {
@@ -201,6 +204,54 @@ const logout = async (req, res) => {
   }
 };
 
+const loadShopPage = async (req, res) => {
+  try {
+    const page = req.query.page || 1;
+    const limit = 4;
+
+    const products = await Product.find()
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const count = await Product.countDocuments();
+    res.render("shop", {
+      products: products,
+      currentPage: page,
+      itemsPerPage: limit,
+      totalResults: count,
+      totalPages: Math.ceil(count / limit),
+    });
+  } catch (error) {
+    console.error("error displaying products", error);
+  }
+};
+
+const loadProductDetails = async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log("Product ID:", id);
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+    const product = await Product.findById(id);
+    console.log(`/uploads/re-image/${product.productImage}`);
+    const limit = 4;
+    const relatedProducts = await Product.find({
+      category: product.category,
+    }).limit(limit);
+
+    if (!product) {
+      res.status(400).json({ message: "product not found" });
+    }
+    res.render("product-details", {
+      product: product,
+      relatedProducts: relatedProducts,
+    });
+  } catch (error) {
+    console.error("error finding product", error);
+  }
+};
+
 module.exports = {
   loadHomepage,
   loadSignup,
@@ -210,4 +261,6 @@ module.exports = {
   loadLogin,
   login,
   logout,
+  loadShopPage,
+  loadProductDetails,
 };

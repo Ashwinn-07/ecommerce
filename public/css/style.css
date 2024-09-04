@@ -1066,8 +1066,8 @@ ol {
   position: absolute;
   left: 0;
   top: 0;
-  opacity: 0;
-  visibility: hidden;
+  opacity: 1;
+  visibility: visible;
   -webkit-transition: all, 0.3s;
   -o-transition: all, 0.3s;
   transition: all, 0.3s;
