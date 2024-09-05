@@ -207,13 +207,13 @@ const logout = async (req, res) => {
 const loadShopPage = async (req, res) => {
   try {
     const page = req.query.page || 1;
-    const limit = 4;
+    const limit = 6;
 
-    const products = await Product.find()
+    const products = await Product.find({ isBlocked: false })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
-    const count = await Product.countDocuments();
+    const count = await Product.countDocuments({ isBlocked: false });
     res.render("shop", {
       products: products,
       currentPage: page,
@@ -233,12 +233,15 @@ const loadProductDetails = async (req, res) => {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid product ID" });
     }
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).populate("category");
     console.log(`/uploads/re-image/${product.productImage}`);
     const limit = 4;
     const relatedProducts = await Product.find({
-      category: product.category,
-    }).limit(limit);
+      category: product.category._id,
+      isBlocked: false,
+    })
+      .limit(limit)
+      .populate("category");
 
     if (!product) {
       res.status(400).json({ message: "product not found" });

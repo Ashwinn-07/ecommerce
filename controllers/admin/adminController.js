@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 
 const loadLogin = (req, res) => {
   if (req.session.admin) {
-    return res.redirect("/admin/dashboard");
+    return res.redirect("/admin/");
   }
   res.render("admin-login", { message: null });
 };

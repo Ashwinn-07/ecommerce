@@ -23,7 +23,7 @@
 <section class="shop spad">
   <div class="container">
     <div class="row">
-      <div class="col-lg-3">
+      <!-- <div class="col-lg-3">
         <div class="shop__sidebar">
           <div class="shop__sidebar__search">
             <form action="#">
@@ -209,7 +209,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div class="col-lg-9">
         <div class="shop__product__option">
@@ -248,17 +248,17 @@
               >
                 <ul class="product__hover">
                   <li>
-                    <a href="#"><img src="img/icon/heart.png" alt="" /></a>
+                    <a href="#"><img src="/img/icon/heart.png" alt="" /></a>
                   </li>
                   <li>
                     <a href="#"
-                      ><img src="img/icon/compare.png" alt="" /><span
+                      ><img src="/img/icon/compare.png" alt="" /><span
                         >Compare</span
                       ></a
                     >
                   </li>
                   <li>
-                    <a href="#"><img src="img/icon/search.png" alt="" /></a>
+                    <a href="#"><img src="/img/icon/search.png" alt="" /></a>
                   </li>
                 </ul>
               </div>
@@ -278,9 +278,14 @@
                 <div class="product__price">
                   $<%= product.salePrice.toFixed(2) %> <% if (product.salePrice
                   < product.regularPrice) { %>
-                  <span>$<%= product.regularPrice.toFixed(2) %></span>
+                  <span
+                    ><del>$<%= product.regularPrice.toFixed(2) %></del></span
+                  >
                   <% } %>
                 </div>
+                <% if (product.quantity === 0) { %>
+                <p class="out-of-stock">Out of Stock</p>
+                <% } %>
               </div>
             </div>
           </div>
