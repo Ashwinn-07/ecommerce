@@ -162,17 +162,16 @@
           </div>
           <div class="col-lg-3 col-md-3">
             <div class="header__nav__option">
-              <% if(locals.user){ %> <% if (locals.user.isDemo) { %>
-              <a href="/" class="sign-in-link">Demo User</a>
-              <% } else { %>
+              <% if(user){ %>
+
               <div class="dropdown">
-                <a href="#" class="sign-in-link"><%= locals.user.name %></a>
+                <a href="#" class="sign-in-link"><%= user.name %></a>
                 <div class="dropdown-content">
                   <a href="/userProfile">Profile</a>
                   <a href="/logout">Logout</a>
                 </div>
               </div>
-              <% } %> <% }else{ %>
+              <% }else{ %>
               <a href="/signup" class="sign-in-link">Sign Up</a>
               <a href="/login" class="sign-in-link">Log in</a>
               <% } %>
