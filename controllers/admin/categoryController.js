@@ -150,9 +150,10 @@ const editCategory = async (req, res) => {
     const { categoryName, description } = req.body;
     const existingCategory = await Category.findOne({ name: categoryName });
     if (existingCategory) {
-      return res
-        .status(400)
-        .json({ error: "category exists please choose another name" });
+      return res.render("edit-category", {
+        category: { _id: id, name: categoryName, description },
+        error: "Category exists, please choose another name",
+      });
     }
 
     const updateCategory = await Category.findByIdAndUpdate(
@@ -166,7 +167,7 @@ const editCategory = async (req, res) => {
     if (updateCategory) {
       return res.redirect("/admin/category");
     } else {
-      return res.status(404).json({ error: "category not found" });
+      return res.status(400).json({ error: "category not found" });
     }
   } catch (error) {
     res.status(500).json({ error: "server error" });

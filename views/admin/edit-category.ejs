@@ -2,6 +2,9 @@
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-md-6 mt-60">
+      <% if (typeof error !== 'undefined') { %>
+      <div class="alert alert-danger"><%= error %></div>
+      <% } %>
       <form method="post" action="/admin/editCategory/<%= category._id  %>">
         <div class="d-grid text-end mt-30 col-md-5">
           <button class="btn btn-primary" type="submit">Update category</button>

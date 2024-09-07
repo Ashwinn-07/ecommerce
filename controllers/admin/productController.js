@@ -128,7 +128,7 @@ const getEditProduct = async (req, res) => {
   try {
     const id = req.query.id;
     const product = await Product.findOne({ _id: id });
-    const category = await Category.findOne({});
+    const category = await Category.find({ isListed: true });
     res.render("edit-product", {
       product: product,
       cat: category,
