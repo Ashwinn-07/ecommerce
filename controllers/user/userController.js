@@ -220,6 +220,7 @@ const loadShopPage = async (req, res) => {
       itemsPerPage: limit,
       totalResults: count,
       totalPages: Math.ceil(count / limit),
+      user: res.locals.user,
     });
   } catch (error) {
     console.error("error displaying products", error);

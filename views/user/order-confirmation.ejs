@@ -1,0 +1,57 @@
+<!-- order-confirmation.ejs -->
+<%- include("../../views/partials/user/header") %>
+<!-- Header Section End -->
+
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-option">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="breadcrumb__text">
+          <h4>Order Confirmation</h4>
+          <div class="breadcrumb__links">
+            <a href="/">Home</a>
+            <span>Order Confirmation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Breadcrumb Section End -->
+
+<!-- Order Confirmation Section Begin -->
+<section class="order-confirmation spad">
+  <div class="container">
+    <h3>Thank you for your order!</h3>
+    <p>Your order has been placed successfully. Here are the details:</p>
+
+    <h4>Order ID: <%= order._id %></h4>
+    <h4>Total Price: $<%= order.totalPrice.toFixed(2) %></h4>
+
+    <h5>Shipping Address:</h5>
+    <p><%= order.address.addressType %></p>
+    <p><%= order.address.name %></p>
+    <p>
+      <%= order.address.city %>, <%= order.address.state %> <%=
+      order.address.pincode %>
+    </p>
+    <p>Phone: <%= order.address.phone %></p>
+
+    <h5>Order Details:</h5>
+    <ul>
+      <% order.orderedItems.forEach((item) => { %>
+      <li>
+        <%= item.product.name %> - <%= item.quantity %> x $<%=
+        item.price.toFixed(2) %>
+      </li>
+      <% }) %>
+    </ul>
+
+    <a href="/shop" class="site-btn">Continue Shopping</a>
+  </div>
+</section>
+<!-- Order Confirmation Section End -->
+
+<!-- Footer Section Begin -->
+<%- include("../../views/partials/user/footer") %>

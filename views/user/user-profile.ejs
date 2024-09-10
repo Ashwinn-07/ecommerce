@@ -1,0 +1,188 @@
+<%-include("../../views/partials/user/header") %>
+<style>
+  body {
+    font-family: "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+  }
+
+  .account-section {
+    padding: 40px 0;
+    background-color: #fff;
+  }
+
+  .container {
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  .account-wrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .account-sidebar {
+    width: 25%;
+  }
+
+  .account-sidebar ul {
+    list-style: none;
+    padding: 0;
+    border: 1px solid #ddd;
+    background-color: #f5f5f5;
+  }
+
+  .account-sidebar ul li a {
+    display: block;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .account-sidebar ul li a:hover {
+    background-color: #f0f0f0;
+    color: #000;
+  }
+
+  .account-sidebar .logout {
+    color: red;
+  }
+
+  .account-content {
+    width: 70%;
+  }
+
+  .account-content h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .profile-form .form-group {
+    margin-bottom: 15px;
+  }
+
+  .profile-form label {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .profile-form input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+  .profile-form button {
+    padding: 10px 15px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+
+  .profile-form button:hover {
+    background-color: #555;
+  }
+  @media (min-width: 768px) {
+    .account-wrapper {
+      flex-wrap: nowrap;
+    }
+
+    .account-sidebar {
+      width: 30%;
+    }
+
+    .account-content {
+      width: 65%;
+    }
+
+    .account-content h2 {
+      font-size: 28px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      width: 80%;
+    }
+
+    .account-sidebar {
+      width: 25%;
+    }
+
+    .account-content {
+      width: 70%;
+    }
+  }
+</style>
+
+<section class="account-section">
+  <div class="container">
+    <div class="account-wrapper">
+      <aside class="account-sidebar">
+        <ul>
+          <li><a href="/profile">Account Details</a></li>
+          <li><a href="/orders">My Orders</a></li>
+          <li><a href="addresses/">My Addresses</a></li>
+          <li><a href="/change-password">Change Password</a></li>
+          <li><a href="/wallet">Wallet</a></li>
+          <li><a href="/logout" class="logout">Log Out</a></li>
+        </ul>
+      </aside>
+
+      <div class="account-content">
+        <h2>My Account</h2>
+        <form action="/profile/edit" method="POST" class="profile-form">
+          <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value="<%= user.name %>"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value="<%= user.email %>"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value="<%= user.phone %>"
+            />
+          </div>
+
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%-include("../../views/partials/user/footer") %>

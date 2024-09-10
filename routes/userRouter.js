@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user/userController");
 const profileController = require("../controllers/user/profileController");
+const cartController = require("../controllers/user/cartController");
+const addressController = require("../controllers/user/addressController");
+const checkoutController = require("../controllers/user/checkoutController");
 const passport = require("passport");
 
 router.use((req, res, next) => {
@@ -42,5 +45,25 @@ router.post("/verify-passForgot-otp", profileController.verifyForgotPassOtp);
 router.get("/reset-password", profileController.getResetPassPage);
 router.post("/reset-password", profileController.postNewPassword);
 router.post("/resend-forgot-otp", profileController.resendOtp);
+
+router.get("/profile", profileController.getProfile);
+router.post("/profile/edit", profileController.editProfile);
+
+router.get("/cart", cartController.getCart);
+router.post("/add-to-cart", cartController.addToCart);
+router.post("/cart/remove/:id", cartController.removeFromCart);
+router.post("/cart/update", cartController.updateCartQuantity);
+router.get("/cart/total", cartController.getCartTotal);
+
+router.get("/addresses", addressController.getAddress);
+router.get("/address/add", addressController.getAddAddress);
+router.post("/address/add", addressController.addAddress);
+router.get("/address/edit/:id", addressController.getEditAddress);
+router.post("/address/edit/:id", addressController.editAddress);
+router.post("/address/delete/:id", addressController.deleteAddress);
+
+router.get("/checkout", checkoutController.getCheckoutPage);
+router.post("/checkout/place-order", checkoutController.checkout);
+router.get("/order-confirmation", checkoutController.getOrderConfirmation);
 
 module.exports = router;

@@ -1,4 +1,6 @@
 const User = require("../../models/userSchema");
+const Order = require("../../models/orderSchema");
+const Address = require("../../models/addressSchema");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
@@ -139,6 +141,40 @@ const postNewPassword = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    } else {
+      res.render("user-profile", {
+        user,
+      });
+    }
+  } catch (error) {
+    console.error("error fetching user profile", error);
+  }
+};
+
+const editProfile = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const { name, email, phone } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { name, email, phone },
+      { new: true }
+    );
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.redirect("/profile");
+  } catch (error) {
+    console.error("Error updating profile details", error);
+  }
+};
+
 module.exports = {
   getForgotPassPage,
   forgotEmailValid,
@@ -146,4 +182,6 @@ module.exports = {
   getResetPassPage,
   resendOtp,
   postNewPassword,
+  getProfile,
+  editProfile,
 };

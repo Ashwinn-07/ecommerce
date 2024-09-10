@@ -1,19 +1,8 @@
 const User = require("../models/userSchema");
 
 const userAuth = (req, res, next) => {
-  if (req.session.user) {
-    User.findById(req.session.user)
-      .then((data) => {
-        if (data && !data.isBlocked) {
-          next();
-        } else {
-          res.redirect("/login");
-        }
-      })
-      .catch((error) => {
-        console.log("error authenticating user", error);
-        res.status(500).send("An error occured");
-      });
+  if (res.locals.user) {
+    next();
   } else {
     res.redirect("/login");
   }
