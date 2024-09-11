@@ -208,12 +208,40 @@ const loadShopPage = async (req, res) => {
   try {
     const page = req.query.page || 1;
     const limit = 6;
+    const sort = req.query.sort || "new_arrivals";
+    const filter = req.query.filter;
 
-    const products = await Product.find({ isBlocked: false })
+    let sortOption = {};
+    switch (sort) {
+      case "price_low_to_high":
+        sortOption = { salePrice: 1 };
+        break;
+      case "price_high_to_low":
+        sortOption = { salePrice: -1 };
+        break;
+      case "new_arrivals":
+        sortOption = { createdAt: -1 };
+        break;
+      case "a_to_z":
+        sortOption = { productName: 1 };
+        break;
+      case "z_to_a":
+        sortOption = { productName: -1 };
+        break;
+      default:
+        sortOption = { createdAt: -1 };
+    }
+
+    const query = { isBlocked: false };
+    if (filter) {
+      query.category = filter;
+    }
+
+    const count = await Product.countDocuments(query);
+    const products = await Product.find(query)
+      .sort(sortOption)
       .limit(limit * 1)
       .skip((page - 1) * limit);
-
-    const count = await Product.countDocuments({ isBlocked: false });
     res.render("shop", {
       products: products,
       currentPage: page,
@@ -221,6 +249,8 @@ const loadShopPage = async (req, res) => {
       totalResults: count,
       totalPages: Math.ceil(count / limit),
       user: res.locals.user,
+      sort,
+      filter,
     });
   } catch (error) {
     console.error("error displaying products", error);

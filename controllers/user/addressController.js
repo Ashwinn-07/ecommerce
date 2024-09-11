@@ -2,11 +2,22 @@ const Address = require("../../models/addressSchema");
 
 const getAddress = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 3;
     const userId = req.session.user;
-    const address = await Address.findOne({ userId });
+    const userAddress = await Address.findOne({ userId });
+
+    const totalAddresses = userAddress.address.length;
+    const totalPages = Math.ceil(totalAddresses / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedAddresses = userAddress.address.slice(startIndex, endIndex);
     res.render("addresses", {
       userId,
-      addresses: address ? address.address : [],
+      addresses: paginatedAddresses,
+      currentPage: page,
+      totalPages: totalPages,
+      totalAddresses: totalAddresses,
     });
   } catch (error) {
     console.error(error);

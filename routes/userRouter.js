@@ -5,6 +5,7 @@ const profileController = require("../controllers/user/profileController");
 const cartController = require("../controllers/user/cartController");
 const addressController = require("../controllers/user/addressController");
 const checkoutController = require("../controllers/user/checkoutController");
+const orderController = require("../controllers/user/orderController");
 const passport = require("passport");
 
 router.use((req, res, next) => {
@@ -65,5 +66,8 @@ router.post("/address/delete/:id", addressController.deleteAddress);
 router.get("/checkout", checkoutController.getCheckoutPage);
 router.post("/checkout/place-order", checkoutController.checkout);
 router.get("/order-confirmation", checkoutController.getOrderConfirmation);
+
+router.get("/orders", orderController.getUserOrders);
+router.post("/orders/:orderId/cancel", orderController.cancelOrder);
 
 module.exports = router;

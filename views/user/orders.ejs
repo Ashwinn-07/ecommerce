@@ -1,0 +1,246 @@
+<%-include("../../views/partials/user/header") %>
+<style>
+  body {
+    font-family: "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+  }
+
+  .account-section {
+    padding: 40px 0;
+    background-color: #fff;
+  }
+
+  .container {
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  .account-wrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .account-sidebar {
+    width: 25%;
+  }
+
+  .account-sidebar ul {
+    list-style: none;
+    padding: 0;
+    border: 1px solid #ddd;
+    background-color: #f5f5f5;
+  }
+
+  .account-sidebar ul li a {
+    display: block;
+    padding: 15px 20px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .account-sidebar ul li a:hover {
+    background-color: #f0f0f0;
+    color: #000;
+  }
+
+  .account-sidebar .logout {
+    color: red;
+  }
+
+  .account-content {
+    width: 70%;
+  }
+
+  .account-content h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .profile-form .form-group {
+    margin-bottom: 15px;
+  }
+
+  .profile-form label {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .profile-form input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+  .profile-form button {
+    padding: 10px 15px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+
+  .profile-form button:hover {
+    background-color: #555;
+  }
+  @media (min-width: 768px) {
+    .account-wrapper {
+      flex-wrap: nowrap;
+    }
+
+    .account-sidebar {
+      width: 30%;
+    }
+
+    .account-content {
+      width: 65%;
+    }
+
+    .account-content h2 {
+      font-size: 28px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      width: 80%;
+    }
+
+    .account-sidebar {
+      width: 25%;
+    }
+
+    .account-content {
+      width: 70%;
+    }
+  }
+  .order-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .order-item {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+  }
+
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .order-details {
+    margin-bottom: 15px;
+  }
+
+  .product-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .product-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+
+  .cancel-btn {
+    background-color: #ff4136;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .cancel-btn:hover {
+    background-color: #ff1a1a;
+  }
+  .pagination-container {
+    margin-left: 600px;
+  }
+</style>
+
+<section class="account-section">
+  <div class="container">
+    <div class="account-wrapper">
+      <aside class="account-sidebar">
+        <ul>
+          <li><a href="/profile">Account Details</a></li>
+          <li><a href="/orders">My Orders</a></li>
+          <li><a href="addresses/">My Addresses</a></li>
+          <li><a href="/change-password">Change Password</a></li>
+          <li><a href="/wallet">Wallet</a></li>
+          <li><a href="/logout" class="logout">Log Out</a></li>
+        </ul>
+      </aside>
+
+      <div class="account-content">
+        <h2>My Orders</h2>
+        <% if (orders && orders.length > 0) { %>
+        <ul class="order-list">
+          <% orders.forEach(order => { %>
+          <li class="order-item">
+            <div class="order-header">
+              <span>Order #<%= order._id %></span>
+              <span>Date: <%= order.createdOn.toLocaleDateString() %></span>
+            </div>
+            <div class="order-details">
+              <p>Status: <%= order.status %></p>
+              <p>Total: $<%= order.totalPrice.toFixed(2) %></p>
+              <h4>Products:</h4>
+              <ul class="product-list">
+                <% order.orderedItems.forEach(item => { %>
+                <li class="product-item">
+                  <span
+                    ><%= item.product.productName %> x <%= item.quantity
+                    %></span
+                  >
+                  <span>$<%= item.price.toFixed(2) %></span>
+                </li>
+                <% }) %>
+              </ul>
+            </div>
+            <% if (order.status !== 'Cancelled' && order.status !== 'Delivered')
+            { %>
+            <form action="/orders/<%= order._id %>/cancel" method="POST">
+              <button type="submit" class="cancel-btn">Cancel Order</button>
+            </form>
+            <% } %>
+          </li>
+          <% }) %>
+        </ul>
+        <% } else { %>
+        <p>You haven't placed any orders yet</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="pagination-container">
+    <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+    <% } %> <% for (let i = 1; i <= totalPages; i++) { %> <% if (i ===
+    currentPage) { %>
+    <span class="current-page"><%= i %></span>
+    <% } else { %>
+    <a href="?page=<%= i %>"><%= i %></a>
+    <% } %> <% } %> <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+    <% } %>
+  </div>
+</section>
+<%-include("../../views/partials/user/footer") %>

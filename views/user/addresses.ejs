@@ -81,6 +81,12 @@
     border: none;
     padding: 5px 10px;
   }
+  .pagination-container {
+    margin-left: 600px;
+  }
+  .account-content {
+    margin-right: 500px;
+  }
 </style>
 
 <section class="account-section">
@@ -104,9 +110,9 @@
           <% if (addresses.length > 0) { %> <% addresses.forEach(address => { %>
           <div class="address-item">
             <p>
-              <%= address.street %>, <%= address.city %>, <%= address.pincode %>
+              <%= address.name %>, <%= address.city %>, <%= address.state %>
             </p>
-            <p><%= address.country %></p>
+            <p><%= address.pincode %></p>
             <div class="address-actions">
               <a href="/address/edit/<%= address._id %>">Edit</a>
               <form action="/address/delete/<%= address._id %>" method="POST">
@@ -123,6 +129,18 @@
         </div>
       </div>
     </div>
+  </div>
+  <div class="pagination-container">
+    <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+    <% } %> <% for (let i = 1; i <= totalPages; i++) { %> <% if (i ===
+    currentPage) { %>
+    <span class="current-page"><%= i %></span>
+    <% } else { %>
+    <a href="?page=<%= i %>"><%= i %></a>
+    <% } %> <% } %> <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+    <% } %>
   </div>
 </section>
 

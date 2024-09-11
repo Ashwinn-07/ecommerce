@@ -80,6 +80,10 @@
     border: none;
     cursor: pointer;
   }
+  .error-message {
+    color: red;
+    display: none;
+  }
 </style>
 
 <section class="account-section">
@@ -106,8 +110,10 @@
               id="addressType"
               name="addressType"
               value="<%= address.addressType %>"
-              required
             />
+            <div class="error-message" id="addressTypeError">
+              Address Type is required
+            </div>
           </div>
           <div class="form-group">
             <label for="name">Name:</label>
@@ -116,8 +122,8 @@
               id="name"
               name="name"
               value="<%= address.name %>"
-              required
             />
+            <div class="error-message" id="nameError">Name is required</div>
           </div>
           <div class="form-group">
             <label for="city">City:</label>
@@ -126,8 +132,8 @@
               id="city"
               name="city"
               value="<%= address.city %>"
-              required
             />
+            <div class="error-message" id="cityError">City is required</div>
           </div>
           <div class="form-group">
             <label for="state">State:</label>
@@ -136,8 +142,8 @@
               id="state"
               name="state"
               value="<%= address.state %>"
-              required
             />
+            <div class="error-message" id="stateError">State is required</div>
           </div>
           <div class="form-group">
             <label for="pincode">Pin Code:</label>
@@ -146,8 +152,12 @@
               id="pincode"
               name="pincode"
               value="<%= address.pincode %>"
-              required
+              pattern="^[1-9][0-9]{5}$"
+              title="Please enter a valid 6-digit pin code"
             />
+            <div class="error-message" id="pincodeError">
+              Pin Code is required (6 digits)
+            </div>
           </div>
           <div class="form-group">
             <label for="phone">Phone:</label>
@@ -156,8 +166,12 @@
               id="phone"
               name="phone"
               value="<%= address.phone %>"
-              required
+              pattern="^[0-9]{10}$"
+              title="Please enter a valid 10-digit phone number"
             />
+            <div class="error-message" id="phoneError">
+              Phone number is required (10 digits)
+            </div>
           </div>
           <button type="submit" class="submit-btn">Save Changes</button>
         </form>
@@ -167,3 +181,57 @@
 </section>
 
 <%-include("../../views/partials/user/footer") %>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const addressTypeInput = document.getElementById("addressType");
+    const nameInput = document.getElementById("name");
+    const cityInput = document.getElementById("city");
+    const stateInput = document.getElementById("state");
+    const pincodeInput = document.getElementById("pincode");
+    const phoneInput = document.getElementById("phone");
+
+    const showError = (input, message) => {
+      const errorElement = document.getElementById(`${input.id}Error`);
+      if (errorElement) {
+        errorElement.innerText = message;
+        errorElement.style.display = "block";
+      }
+    };
+
+    const clearError = (input) => {
+      const errorElement = document.getElementById(`${input.id}Error`);
+      if (errorElement) {
+        errorElement.innerText = "";
+        errorElement.style.display = "none";
+      }
+    };
+
+    const validateInput = (input, message) => {
+      if (input.value.trim() === "") {
+        showError(input, message);
+        return false;
+      } else {
+        clearError(input);
+        return true;
+      }
+    };
+
+    form.addEventListener("submit", function (event) {
+      let isValid = true;
+
+      if (!validateInput(addressTypeInput, "Address Type is required"))
+        isValid = false;
+      if (!validateInput(nameInput, "Name is required")) isValid = false;
+      if (!validateInput(cityInput, "City is required")) isValid = false;
+      if (!validateInput(stateInput, "State is required")) isValid = false;
+      if (!validateInput(pincodeInput, "Pin Code is required")) isValid = false;
+      if (!validateInput(phoneInput, "Phone number is required"))
+        isValid = false;
+
+      if (!isValid) {
+        event.preventDefault();
+      }
+    });
+  });
+</script>

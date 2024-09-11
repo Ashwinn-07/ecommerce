@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
 const orderSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   orderId: {
     type: String,
     default: () => uuidv4(),
@@ -37,9 +42,12 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   address: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Address",
-    required: true,
+    addressType: String,
+    name: String,
+    city: String,
+    state: String,
+    pincode: Number,
+    phone: String,
   },
   status: {
     type: String,
@@ -53,6 +61,11 @@ const orderSchema = new mongoose.Schema({
       "Return Request",
       "Returned",
     ],
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["COD", "Online"],
+    required: true,
   },
   createdOn: {
     type: Date,

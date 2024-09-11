@@ -225,11 +225,13 @@
             </div>
             <div class="col-lg-6 col-md-6 col-sm-6">
               <div class="shop__product__option__right">
-                <p>Sort by Price:</p>
-                <select>
-                  <option value="">Low To High</option>
-                  <option value="">$0 - $55</option>
-                  <option value="">$55 - $100</option>
+                <p>Sort by:</p>
+                <select onchange="location = this.value;">
+                  <option value="?sort=price_low_to_high" <%= sort === 'price_low_to_high' ? 'selected' : '' %>>Price: Low to High</option>
+                  <option value="?sort=price_high_to_low" <%= sort === 'price_high_to_low' ? 'selected' : '' %>>Price: High to Low</option>
+                  <option value="?sort=new_arrivals" <%= sort === 'new_arrivals' ? 'selected' : '' %>>New Arrivals</option>
+                  <option value="?sort=a_to_z" <%= sort === 'a_to_z' ? 'selected' : '' %>>A-Z</option>
+                  <option value="?sort=z_to_a" <%= sort === 'z_to_a' ? 'selected' : '' %>>Z-A</option>
                 </select>
               </div>
             </div>

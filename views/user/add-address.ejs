@@ -57,6 +57,7 @@
   }
 
   .form-group {
+    position: relative;
     margin-bottom: 20px;
   }
 
@@ -69,6 +70,13 @@
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
+  }
+  .error-message {
+    color: red;
+    font-size: 0.875em;
+    position: absolute;
+    bottom: -20px;
+    left: 0;
   }
 
   .submit-btn {
@@ -99,30 +107,36 @@
       <div class="account-content">
         <h2>Add New Address</h2>
 
-        <form action="/address/add" method="POST">
+        <form id="addressForm" action="/address/add" method="POST">
           <div class="form-group">
             <label for="addressType">Address Type (e.g. Home, Work):</label>
-            <input type="text" id="addressType" name="addressType" required />
+            <input type="text" id="addressType" name="addressType" />
+            <div class="error-message" id="addressTypeError"></div>
           </div>
           <div class="form-group">
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required />
+            <input type="text" id="name" name="name" />
+            <div class="error-message" id="nameError"></div>
           </div>
           <div class="form-group">
             <label for="city">City:</label>
-            <input type="text" id="city" name="city" required />
+            <input type="text" id="city" name="city" />
+            <div class="error-message" id="cityError"></div>
           </div>
           <div class="form-group">
             <label for="state">State:</label>
-            <input type="text" id="state" name="state" required />
+            <input type="text" id="state" name="state" />
+            <div class="error-message" id="stateError"></div>
           </div>
           <div class="form-group">
             <label for="pincode">Pin Code:</label>
-            <input type="text" id="pincode" name="pincode" required />
+            <input type="text" id="pincode" name="pincode" />
+            <div class="error-message" id="pincodeError"></div>
           </div>
           <div class="form-group">
             <label for="phone">Phone Number:</label>
-            <input type="text" id="phone" name="phone" required />
+            <input type="text" id="phone" name="phone" />
+            <div class="error-message" id="phoneError"></div>
           </div>
           <div class="form-group">
             <button type="submit" class="submit-btn">Add Address</button>
@@ -134,3 +148,51 @@
 </section>
 
 <%-include("../../views/partials/user/footer") %>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("addressForm");
+    const addressTypeInput = document.getElementById("addressType");
+    const nameInput = document.getElementById("name");
+    const cityInput = document.getElementById("city");
+    const stateInput = document.getElementById("state");
+    const pincodeInput = document.getElementById("pincode");
+    const phoneInput = document.getElementById("phone");
+
+    const showError = (input, message) => {
+      const errorElement = document.getElementById(`${input.id}Error`);
+      errorElement.innerText = message;
+    };
+
+    const clearError = (input) => {
+      const errorElement = document.getElementById(`${input.id}Error`);
+      errorElement.innerText = "";
+    };
+
+    const validateInput = (input, message) => {
+      if (input.value.trim() === "") {
+        showError(input, message);
+        return false;
+      } else {
+        clearError(input);
+        return true;
+      }
+    };
+
+    form.addEventListener("submit", function (event) {
+      let isValid = true;
+
+      if (!validateInput(addressTypeInput, "Address Type is required"))
+        isValid = false;
+      if (!validateInput(nameInput, "Name is required")) isValid = false;
+      if (!validateInput(cityInput, "City is required")) isValid = false;
+      if (!validateInput(stateInput, "State is required")) isValid = false;
+      if (!validateInput(pincodeInput, "Pin Code is required")) isValid = false;
+      if (!validateInput(phoneInput, "Phone number is required"))
+        isValid = false;
+
+      if (!isValid) {
+        event.preventDefault();
+      }
+    });
+  });
+</script>

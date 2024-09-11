@@ -1,0 +1,98 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+        .pagination-container{
+            margin-left: 600px;
+        }
+
+</style>
+
+<div class="container mt-4">
+  <h2>Order Management</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>User</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% orders.forEach(order => { %>
+        <tr>
+          <td><%= order._id %></td>
+          <td><%= order.userId.name %> (<%= order.userId.email %>)</td>
+          <td>$<%= order.totalPrice.toFixed(2) %></td>
+          <td>
+            <form action="/admin/orderList/change-status" method="POST">
+              <input type="hidden" name="orderId" value="<%= order._id %>">
+              <select name="newStatus" onchange="this.form.submit()">
+                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              </select>
+            </form>
+          </td>
+          <td><%= order.createdOn.toLocaleDateString() %></td>
+          <td>
+            <a href="#" class="btn btn-sm btn-info" data-toggle="modal" data-target="#orderModal<%= order._id %>">View</a>
+            <% if (order.status !== 'Cancelled' && order.status !== 'Delivered') { %>
+              <form action="/admin/orderList/<%= order._id %>/cancel" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        
+        
+        <div class="modal fade" id="orderModal<%= order._id %>" tabindex="-1" role="dialog">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <h6>Order Items:</h6>
+                <ul>
+                  <% order.orderedItems.forEach(item => { %>
+                    <li><%= item.product.name %> - Quantity: <%= item.quantity %>, Price: $<%= item.price.toFixed(2) %></li>
+                  <% }) %>
+                </ul>
+                <p><strong>Total:</strong> $<%= order.totalPrice.toFixed(2) %></p>
+                <p><strong>Status:</strong> <%= order.status %></p>
+                <p><strong>Date:</strong> <%= order.createdOn.toLocaleDateString() %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<div class="pagination-container">
+  <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+  <% } %>
+
+  <% for (let i = 1; i <= totalPages; i++) { %>
+    <% if (i === currentPage) { %>
+      <span class="current-page"><%= i %></span>
+    <% } else { %>
+      <a href="?page=<%= i %>"><%= i %></a>
+    <% } %>
+  <% } %>
+
+  <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+  <% } %>
+</div>
+
+
+<%- include("../../views/partials/admin/footer") %>
