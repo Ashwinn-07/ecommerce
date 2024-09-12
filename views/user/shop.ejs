@@ -1,5 +1,6 @@
 <%- include("../../views/partials/user/header") %>
 <!-- Header Section End -->
+ 
 
 <!-- Breadcrumb Section Begin -->
 <section class="breadcrumb-option">
@@ -286,8 +287,10 @@
                   <% } %>
                 </div>
                 <% if (product.quantity === 0) { %>
-                <p class="out-of-stock">Out of Stock</p>
-                <% } %>
+                Out of Stock
+                <% } else{%>
+                  In Stock:<%=product.quantity%>
+                  <%}%>
               </div>
             </div>
           </div>

@@ -119,9 +119,8 @@
               <%= product.salePrice %>
               <span><%= product.regularPrice %></span>
             </h3>
-            <% if (product.quantity === 0) { %>
-            <p class="out-of-stock">Out of Stock</p>
-            <% } %>
+            <% if (product.quantity === 0) { %> Out of Stock <% } else{%> In
+            Stock:<%= product.quantity %> <% } %>
             <p><%= product.description %></p>
             <!-- <div class="product__details__option">
               <div class="product__details__option__color">
