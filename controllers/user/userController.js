@@ -210,6 +210,7 @@ const loadShopPage = async (req, res) => {
     const limit = 6;
     const sort = req.query.sort || "new_arrivals";
     const filter = req.query.filter;
+    const stockFilter = req.query.stock;
 
     let sortOption = {};
     switch (sort) {
@@ -236,6 +237,9 @@ const loadShopPage = async (req, res) => {
     if (filter) {
       query.category = filter;
     }
+    if (stockFilter === "in-stock") {
+      query.quantity = { $gt: 0 };
+    }
 
     const count = await Product.countDocuments(query);
     const products = await Product.find(query)
@@ -251,6 +255,7 @@ const loadShopPage = async (req, res) => {
       user: res.locals.user,
       sort,
       filter,
+      stockFilter: stockFilter,
     });
   } catch (error) {
     console.error("error displaying products", error);

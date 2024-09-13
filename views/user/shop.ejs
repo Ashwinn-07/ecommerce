@@ -211,6 +211,14 @@
           </div>
         </div>
       </div> -->
+      <label for="in-stock">Show Only In-Stock Products
+        <input type="checkbox" id="in-stock" 
+               onchange="filterStock(this.checked)" 
+               <%= stockFilter === 'in-stock' ? 'checked' : '' %> />
+      </label>
+      
+      
+      
 
       <div class="col-lg-9">
         <div class="shop__product__option">
@@ -325,3 +333,16 @@
 
 <%- include("../../views/partials/user/footer") %>
 <!-- Footer Section End -->
+
+<script>
+  function filterStock(showInStock) {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (showInStock) {
+    urlParams.set('stock', 'in-stock');
+  } else {
+    urlParams.delete('stock');
+  }
+  window.location.search = urlParams.toString();
+}
+ 
+</script>
