@@ -33,7 +33,9 @@ const customerInfo = async (req, res) => {
     const totalPages = Math.ceil(count / limit);
 
     res.render("customers", { data: userData, totalPages, currentPage: page });
-  } catch (error) {}
+  } catch (error) {
+    res.status(500).json({ message: "internal server error" });
+  }
 };
 
 const customerBlocked = async (req, res) => {
@@ -43,6 +45,7 @@ const customerBlocked = async (req, res) => {
     res.redirect("/admin/users");
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -53,6 +56,7 @@ const customerUnblocked = async (req, res) => {
     res.redirect("/admin/users");
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 

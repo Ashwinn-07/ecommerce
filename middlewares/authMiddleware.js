@@ -7,9 +7,15 @@ const authMiddleware = async (req, res, next) => {
       const user = await User.findById(req.session.user);
       if (user && !user.isBlocked) {
         res.locals.user = user;
+      } else {
+        req.session.destroy((err) => {
+          if (err) console.error("error destroying session");
+        });
+        return res.redirect("/login");
       }
     } catch (error) {
       console.error("Error in auth middleware:", error);
+      return res.redirect("/login");
     }
   }
   next();

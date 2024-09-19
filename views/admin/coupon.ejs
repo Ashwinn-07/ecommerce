@@ -1,0 +1,384 @@
+<%- include("../../views/partials/admin/header") %>
+<head>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"
+  />
+  <style>
+    .content-main {
+      margin-left: 300px;
+    }
+    .col-md-3 {
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin: 10px;
+    }
+    .form-label {
+      margin-bottom: 8px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    .d-grid {
+      margin-top: 20px;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+      border: 1px solid #007bff;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    .pagination-container {
+      text-align: center;
+    }
+    .pagination {
+      display: inline-block;
+    }
+    .pagination a,
+    .pagination .current-page {
+      display: inline-block;
+      padding: 5px 10px;
+      margin: 0 2px;
+      border: 1px solid #ddd;
+      text-decoration: none;
+      color: #333;
+    }
+    .pagination a:hover {
+      background-color: #f5f5f5;
+    }
+    .error-message {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <section class="content-main">
+    <div class="content-header">
+      <div>
+        <h2 class="content-title card-title">Coupons</h2>
+      </div>
+    </div>
+    <header class="card-header text-center mb-20">
+      <form action="/admin/coupons/" method="get" class="d-inline">
+        <div
+          class="input-group input-group-sm border border-1 border-grey rounded-pill"
+          style="width: 500px; margin-left: 230px"
+        >
+          <input
+            type="text"
+            class="form-control border-0 rounded-pill mt-3"
+            placeholder="Search coupons"
+            name="search"
+          />
+          <button class="btn" type="submit">Search</button>
+        </div>
+      </form>
+    </header>
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <form
+              method="post"
+              action="/admin/addCoupon"
+              onsubmit="return handleFormSubmit(event)"
+            >
+              <div class="mb-4">
+                <label for="coupon_name" class="form-label">Coupon Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Enter coupon name"
+                  class="form-control"
+                  id="coupon_name"
+                />
+                <div id="name-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label for="offer_price" class="form-label">Offer Price</label>
+                <input
+                  type="number"
+                  name="offerPrice"
+                  placeholder="Enter offer price"
+                  class="form-control"
+                  id="offer_price"
+                />
+                <div id="offer-price-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label for="minimum_price" class="form-label"
+                  >Minimum Price</label
+                >
+                <input
+                  type="number"
+                  name="minimumPrice"
+                  placeholder="Enter minimum price"
+                  class="form-control"
+                  id="minimum_price"
+                />
+                <div id="minimum-price-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label for="expire_date" class="form-label">Expiry Date</label>
+                <input
+                  type="date"
+                  name="expireOn"
+                  class="form-control"
+                  id="expire_date"
+                />
+                <div id="expire-date-error" class="error-message"></div>
+              </div>
+              <div class="d-grid">
+                <button class="btn btn-primary" type="submit">
+                  Create Coupon
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="col-md-8 ml-10">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Offer Price</th>
+                    <th>Minimum Price</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                    <th>Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% coupons.forEach((coupon) => { %>
+                  <tr>
+                    <td><%= coupon.name %></td>
+                    <td>₹<%= coupon.offerPrice %></td>
+                    <td>₹<%= coupon.minimumPrice %></td>
+                    <td>
+                      <%= new Date(coupon.expireOn).toLocaleDateString() %>
+                    </td>
+                    <td>
+                      <% if(coupon.isList) { %>
+                      <span class="badge rounded-pill alert-success"
+                        >Active</span
+                      >
+                      <% } else { %>
+                      <span class="badge rounded-pill alert-danger"
+                        >Inactive</span
+                      >
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if(coupon.isList) { %>
+                      <button
+                        class="btn btn-danger"
+                        onclick="toggleCouponStatus('<%= coupon._id %>', false)"
+                      >
+                        Deactivate
+                      </button>
+                      <% } else { %>
+                      <button
+                        class="btn btn-success"
+                        onclick="toggleCouponStatus('<%= coupon._id %>', true)"
+                      >
+                        Activate
+                      </button>
+                      <% } %>
+                    </td>
+                    <td>
+                      <a
+                        href="/admin/editCoupon?id=<%= coupon._id %>"
+                        class="btn btn-info text-white"
+                        >Edit</a
+                      >
+                    </td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pagination-container">
+      <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+      <% } %> <% for (let i = 1; i <= totalPages; i++) { %> <% if (i ===
+      currentPage) { %>
+      <span class="current-page"><%= i %></span>
+      <% } else { %>
+      <a href="?page=<%= i %>"><%= i %></a>
+      <% } %> <% } %> <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+      <% } %>
+    </div>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      if (!validateForm()) {
+        return false;
+      }
+
+      const name = document.getElementById("coupon_name").value;
+      const offerPrice = document.getElementById("offer_price").value;
+      const minimumPrice = document.getElementById("minimum_price").value;
+      const expireOn = document.getElementById("expire_date").value;
+
+      fetch("/admin/addCoupon", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, offerPrice, minimumPrice, expireOn }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((err) => {
+              throw new Error(err.error);
+            });
+          }
+          return response.json();
+        })
+        .then(() => {
+          Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: "Coupon added successfully!",
+          }).then(() => {
+            location.reload();
+          });
+        })
+        .catch((error) => {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text:
+              error.message ||
+              "An error occurred while adding the coupon. Please try again.",
+          });
+        });
+    }
+
+    function validateForm() {
+      clearErrorMessages();
+      const name = document.getElementById("coupon_name").value.trim();
+      const offerPrice = document.getElementById("offer_price").value.trim();
+      const minimumPrice = document
+        .getElementById("minimum_price")
+        .value.trim();
+      const expireDate = document.getElementById("expire_date").value;
+      let isValid = true;
+
+      if (name === "") {
+        displayErrorMessage("name-error", "Please enter a coupon name");
+        isValid = false;
+      }
+
+      if (offerPrice === "" || isNaN(offerPrice) || Number(offerPrice) <= 0) {
+        displayErrorMessage(
+          "offer-price-error",
+          "Please enter a valid offer price"
+        );
+        isValid = false;
+      }
+
+      if (
+        minimumPrice === "" ||
+        isNaN(minimumPrice) ||
+        Number(minimumPrice) < 0
+      ) {
+        displayErrorMessage(
+          "minimum-price-error",
+          "Please enter a valid minimum price"
+        );
+        isValid = false;
+      }
+
+      if (expireDate === "") {
+        displayErrorMessage(
+          "expire-date-error",
+          "Please select an expiry date"
+        );
+        isValid = false;
+      } else if (new Date(expireDate) <= new Date()) {
+        displayErrorMessage(
+          "expire-date-error",
+          "Expiry date must be in the future"
+        );
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    function displayErrorMessage(elementId, message) {
+      var errorElement = document.getElementById(elementId);
+      errorElement.innerText = message;
+      errorElement.style.display = "block";
+    }
+
+    function clearErrorMessages() {
+      const errorElements = document.getElementsByClassName("error-message");
+      Array.from(errorElements).forEach((element) => {
+        element.innerText = "";
+        element.style.display = "none";
+      });
+    }
+
+    function toggleCouponStatus(couponId, newStatus) {
+      fetch("/admin/toggleCouponStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ couponId, status: newStatus }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status) {
+            Swal.fire({
+              icon: "success",
+              title: "Success",
+              text: `Coupon ${
+                newStatus ? "activated" : "deactivated"
+              } successfully!`,
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "An error occurred while updating the coupon status. Please try again.",
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "An error occurred while updating the coupon status. Please try again.",
+          });
+        });
+    }
+  </script>
+  <%- include("../../views/partials/admin/footer") %>
+</body>

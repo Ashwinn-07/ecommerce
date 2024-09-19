@@ -23,6 +23,7 @@ const listOrders = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -40,6 +41,7 @@ const changeOrderStatus = async (req, res) => {
     res.redirect("/admin/orderList");
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -68,6 +70,7 @@ const cancelOrder = async (req, res) => {
     res.redirect("/admin/orderList");
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 

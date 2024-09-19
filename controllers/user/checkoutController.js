@@ -2,6 +2,13 @@ const Order = require("../../models/orderSchema");
 const Cart = require("../../models/cartSchema");
 const Address = require("../../models/addressSchema");
 const Product = require("../../models/productSchema");
+const Coupon = require("../../models/couponSchema");
+const paypal = require("@paypal/checkout-server-sdk");
+
+let clientId = process.env.PAYPAL_CLIENT_ID;
+let clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+let environment = new paypal.core.SandboxEnvironment(clientId, clientSecret);
+let client = new paypal.core.PayPalHttpClient(environment);
 
 const getCheckoutPage = async (req, res) => {
   try {
@@ -9,20 +16,179 @@ const getCheckoutPage = async (req, res) => {
     const addresses = await Address.find({ userId });
     const cart = await Cart.findOne({ userId }).populate("items.productId");
 
-    if (!cart) {
-      res.redirect("/cart");
+    if (!cart || cart.items.length === 0) {
+      return res.redirect("/cart");
     }
 
     const total = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
-    res.render("checkout", { addresses, cart, total });
+
+    const availableCoupons = await Coupon.find({
+      isList: true,
+      expireOn: { $gte: new Date() },
+      minimumPrice: { $lte: total },
+    });
+    console.log(availableCoupons);
+
+    res.render("checkout", { addresses, cart, total, availableCoupons });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
+};
+
+const couponValidate = async (req, res) => {
+  try {
+    const { couponId } = req.params;
+    const { subtotal } = req.body;
+    console.log(`Coupon ID: ${couponId}, Subtotal: ${subtotal}`);
+    const coupon = await Coupon.findById(couponId);
+    if (
+      coupon &&
+      coupon.isList &&
+      new Date() <= coupon.expireOn &&
+      subtotal >= coupon.minimumPrice
+    ) {
+      const discount = coupon.offerPrice;
+      res.json({ isValid: true, discount });
+    } else {
+      res.json({ isValid: false });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const initiatePayPalPayment = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: "Cart is empty" });
+    }
+
+    let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
+
+    const { appliedCouponId, discountAmount } = req.body;
+    if (appliedCouponId && discountAmount) {
+      totalPrice -= parseFloat(discountAmount);
+    }
+
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "USD",
+            value: totalPrice.toFixed(2),
+          },
+        },
+      ],
+      application_context: {
+        return_url: `${req.protocol}://${req.get(
+          "host"
+        )}/checkout/paypal-success`,
+        cancel_url: `${req.protocol}://${req.get(
+          "host"
+        )}/checkout/paypal-cancel`,
+      },
+    });
+
+    const order = await client.execute(request);
+
+    req.session.paypalOrderId = order.result.id;
+    req.session.checkoutDetails = req.body;
+
+    const approvalUrl = order.result.links.find(
+      (link) => link.rel === "approve"
+    ).href;
+    res.redirect(approvalUrl);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const paypalSuccess = async (req, res) => {
+  try {
+    console.log("Checkout Details: ", req.session.checkoutDetails);
+    const paypalOrderId = req.session.paypalOrderId;
+    console.log(paypalOrderId);
+    if (!paypalOrderId) {
+      return res.status(400).json({ message: "An error occured" });
+    }
+
+    const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
+    request.requestBody({});
+    const capture = await client.execute(request);
+
+    if (capture.result.status === "COMPLETED") {
+      const {
+        userId,
+        cartItems,
+        totalPrice,
+        finalAmount,
+        selectedAddress,
+        couponApplied,
+      } = req.session.checkoutDetails || {};
+      console.log("Checkout Details: ", req.session.checkoutDetails);
+
+      const orderData = {
+        userId,
+        orderedItems: cartItems.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+          price: item.totalPrice,
+        })),
+        totalPrice: totalPrice,
+        finalAmount: finalAmount,
+        address: selectedAddress,
+        status: "Paid",
+        paymentMethod: "PayPal",
+        couponApplied: couponApplied,
+      };
+
+      const order = new Order(orderData);
+      const savedOrder = await order.save();
+
+      for (const item of cartItems) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { quantity: -item.quantity },
+        });
+      }
+
+      await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
+
+      delete req.session.paypalOrderId;
+      delete req.session.checkoutDetails;
+
+      req.session.lastOrderId = savedOrder._id;
+      res.redirect("/order-confirmation");
+    } else {
+      res.status(400).json({ message: "An error occured" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const paypalCancel = (req, res) => {
+  delete req.session.paypalOrderId;
+  delete req.session.checkoutDetails;
+  res.redirect("/checkout?error=payment_cancelled");
 };
 
 const checkout = async (req, res) => {
   try {
-    const { addressId, newAddress, paymentMethod } = req.body;
+    const {
+      addressId,
+      newAddress,
+      paymentMethod,
+      appliedCouponId,
+      discountAmount,
+    } = req.body;
     console.log("Received address ID: ", addressId);
     console.log("Received new address: ", newAddress);
 
@@ -33,6 +199,12 @@ const checkout = async (req, res) => {
     }
     if (!paymentMethod) {
       return res.status(400).json({ message: "payment method is required" });
+    }
+    const blockedProduct = cart.items.find((item) => item.productId.isBlocked);
+    if (blockedProduct) {
+      return res.status(400).json({
+        message: `Product "${blockedProduct.productId.productName}" is blocked and cannot be ordered.`,
+      });
     }
     let selectedAddress;
     if (addressId) {
@@ -60,40 +232,76 @@ const checkout = async (req, res) => {
       return res.status(400).json({ message: "Address is required" });
     }
 
-    const totalPrice = cart.items.reduce(
-      (acc, item) => acc + item.totalPrice,
-      0
-    );
+    let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
+    let discount = 0;
+    let couponApplied = false;
 
-    const orderData = new Order({
-      userId,
-      orderedItems: cart.items.map((item) => ({
-        product: item.productId,
-        quantity: item.quantity,
-        price: item.totalPrice,
-      })),
-      totalPrice: totalPrice,
-      finalAmount: totalPrice,
-      address: selectedAddress,
-      status: "Pending",
-      paymentMethod,
-    });
-    const order = new Order(orderData);
-    const savedOrder = await order.save();
-
-    for (const item of cart.items) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { quantity: -item.quantity },
-      });
+    if (appliedCouponId && discountAmount) {
+      const coupon = await Coupon.findById(appliedCouponId);
+      if (
+        coupon &&
+        coupon.isList &&
+        new Date() <= coupon.expireOn &&
+        totalPrice >= coupon.minimumPrice
+      ) {
+        discount = parseFloat(discountAmount);
+        couponApplied = true;
+        console.log("Applied discount: ", discount);
+      }
     }
+    const finalAmount = totalPrice - discount;
+    console.log("Final amount: ", finalAmount);
+    if (paymentMethod === "COD") {
+      const orderData = {
+        userId,
+        orderedItems: cart.items.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+          price: item.totalPrice,
+        })),
+        totalPrice: totalPrice,
+        finalAmount: finalAmount,
+        address: selectedAddress,
+        status: "Pending",
+        paymentMethod,
+        couponApplied: couponApplied,
+      };
 
-    cart.items = [];
-    await cart.save();
-    req.session.lastOrderId = savedOrder._id;
+      const order = new Order(orderData);
+      const savedOrder = await order.save();
 
-    res.redirect("/order-confirmation");
+      for (const item of cart.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { quantity: -item.quantity },
+        });
+      }
+
+      cart.items = [];
+      await cart.save();
+
+      req.session.lastOrderId = savedOrder._id;
+
+      return res.redirect("/order-confirmation");
+    } else if (paymentMethod === "PayPal") {
+      req.session.checkoutDetails = {
+        userId,
+        cartItems: cart.items,
+        totalPrice,
+        finalAmount,
+        selectedAddress,
+        couponApplied,
+        appliedCouponId,
+        discountAmount,
+      };
+      console.log("Setting checkoutDetails:", req.session.checkoutDetails);
+
+      return res.redirect("/checkout/initiate-paypal");
+    } else {
+      return res.status(400).json({ message: "Invalid payment method" });
+    }
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -122,6 +330,7 @@ const getOrderConfirmation = async (req, res) => {
     res.render("order-confirmation", { order });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -129,4 +338,8 @@ module.exports = {
   getCheckoutPage,
   checkout,
   getOrderConfirmation,
+  couponValidate,
+  paypalSuccess,
+  paypalCancel,
+  initiatePayPalPayment,
 };

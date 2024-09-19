@@ -22,6 +22,7 @@ const categoryInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("An error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -121,6 +122,7 @@ const getListCategory = async (req, res) => {
     res.redirect("/admin/category");
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -131,6 +133,7 @@ const getUnlistCategory = async (req, res) => {
     res.redirect("/admin/category");
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -141,6 +144,7 @@ const getEditCategory = async (req, res) => {
     res.render("edit-category", { category: category });
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 

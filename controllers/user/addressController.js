@@ -53,6 +53,7 @@ const addAddress = async (req, res) => {
     res.redirect("/addresses");
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -71,6 +72,7 @@ const getEditAddress = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -98,6 +100,7 @@ const editAddress = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -116,6 +119,7 @@ const deleteAddress = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 

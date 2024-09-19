@@ -1,0 +1,242 @@
+<%- include("../../views/partials/admin/header") %>
+<head>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"
+  />
+  <style>
+    .content-main {
+      margin-left: 300px;
+    }
+    .edit-form {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .form-label {
+      margin-bottom: 8px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+      border: 1px solid #007bff;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    .error-message {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <section class="content-main">
+    <div class="content-header">
+      <div>
+        <h2 class="content-title card-title">Edit Coupon</h2>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-12">
+            <form id="editCouponForm" class="edit-form">
+              <input type="hidden" id="coupon_id" value="<%= coupon._id %>" />
+              <div class="mb-4">
+                <label for="coupon_name" class="form-label">Coupon Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value="<%= coupon.name %>"
+                  class="form-control"
+                  id="coupon_name"
+                  required
+                />
+                <div id="name-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label for="offer_price" class="form-label">Offer Price</label>
+                <input
+                  type="number"
+                  name="offerPrice"
+                  value="<%= coupon.offerPrice %>"
+                  class="form-control"
+                  id="offer_price"
+                  required
+                />
+                <div id="offer-price-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label for="minimum_price" class="form-label"
+                  >Minimum Price</label
+                >
+                <input
+                  type="number"
+                  name="minimumPrice"
+                  value="<%= coupon.minimumPrice %>"
+                  class="form-control"
+                  id="minimum_price"
+                  required
+                />
+                <div id="minimum-price-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label for="expire_date" class="form-label">Expiry Date</label>
+                <input
+                  type="date"
+                  name="expireOn"
+                  value="<%= new Date(coupon.expireOn).toISOString().split('T')[0] %>"
+                  class="form-control"
+                  id="expire_date"
+                  required
+                />
+                <div id="expire-date-error" class="error-message"></div>
+              </div>
+              <div class="d-grid">
+                <button class="btn btn-primary" type="submit">
+                  Update Coupon
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    document
+      .getElementById("editCouponForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (!validateForm()) {
+          return false;
+        }
+
+        const couponId = document.getElementById("coupon_id").value;
+        const name = document.getElementById("coupon_name").value;
+        const offerPrice = document.getElementById("offer_price").value;
+        const minimumPrice = document.getElementById("minimum_price").value;
+        const expireOn = document.getElementById("expire_date").value;
+
+        fetch("/admin/updateCoupon", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: couponId,
+            name,
+            offerPrice,
+            minimumPrice,
+            expireOn,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.message) {
+              Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Coupon updated successfully!",
+              }).then(() => {
+                window.location.href = "/admin/coupons";
+              });
+            } else {
+              throw new Error(
+                data.error || "An error occurred while updating the coupon"
+              );
+            }
+          })
+          .catch((error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: error.message,
+            });
+          });
+      });
+
+    function validateForm() {
+      clearErrorMessages();
+      const name = document.getElementById("coupon_name").value.trim();
+      const offerPrice = document.getElementById("offer_price").value.trim();
+      const minimumPrice = document
+        .getElementById("minimum_price")
+        .value.trim();
+      const expireDate = document.getElementById("expire_date").value;
+      let isValid = true;
+
+      if (name === "") {
+        displayErrorMessage("name-error", "Please enter a coupon name");
+        isValid = false;
+      }
+
+      if (offerPrice === "" || isNaN(offerPrice) || Number(offerPrice) <= 0) {
+        displayErrorMessage(
+          "offer-price-error",
+          "Please enter a valid offer price"
+        );
+        isValid = false;
+      }
+
+      if (
+        minimumPrice === "" ||
+        isNaN(minimumPrice) ||
+        Number(minimumPrice) < 0
+      ) {
+        displayErrorMessage(
+          "minimum-price-error",
+          "Please enter a valid minimum price"
+        );
+        isValid = false;
+      }
+
+      if (expireDate === "") {
+        displayErrorMessage(
+          "expire-date-error",
+          "Please select an expiry date"
+        );
+        isValid = false;
+      } else if (new Date(expireDate) <= new Date()) {
+        displayErrorMessage(
+          "expire-date-error",
+          "Expiry date must be in the future"
+        );
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    function displayErrorMessage(elementId, message) {
+      var errorElement = document.getElementById(elementId);
+      errorElement.innerText = message;
+      errorElement.style.display = "block";
+    }
+
+    function clearErrorMessages() {
+      const errorElements = document.getElementsByClassName("error-message");
+      Array.from(errorElements).forEach((element) => {
+        element.innerText = "";
+        element.style.display = "none";
+      });
+    }
+  </script>
+  <%- include("../../views/partials/admin/footer") %>
+</body>

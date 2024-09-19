@@ -159,7 +159,23 @@
             </form>
 
             <div class="product__details__btns__option">
-              <a href="#"><i class="fa fa-heart"></i> add to wishlist</a>
+              <form
+                action="/wishlist/add/<%= product._id %>"
+                method="POST"
+                style="display: inline"
+              >
+                <button
+                  type="submit"
+                  style="
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 0;
+                  "
+                >
+                  <i class="fa fa-heart"></i> add to wishlist
+                </button>
+              </form>
               <a href="#"><i class="fa fa-exchange"></i> Add To Compare</a>
             </div>
             <div class="product__details__last__option">

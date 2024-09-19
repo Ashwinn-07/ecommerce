@@ -202,6 +202,18 @@
   .cancel-btn:hover {
     background-color: #ff1a1a;
   }
+  .return-btn {
+    background-color: #ff851b;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .return-btn:hover {
+    background-color: #ff6600;
+  }
+
   .pagination-container {
     margin-left: 600px;
   }
@@ -262,8 +274,12 @@
                 <% }) %>
               </ul>
             </div>
-            <% if (order.status !== 'Cancelled' && order.status !== 'Delivered')
-            { %>
+            <% if (order.status === 'Delivered') { %>
+            <form action="/orders/<%= order._id %>/return" method="POST">
+              <button type="submit" class="return-btn">Return Order</button>
+            </form>
+            <% } else if (order.status !== 'Cancelled' && order.status !==
+            'Returned') { %>
             <form action="/orders/<%= order._id %>/cancel" method="POST">
               <button type="submit" class="cancel-btn">Cancel Order</button>
             </form>

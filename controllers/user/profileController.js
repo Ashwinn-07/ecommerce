@@ -154,6 +154,7 @@ const getProfile = async (req, res) => {
     }
   } catch (error) {
     console.error("error fetching user profile", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -172,6 +173,7 @@ const editProfile = async (req, res) => {
     res.redirect("/profile");
   } catch (error) {
     console.error("Error updating profile details", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 

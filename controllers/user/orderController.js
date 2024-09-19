@@ -1,5 +1,6 @@
 const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
+const Wallet = require("../../models/walletSchema");
 
 const getUserOrders = async (req, res) => {
   try {
@@ -24,6 +25,7 @@ const getUserOrders = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -45,16 +47,62 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId });
+    }
+
+    wallet.balance += order.totalPrice;
+    wallet.transactions.push({
+      type: "CREDIT",
+      amount: order.totalPrice,
+      description: "Refund for cancelled order",
+    });
+
+    await wallet.save();
+
     order.status = "Cancelled";
     await order.save();
 
     res.redirect("/orders");
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "internal server error" });
+  }
+};
+
+const returnOrder = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const userId = req.session.user;
+    const order = await Order.findOne({ _id: orderId, userId });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Delivered") {
+      return res
+        .status(400)
+        .json({ message: "Order cannot be returned unless delivered" });
+    }
+
+    for (const item of order.orderedItems) {
+      await Product.findByIdAndUpdate(item.product._id, {
+        $inc: { quantity: item.quantity },
+      });
+    }
+    order.status = "Returned";
+    await order.save();
+    res.redirect("/orders");
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 module.exports = {
   getUserOrders,
   cancelOrder,
+  returnOrder,
 };

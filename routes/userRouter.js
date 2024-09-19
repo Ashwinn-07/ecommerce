@@ -6,6 +6,8 @@ const cartController = require("../controllers/user/cartController");
 const addressController = require("../controllers/user/addressController");
 const checkoutController = require("../controllers/user/checkoutController");
 const orderController = require("../controllers/user/orderController");
+const wishlistController = require("../controllers/user/wishlistController");
+const walletController = require("../controllers/user/walletController");
 const passport = require("passport");
 
 router.use((req, res, next) => {
@@ -65,9 +67,27 @@ router.post("/address/delete/:id", addressController.deleteAddress);
 
 router.get("/checkout", checkoutController.getCheckoutPage);
 router.post("/checkout/place-order", checkoutController.checkout);
+router.get(
+  "/checkout/initiate-paypal",
+  checkoutController.initiatePayPalPayment
+);
 router.get("/order-confirmation", checkoutController.getOrderConfirmation);
+router.get("/checkout/paypal-success", checkoutController.paypalSuccess);
+router.get("/checkout/paypal-cancel", checkoutController.paypalCancel);
 
 router.get("/orders", orderController.getUserOrders);
 router.post("/orders/:orderId/cancel", orderController.cancelOrder);
+router.post("/orders/:orderId/return", orderController.returnOrder);
+
+router.get("/wishlist", wishlistController.getWishlist);
+router.post("/wishlist/add/:productId", wishlistController.addToWishlist);
+router.post(
+  "/wishlist/remove/:productId",
+  wishlistController.removeFromWishlist
+);
+
+router.post("/validate-coupon/:couponId", checkoutController.couponValidate);
+
+router.get("/wallet", walletController.getWalletPage);
 
 module.exports = router;

@@ -13,6 +13,7 @@ const getProductAddPage = async (req, res) => {
     });
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -67,6 +68,7 @@ const addProducts = async (req, res) => {
     }
   } catch (error) {
     console.error("error adding product", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -102,6 +104,7 @@ const getAllProducts = async (req, res) => {
     }
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -112,6 +115,7 @@ const blockProduct = async (req, res) => {
     res.redirect("/admin/products");
   } catch (error) {
     console.error("an error blocking product", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 const unblockProduct = async (req, res) => {
@@ -121,6 +125,7 @@ const unblockProduct = async (req, res) => {
     res.redirect("/admin/products");
   } catch (error) {
     console.error("an error unblocking product", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -135,6 +140,7 @@ const getEditProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -173,6 +179,7 @@ const editProduct = async (req, res) => {
     res.redirect("/admin/products");
   } catch (error) {
     console.error("error editing product", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -197,6 +204,47 @@ const deleteSingleImage = async (req, res) => {
     res.send({ status: true });
   } catch (error) {
     console.error("an error occured", error);
+    res.status(500).json({ message: "internal server error" });
+  }
+};
+
+const addProductOffer = async (req, res) => {
+  try {
+    const { productId, percentage } = req.body;
+    const findProduct = await Product.findOne({ _id: productId });
+    const findCategory = await Category.findOne({ _id: findProduct.category });
+    if (findCategory.categoryOffer > percentage) {
+      return res.josn({
+        status: fales,
+        message: "This product already has category offer applied",
+      });
+    }
+    findProduct.salePrice =
+      findProduct.salePrice -
+      Math.floor(findProduct.regularPrice * (percentage / 100));
+    findProduct.productOffer = parseInt(percentage);
+    await findProduct.save();
+    findCategory.categoryOffer = 0;
+    await findCategory.save();
+    res.json({ status: true });
+  } catch (error) {
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+const removeProductOffer = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const findProduct = await Product.findOne({ _id: productId });
+    const percentage = findProduct.productOffer;
+    findProduct.salePrice =
+      findProduct.salePrice +
+      Math.floor(findProduct.regularPrice * (percentage / 100));
+    findProduct.productOffer = 0;
+    await findProduct.save();
+    res.json({ status: true });
+  } catch (error) {
+    console.error(error);
   }
 };
 
@@ -209,4 +257,6 @@ module.exports = {
   getEditProduct,
   editProduct,
   deleteSingleImage,
+  addProductOffer,
+  removeProductOffer,
 };

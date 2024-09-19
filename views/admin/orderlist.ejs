@@ -34,13 +34,14 @@
                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
               </select>
             </form>
           </td>
           <td><%= order.createdOn.toLocaleDateString() %></td>
           <td>
             <a href="#" class="btn btn-sm btn-info" data-toggle="modal" data-target="#orderModal<%= order._id %>">View</a>
-            <% if (order.status !== 'Cancelled' && order.status !== 'Delivered') { %>
+            <% if (order.status !== 'Cancelled' && order.status !== 'Delivered' && order.status !== 'Returned') { %>
               <form action="/admin/orderList/<%= order._id %>/cancel" method="POST" style="display:inline;">
                 <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
               </form>

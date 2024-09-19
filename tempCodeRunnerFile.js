@@ -10,6 +10,7 @@ const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const demoRouter = require("./routes/demoRouter");
 db();
+const authMiddleware = require("./middlewares/authMiddleware");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,6 +38,8 @@ app.use(preventCache);
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(authMiddleware);
 
 app.set("view engine", "ejs");
 app.set("views", [

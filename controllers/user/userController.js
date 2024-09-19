@@ -259,6 +259,7 @@ const loadShopPage = async (req, res) => {
     });
   } catch (error) {
     console.error("error displaying products", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -288,6 +289,7 @@ const loadProductDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("error finding product", error);
+    res.status(500).json({ message: "internal server error" });
   }
 };
 

@@ -24,18 +24,30 @@
 <section class="checkout spad">
   <div class="container">
     <div class="checkout__form">
-      <form action="/checkout/place-order" method="post">
+      <form action="/checkout/place-order" method="post" id="checkoutForm">
         <div class="row">
           <div class="col-lg-8 col-md-6">
-            <!-- <h6 class="coupon__code">
-              <span class="icon_tag_alt"></span> Have a coupon?
-              <a href="#">Click here</a> to enter your code
-            </h6> -->
+            <div class="checkout__input">
+              <p>Select Coupon</p>
+              <select id="couponSelect" name="couponSelect">
+                <option value="">Select Coupon</option>
+                <% availableCoupons.forEach((coupon) => { %>
+                <option
+                  value="<%= coupon._id %>"
+                  data-discount="<%= coupon.offerPrice %>"
+                >
+                  <%= coupon.name %> - Save $<%= coupon.offerPrice %> (Min Order
+                  $<%= coupon.minimumPrice %>)
+                </option>
+                <% }); %>
+              </select>
+              <p id="couponMessage"></p>
+            </div>
 
             <div>
-              <% if (addresses && addresses.length > 0) { %>
               <h3>Saved Addresses</h3>
-              <% addresses.forEach((addressEntry) => { %> <% if
+              <% if (addresses && addresses.length > 0) { %> <%
+              addresses.forEach((addressEntry) => { %> <% if
               (addressEntry.address && addressEntry.address.length > 0) { %> <%
               addressEntry.address.forEach((address) => { %>
               <div>
@@ -54,7 +66,9 @@
               <p>No saved addresses. Please add a new address below.</p>
               <% } %>
             </div>
-            <h6 class="checkout__title">Add Address</h6>
+
+            <!-- New Address Form -->
+            <h6 class="checkout__title">Add New Address</h6>
             <div class="row">
               <div class="col-lg-6">
                 <div class="checkout__input">
@@ -62,10 +76,12 @@
                   <input type="text" name="newAddress[name]" />
                 </div>
               </div>
-            </div>
-            <div class="checkout__input">
-              <p>Address type<span>*</span></p>
-              <input type="text" name="newAddress[addressType]" />
+              <div class="col-lg-6">
+                <div class="checkout__input">
+                  <p>Address Type<span>*</span></p>
+                  <input type="text" name="newAddress[addressType]" />
+                </div>
+              </div>
             </div>
             <div class="checkout__input">
               <p>City<span>*</span></p>
@@ -79,15 +95,12 @@
               <p>Pincode<span>*</span></p>
               <input type="text" name="newAddress[pincode]" />
             </div>
-            <div class="row">
-              <div class="col-lg-6">
-                <div class="checkout__input">
-                  <p>Phone<span>*</span></p>
-                  <input type="text" name="newAddress[phone]" />
-                </div>
-              </div>
+            <div class="checkout__input">
+              <p>Phone<span>*</span></p>
+              <input type="text" name="newAddress[phone]" />
             </div>
           </div>
+
           <div class="col-lg-4 col-md-6">
             <div class="checkout__order">
               <h4 class="order__title">Your order</h4>
@@ -103,8 +116,16 @@
                 <% }); %>
               </ul>
               <ul class="checkout__total__all">
-                <li>Subtotal <span><%=total%></span></li>
-                <li>Total <span><%=total%></span></li>
+                <li>
+                  Subtotal
+                  <span>$<span id="subtotal"><%= total %></span></span>
+                </li>
+                <li>
+                  Discount <span>$<span id="discount">0.00</span></span>
+                </li>
+                <li>
+                  Total <span>$<span id="totalAmount"><%= total %></span></span>
+                </li>
               </ul>
               <div class="checkout__input__checkbox">
                 <label for="payment">
@@ -121,11 +142,11 @@
               </div>
               <div class="checkout__input__checkbox">
                 <label for="paypal">
-                  Online Payment
+                  PayPal
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="Online"
+                    value="PayPal"
                     id="paypal"
                   />
                   <span class="checkmark"></span>
@@ -135,6 +156,19 @@
             </div>
           </div>
         </div>
+
+        <input
+          type="hidden"
+          name="appliedCouponId"
+          id="appliedCouponId"
+          value=""
+        />
+        <input
+          type="hidden"
+          name="discountAmount"
+          id="discountAmount"
+          value="0"
+        />
       </form>
     </div>
   </div>
@@ -143,3 +177,61 @@
 
 <!-- Footer Section Begin -->
 <%-include("../../views/partials/user/footer") %>
+
+<script>
+  let discountAmount = 0;
+  let appliedCouponId = "";
+
+  document
+    .getElementById("couponSelect")
+    .addEventListener("change", async function () {
+      const selectedCoupon = this.value;
+      const subtotal = parseFloat(
+        document.getElementById("subtotal").innerText
+      );
+
+      if (selectedCoupon) {
+        try {
+          const response = await fetch(`/validate-coupon/${selectedCoupon}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subtotal }),
+          });
+
+          const result = await response.json();
+
+          if (result.isValid) {
+            const discount = result.discount;
+            const newTotal = subtotal - discount;
+            document.getElementById("discount").innerText = discount.toFixed(2);
+            document.getElementById("totalAmount").innerText =
+              newTotal.toFixed(2);
+            document.getElementById("couponMessage").innerText =
+              "Coupon applied successfully!";
+
+            document.getElementById("appliedCouponId").value = selectedCoupon;
+            document.getElementById("discountAmount").value =
+              discount.toFixed(2);
+          } else {
+            document.getElementById("couponMessage").innerText =
+              "Coupon is not valid!";
+            resetCouponFields();
+          }
+        } catch (error) {
+          console.error("Error validating coupon:", error);
+          resetCouponFields();
+        }
+      } else {
+        resetCouponFields();
+      }
+    });
+
+  function resetCouponFields() {
+    const subtotal = parseFloat(document.getElementById("subtotal").innerText);
+    document.getElementById("discount").innerText = "0.00";
+    document.getElementById("totalAmount").innerText = subtotal.toFixed(2);
+    document.getElementById("couponMessage").innerText = "";
+    document.getElementById("appliedCouponId").value = "";
+    document.getElementById("discountAmount").value = "0";
+  }
+</script>
