@@ -217,6 +217,22 @@
   .pagination-container {
     margin-left: 600px;
   }
+  .order-details p {
+    margin-bottom: 5px;
+  }
+
+  .payment-method {
+    font-weight: bold;
+    color: #4a4a4a;
+  }
+
+  .payment-method-cod {
+    color: #2ecc71;
+  }
+
+  .payment-method-paypal {
+    color: #3498db;
+  }
 </style>
 <section class="breadcrumb-option">
   <div class="container">
@@ -261,6 +277,13 @@
             <div class="order-details">
               <p>Status: <%= order.status %></p>
               <p>Total: $<%= order.totalPrice.toFixed(2) %></p>
+              <p>
+                Payment Method:
+                <span
+                  class="payment-method payment-method-<%= order.paymentMethod.toLowerCase() %>"
+                  ><%= order.paymentMethod %></span
+                >
+              </p>
               <h4>Products:</h4>
               <ul class="product-list">
                 <% order.orderedItems.forEach(item => { %>

@@ -4,6 +4,7 @@ const Address = require("../../models/addressSchema");
 const Product = require("../../models/productSchema");
 const Coupon = require("../../models/couponSchema");
 const paypal = require("@paypal/checkout-server-sdk");
+const CheckoutSession = require("../../models/checkoutSessionSchema");
 
 let clientId = process.env.PAYPAL_CLIENT_ID;
 let clientSecret = process.env.PAYPAL_CLIENT_SECRET;
@@ -97,9 +98,21 @@ const initiatePayPalPayment = async (req, res) => {
     });
 
     const order = await client.execute(request);
-
-    req.session.paypalOrderId = order.result.id;
-    req.session.checkoutDetails = req.body;
+    const checkoutDetails = {
+      userId,
+      cartItems: cart.items,
+      totalPrice,
+      finalAmount: totalPrice,
+      selectedAddress: req.body.selectedAddress,
+      couponApplied: !!appliedCouponId,
+      appliedCouponId,
+      discountAmount,
+    };
+    const checkoutSession = new CheckoutSession({
+      paypalOrderId: order.result.id,
+      checkoutDetails,
+    });
+    await checkoutSession.save();
 
     const approvalUrl = order.result.links.find(
       (link) => link.rel === "approve"
@@ -112,12 +125,16 @@ const initiatePayPalPayment = async (req, res) => {
 };
 const paypalSuccess = async (req, res) => {
   try {
-    console.log("Checkout Details: ", req.session.checkoutDetails);
-    const paypalOrderId = req.session.paypalOrderId;
-    console.log(paypalOrderId);
-    if (!paypalOrderId) {
-      return res.status(400).json({ message: "An error occured" });
+    const paypalOrderId = req.query.token;
+
+    const checkoutSession = await CheckoutSession.findOne({ paypalOrderId });
+
+    if (!checkoutSession) {
+      return res.status(400).json({ message: "Checkout session not found" });
     }
+
+    const { checkoutDetails } = checkoutSession;
+    console.log(" Checkout Details: ", checkoutDetails);
 
     const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
     request.requestBody({});
@@ -131,8 +148,7 @@ const paypalSuccess = async (req, res) => {
         finalAmount,
         selectedAddress,
         couponApplied,
-      } = req.session.checkoutDetails || {};
-      console.log("Checkout Details: ", req.session.checkoutDetails);
+      } = checkoutDetails;
 
       const orderData = {
         userId,
@@ -144,7 +160,7 @@ const paypalSuccess = async (req, res) => {
         totalPrice: totalPrice,
         finalAmount: finalAmount,
         address: selectedAddress,
-        status: "Paid",
+        status: "Pending",
         paymentMethod: "PayPal",
         couponApplied: couponApplied,
       };
@@ -160,23 +176,19 @@ const paypalSuccess = async (req, res) => {
 
       await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
 
-      delete req.session.paypalOrderId;
-      delete req.session.checkoutDetails;
+      await CheckoutSession.findByIdAndDelete(checkoutSession._id);
 
       req.session.lastOrderId = savedOrder._id;
       res.redirect("/order-confirmation");
     } else {
-      res.status(400).json({ message: "An error occured" });
+      res.status(400).json({ message: "An error occurred" });
     }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 const paypalCancel = (req, res) => {
-  delete req.session.paypalOrderId;
-  delete req.session.checkoutDetails;
   res.redirect("/checkout?error=payment_cancelled");
 };
 
@@ -283,18 +295,6 @@ const checkout = async (req, res) => {
 
       return res.redirect("/order-confirmation");
     } else if (paymentMethod === "PayPal") {
-      req.session.checkoutDetails = {
-        userId,
-        cartItems: cart.items,
-        totalPrice,
-        finalAmount,
-        selectedAddress,
-        couponApplied,
-        appliedCouponId,
-        discountAmount,
-      };
-      console.log("Setting checkoutDetails:", req.session.checkoutDetails);
-
       return res.redirect("/checkout/initiate-paypal");
     } else {
       return res.status(400).json({ message: "Invalid payment method" });
