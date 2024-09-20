@@ -6,6 +6,7 @@ const categoryController = require("../controllers/admin/categoryController");
 const productController = require("../controllers/admin/productController");
 const orderlistController = require("../controllers/admin/orderlistController");
 const couponController = require("../controllers/admin/couponController");
+const salesreportController = require("../controllers/admin/salesreportController");
 const { userAuth, adminAuth } = require("../middlewares/auth");
 const multer = require("multer");
 const storage = require("../helpers/multer");
@@ -85,4 +86,9 @@ router.post(
 router.get("/editCoupon", adminAuth, couponController.getEditCouponPage);
 router.post("/updateCoupon", adminAuth, couponController.updatedCoupon);
 
+router.post(
+  "/generate-sales-report",
+  salesreportController.generateSalesReport
+);
+router.get("/download-report", salesreportController.downloadReport);
 module.exports = router;

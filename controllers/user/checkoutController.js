@@ -28,7 +28,6 @@ const getCheckoutPage = async (req, res) => {
       expireOn: { $gte: new Date() },
       minimumPrice: { $lte: total },
     });
-    console.log(availableCoupons);
 
     res.render("checkout", { addresses, cart, total, availableCoupons });
   } catch (error) {
@@ -134,7 +133,6 @@ const paypalSuccess = async (req, res) => {
     }
 
     const { checkoutDetails } = checkoutSession;
-    console.log(" Checkout Details: ", checkoutDetails);
 
     const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
     request.requestBody({});
@@ -201,8 +199,6 @@ const checkout = async (req, res) => {
       appliedCouponId,
       discountAmount,
     } = req.body;
-    console.log("Received address ID: ", addressId);
-    console.log("Received new address: ", newAddress);
 
     const userId = req.session.user;
     const cart = await Cart.findOne({ userId }).populate("items.productId");
@@ -228,7 +224,6 @@ const checkout = async (req, res) => {
         return res.status(400).json({ message: " Address not found" });
       }
       selectedAddress = addressDoc.address.id(addressId);
-      console.log("Fetched Address:", selectedAddress);
     } else if (newAddress && Object.keys(newAddress).length > 0) {
       const addressDoc = await Address.findOne({ userId });
       if (addressDoc) {
@@ -262,7 +257,7 @@ const checkout = async (req, res) => {
       }
     }
     const finalAmount = totalPrice - discount;
-    console.log("Final amount: ", finalAmount);
+
     if (paymentMethod === "COD") {
       const orderData = {
         userId,

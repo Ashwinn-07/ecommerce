@@ -266,12 +266,12 @@ const loadShopPage = async (req, res) => {
 const loadProductDetails = async (req, res) => {
   try {
     const id = req.params.id;
-    console.log("Product ID:", id);
+
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid product ID" });
     }
     const product = await Product.findById(id).populate("category");
-    console.log(`/uploads/re-image/${product.productImage}`);
+
     const limit = 4;
     const relatedProducts = await Product.find({
       category: product.category._id,
