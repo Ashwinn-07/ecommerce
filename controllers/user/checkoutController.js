@@ -22,6 +22,18 @@ const getCheckoutPage = async (req, res) => {
     }
 
     const total = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
+    let discount = 0;
+    let finalAmount = total;
+
+    if (req.session.appliedCouponId) {
+      const appliedCoupon = await Coupon.findById(req.session.appliedCouponId);
+      if (appliedCoupon && appliedCoupon.minimumPrice <= total) {
+        discount = appliedCoupon.offerPrice;
+        finalAmount = total - discount;
+      } else {
+        delete req.session.appliedCouponId;
+      }
+    }
 
     const availableCoupons = await Coupon.find({
       isList: true,
@@ -29,19 +41,38 @@ const getCheckoutPage = async (req, res) => {
       minimumPrice: { $lte: total },
     });
 
-    res.render("checkout", { addresses, cart, total, availableCoupons });
+    res.render("checkout", {
+      addresses,
+      cart,
+      total,
+      discount,
+      finalAmount,
+      availableCoupons,
+      appliedCouponId: req.session.appliedCouponId || null,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "internal server error" });
   }
 };
 
-const couponValidate = async (req, res) => {
+const applyCoupon = async (req, res) => {
   try {
-    const { couponId } = req.params;
-    const { subtotal } = req.body;
-    console.log(`Coupon ID: ${couponId}, Subtotal: ${subtotal}`);
-    const coupon = await Coupon.findById(couponId);
+    const userId = req.session.user;
+    const { couponSelect } = req.body;
+
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ success: false, message: "Cart is empty" });
+    }
+
+    const subtotal = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
+
+    if (!couponSelect) {
+      return res.json({ success: true, discount: 0, newTotal: subtotal });
+    }
+
+    const coupon = await Coupon.findById(couponSelect);
     if (
       coupon &&
       coupon.isList &&
@@ -49,13 +80,15 @@ const couponValidate = async (req, res) => {
       subtotal >= coupon.minimumPrice
     ) {
       const discount = coupon.offerPrice;
-      res.json({ isValid: true, discount });
+      const newTotal = subtotal - discount;
+      req.session.appliedCouponId = coupon._id;
+      return res.json({ success: true, discount, newTotal });
     } else {
-      res.json({ isValid: false });
+      return res.json({ success: false, message: "Coupon is not valid" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 const initiatePayPalPayment = async (req, res) => {
@@ -69,9 +102,9 @@ const initiatePayPalPayment = async (req, res) => {
 
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
 
-    const { appliedCouponId, discountAmount } = req.body;
-    if (appliedCouponId && discountAmount) {
-      totalPrice -= parseFloat(discountAmount);
+    const { appliedCouponId, discount } = req.body;
+    if (appliedCouponId && discount) {
+      totalPrice -= parseFloat(discount);
     }
 
     const request = new paypal.orders.OrdersCreateRequest();
@@ -105,7 +138,7 @@ const initiatePayPalPayment = async (req, res) => {
       selectedAddress: req.body.selectedAddress,
       couponApplied: !!appliedCouponId,
       appliedCouponId,
-      discountAmount,
+      discount,
     };
     const checkoutSession = new CheckoutSession({
       paypalOrderId: order.result.id,
@@ -192,13 +225,7 @@ const paypalCancel = (req, res) => {
 
 const checkout = async (req, res) => {
   try {
-    const {
-      addressId,
-      newAddress,
-      paymentMethod,
-      appliedCouponId,
-      discountAmount,
-    } = req.body;
+    const { addressId, newAddress, paymentMethod, couponSelect } = req.body;
 
     const userId = req.session.user;
     const cart = await Cart.findOne({ userId }).populate("items.productId");
@@ -243,15 +270,15 @@ const checkout = async (req, res) => {
     let discount = 0;
     let couponApplied = false;
 
-    if (appliedCouponId && discountAmount) {
-      const coupon = await Coupon.findById(appliedCouponId);
+    if (couponSelect) {
+      const coupon = await Coupon.findById(couponSelect);
       if (
         coupon &&
         coupon.isList &&
         new Date() <= coupon.expireOn &&
         totalPrice >= coupon.minimumPrice
       ) {
-        discount = parseFloat(discountAmount);
+        discount = coupon.offerPrice;
         couponApplied = true;
         console.log("Applied discount: ", discount);
       }
@@ -268,6 +295,7 @@ const checkout = async (req, res) => {
         })),
         totalPrice: totalPrice,
         finalAmount: finalAmount,
+        discount: discount,
         address: selectedAddress,
         status: "Pending",
         paymentMethod,
@@ -333,7 +361,7 @@ module.exports = {
   getCheckoutPage,
   checkout,
   getOrderConfirmation,
-  couponValidate,
+  applyCoupon,
   paypalSuccess,
   paypalCancel,
   initiatePayPalPayment,

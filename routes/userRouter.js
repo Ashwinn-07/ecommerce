@@ -86,7 +86,7 @@ router.post(
   wishlistController.removeFromWishlist
 );
 
-router.post("/validate-coupon/:couponId", checkoutController.couponValidate);
+router.post("/apply-coupon", checkoutController.applyCoupon);
 
 router.get("/wallet", walletController.getWalletPage);
 

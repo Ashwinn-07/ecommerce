@@ -32,13 +32,13 @@
               <select id="couponSelect" name="couponSelect">
                 <option value="">Select Coupon</option>
                 <% availableCoupons.forEach((coupon) => { %>
-                <option
-                  value="<%= coupon._id %>"
-                  data-discount="<%= coupon.offerPrice %>"
-                >
-                  <%= coupon.name %> - Save $<%= coupon.offerPrice %> (Min Order
-                  $<%= coupon.minimumPrice %>)
-                </option>
+                  <option
+                    value="<%= coupon._id %>"
+                    data-discount="<%= coupon.offerPrice %>"
+                    <%= (appliedCouponId && appliedCouponId.toString() === coupon._id.toString()) ? 'selected' : '' %>
+                  >
+                    <%= coupon.name %> - Save $<%= coupon.offerPrice %> (Min Order $<%= coupon.minimumPrice %>)
+                  </option>
                 <% }); %>
               </select>
               <p id="couponMessage"></p>
@@ -118,13 +118,25 @@
               <ul class="checkout__total__all">
                 <li>
                   Subtotal
-                  <span>$<span id="subtotal"><%= total %></span></span>
+                  <span
+                    >$<span id="subtotal"><%= total.toFixed(2) %></span></span
+                  >
                 </li>
                 <li>
-                  Discount <span>$<span id="discount">0.00</span></span>
+                  Discount
+                  <span
+                    >$<span id="discount"
+                      ><%= discount.toFixed(2) %></span
+                    ></span
+                  >
                 </li>
                 <li>
-                  Total <span>$<span id="totalAmount"><%= total %></span></span>
+                  Total
+                  <span
+                    >$<span id="totalAmount"
+                      ><%= finalAmount.toFixed(2) %></span
+                    ></span
+                  >
                 </li>
               </ul>
               <div class="checkout__input__checkbox">
@@ -175,63 +187,41 @@
 </section>
 <!-- Checkout Section End -->
 
-<!-- Footer Section Begin -->
-<%-include("../../views/partials/user/footer") %>
-
 <script>
-  let discountAmount = 0;
-  let appliedCouponId = "";
-
   document
     .getElementById("couponSelect")
     .addEventListener("change", async function () {
-      const selectedCoupon = this.value;
-      const subtotal = parseFloat(
-        document.getElementById("subtotal").innerText
-      );
+      const form = document.getElementById("checkoutForm");
+      const formData = new FormData(form);
 
-      if (selectedCoupon) {
-        try {
-          const response = await fetch(`/validate-coupon/${selectedCoupon}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subtotal }),
-          });
+      try {
+        const response = await fetch("/apply-coupon", {
+          method: "POST",
+          body: formData,
+        });
 
-          const result = await response.json();
+        const result = await response.json();
 
-          if (result.isValid) {
-            const discount = result.discount;
-            const newTotal = subtotal - discount;
-            document.getElementById("discount").innerText = discount.toFixed(2);
-            document.getElementById("totalAmount").innerText =
-              newTotal.toFixed(2);
-            document.getElementById("couponMessage").innerText =
-              "Coupon applied successfully!";
-
-            document.getElementById("appliedCouponId").value = selectedCoupon;
-            document.getElementById("discountAmount").value =
-              discount.toFixed(2);
-          } else {
-            document.getElementById("couponMessage").innerText =
-              "Coupon is not valid!";
-            resetCouponFields();
-          }
-        } catch (error) {
-          console.error("Error validating coupon:", error);
-          resetCouponFields();
+        if (result.success) {
+          document.getElementById("discount").innerText =
+            result.discount.toFixed(2);
+          document.getElementById("totalAmount").innerText =
+            result.newTotal.toFixed(2);
+          document.getElementById("couponMessage").innerText =
+            "Coupon applied successfully!";
+        } else {
+          document.getElementById("discount").innerText = "0.00";
+          document.getElementById("totalAmount").innerText =
+            document.getElementById("subtotal").innerText;
+          document.getElementById("couponMessage").innerText =
+            result.message || "Coupon is not valid!";
         }
-      } else {
-        resetCouponFields();
+      } catch (error) {
+        console.error("Error applying coupon:", error);
+        document.getElementById("couponMessage").innerText =
+          "An error occurred while applying the coupon.";
       }
     });
-
-  function resetCouponFields() {
-    const subtotal = parseFloat(document.getElementById("subtotal").innerText);
-    document.getElementById("discount").innerText = "0.00";
-    document.getElementById("totalAmount").innerText = subtotal.toFixed(2);
-    document.getElementById("couponMessage").innerText = "";
-    document.getElementById("appliedCouponId").value = "";
-    document.getElementById("discountAmount").value = "0";
-  }
 </script>
+<!-- Footer Section Begin -->
+<%-include("../../views/partials/user/footer") %>

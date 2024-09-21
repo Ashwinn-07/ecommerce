@@ -27,7 +27,7 @@
     <p>Your order has been placed successfully. Here are the details:</p>
 
     <h4>Order ID: <%= order._id %></h4>
-    <h4>Total Price: $<%= order.totalPrice.toFixed(2) %></h4>
+    <h4>Total Price: $<%= order.finalAmount.toFixed(2) %></h4>
 
     <h5>Shipping Address:</h5>
     <p><%= order.address.name %></p>

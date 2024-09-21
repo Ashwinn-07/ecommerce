@@ -209,8 +209,9 @@ const loadShopPage = async (req, res) => {
     const page = req.query.page || 1;
     const limit = 6;
     const sort = req.query.sort || "new_arrivals";
-    const filter = req.query.filter;
+    const categoryFilter = req.query.category;
     const stockFilter = req.query.stock;
+    const searchQuery = req.query.search;
 
     let sortOption = {};
     switch (sort) {
@@ -234,11 +235,17 @@ const loadShopPage = async (req, res) => {
     }
 
     const query = { isBlocked: false };
-    if (filter) {
-      query.category = filter;
+    if (categoryFilter) {
+      query.category = categoryFilter;
     }
-    if (stockFilter === "in-stock") {
+    if (stockFilter) {
       query.quantity = { $gt: 0 };
+    }
+    if (searchQuery) {
+      query.$or = [
+        { productName: { $regex: searchQuery, $options: "i" } },
+        { description: { $regex: searchQuery, $options: "i" } },
+      ];
     }
 
     const count = await Product.countDocuments(query);
@@ -246,6 +253,8 @@ const loadShopPage = async (req, res) => {
       .sort(sortOption)
       .limit(limit * 1)
       .skip((page - 1) * limit);
+
+    const categories = await Category.find({ isListed: true });
     res.render("shop", {
       products: products,
       currentPage: page,
@@ -254,8 +263,10 @@ const loadShopPage = async (req, res) => {
       totalPages: Math.ceil(count / limit),
       user: res.locals.user,
       sort,
-      filter,
-      stockFilter: stockFilter,
+      categoryFilter,
+      stockFilter,
+      searchQuery,
+      categories,
     });
   } catch (error) {
     console.error("error displaying products", error);
