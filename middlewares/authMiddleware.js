@@ -1,10 +1,11 @@
 const User = require("../models/userSchema");
 
 const authMiddleware = async (req, res, next) => {
+  console.log("Auth middleware executed");
   res.locals.user = null;
-  if (req.session.user) {
+  if (req.session.userId) {
     try {
-      const user = await User.findById(req.session.user);
+      const user = await User.findById(req.session.userId);
       if (user && !user.isBlocked) {
         res.locals.user = user;
       } else {
@@ -17,6 +18,8 @@ const authMiddleware = async (req, res, next) => {
       console.error("Error in auth middleware:", error);
       return res.redirect("/login");
     }
+  } else if (req.user) {
+    res.locals.user = req.user;
   }
   next();
 };

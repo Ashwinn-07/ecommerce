@@ -7,56 +7,60 @@
     box-sizing: border-box;
     background-color: #f9f9f9;
   }
+
+  .container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+
   .breadcrumb-option {
     background-color: #f3f2ee;
-    padding: 40px 0;
+    padding: 20px 0;
   }
 
   .breadcrumb__text h4 {
     color: #111111;
     font-weight: 700;
     margin-bottom: 8px;
+    font-size: 24px;
   }
 
-  .breadcrumb__links a {
-    font-size: 15px;
+  .breadcrumb__links a,
+  .breadcrumb__links span {
+    font-size: 14px;
     color: #111111;
-    margin-right: 18px;
+    margin-right: 10px;
     display: inline-block;
     position: relative;
   }
 
   .breadcrumb__links span {
-    font-size: 15px;
     color: #b7b7b7;
-    display: inline-block;
   }
 
   .breadcrumb__links a:after {
     position: absolute;
-    right: -12px;
+    right: -8px;
     top: 0;
     content: "/";
     color: #888888;
   }
 
   .account-section {
-    padding: 40px 0;
+    padding: 30px 0;
     background-color: #fff;
-  }
-
-  .container {
-    width: 80%;
-    margin: 0 auto;
   }
 
   .account-wrapper {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
   }
 
   .account-sidebar {
-    width: 25%;
+    width: 100%;
+    margin-bottom: 30px;
   }
 
   .account-sidebar ul {
@@ -68,10 +72,11 @@
 
   .account-sidebar ul li a {
     display: block;
-    padding: 15px 20px;
+    padding: 12px 15px;
     color: #333;
     text-decoration: none;
     border-bottom: 1px solid #ddd;
+    font-size: 14px;
   }
 
   .account-sidebar ul li a:hover {
@@ -84,40 +89,139 @@
   }
 
   .account-content {
-    margin: 20px;
+    width: 100%;
   }
+
+  .account-content h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
   .address-list {
     margin: 20px 0;
   }
+
   .address-item {
     border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+    border-radius: 5px;
   }
+
   .address-actions {
     margin-top: 10px;
   }
-  .address-actions a {
+
+  .address-actions a,
+  .address-actions form {
+    display: inline-block;
     margin-right: 10px;
+    margin-bottom: 5px;
   }
+
   .add-address-btn {
     display: inline-block;
     padding: 10px 20px;
     background-color: #000;
     color: #fff;
     text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
   }
+
   .delete-btn {
     background-color: #f44336;
     color: white;
     border: none;
     padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
   }
+
   .pagination-container {
-    margin-left: 600px;
+    text-align: center;
+    margin-top: 20px;
   }
-  .account-content {
-    margin-right: 500px;
+
+  .pagination-container a,
+  .pagination-container span {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    color: #333;
+    text-decoration: none;
+    border-radius: 3px;
+  }
+
+  .pagination-container .current-page {
+    background-color: #333;
+    color: #fff;
+  }
+
+  @media (min-width: 768px) {
+    .account-wrapper {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+
+    .account-sidebar {
+      width: 30%;
+      margin-bottom: 0;
+    }
+
+    .account-content {
+      width: 65%;
+    }
+
+    .breadcrumb__text h4 {
+      font-size: 28px;
+    }
+
+    .breadcrumb__links a,
+    .breadcrumb__links span {
+      font-size: 15px;
+    }
+
+    .account-content h2 {
+      font-size: 26px;
+    }
+
+    .add-address-btn {
+      font-size: 15px;
+    }
+
+    .delete-btn {
+      font-size: 15px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      width: 80%;
+    }
+
+    .account-sidebar {
+      width: 25%;
+    }
+
+    .account-content {
+      width: 70%;
+    }
+
+    .account-content h2 {
+      font-size: 28px;
+    }
+
+    .add-address-btn {
+      font-size: 16px;
+    }
+
+    .delete-btn {
+      font-size: 16px;
+    }
   }
 </style>
 <section class="breadcrumb-option">

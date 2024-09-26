@@ -1,5 +1,6 @@
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
+const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
 const fs = require("fs");
 const path = require("path");
@@ -8,8 +9,10 @@ const sharp = require("sharp");
 const getProductAddPage = async (req, res) => {
   try {
     const category = await Category.find({ isListed: true });
+    const brand = await Brand.find({ isBlocked: false });
     res.render("product-add", {
       cat: category,
+      brand: brand,
     });
   } catch (error) {
     console.error("an error occured", error);
@@ -46,10 +49,15 @@ const addProducts = async (req, res) => {
       if (!categoryId) {
         return res.status(400).json("Invalid category name");
       }
+      const brandId = await Brand.findOne({ brandName: products.brand });
+      if (!brandId) {
+        return res.status(400).json("Invalid brand name");
+      }
 
       const newProduct = new Product({
         productName: products.productName,
         description: products.description,
+        brand: brandId._id,
         category: categoryId._id,
         regularPrice: products.regularPrice,
         salePrice: products.salePrice,
@@ -84,6 +92,7 @@ const getAllProducts = async (req, res) => {
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .populate("category")
+      .populate("brand")
       .exec();
 
     const count = await Product.find({
@@ -91,13 +100,15 @@ const getAllProducts = async (req, res) => {
     }).countDocuments();
 
     const category = await Category.find({ isListed: true });
+    const brand = await Brand.find({ isBlocked: false });
 
-    if (category) {
+    if (category && brand) {
       res.render("products", {
         data: productData,
         currentPage: page,
         totalPages: Math.ceil(count / limit),
         cat: category,
+        brand: brand,
       });
     } else {
       res.status(400).json("cannot fetch products");
@@ -134,9 +145,11 @@ const getEditProduct = async (req, res) => {
     const id = req.query.id;
     const product = await Product.findOne({ _id: id });
     const category = await Category.find({ isListed: true });
+    const brand = await Brand.find({});
     res.render("edit-product", {
       product: product,
       cat: category,
+      brand: brand,
     });
   } catch (error) {
     console.error("an error occured", error);
@@ -162,10 +175,16 @@ const editProduct = async (req, res) => {
         images.push(req.files[i].filename);
       }
     }
+    const brandId = await Brand.findOne({ brandName: data.brand });
+    if (!brandId) {
+      return res.status(400).json("Invalid brand name");
+    }
+
     const updateFields = {
       productName: data.productName,
       description: data.description,
       category: product.category,
+      brand: brandId._id,
       regularPrice: data.regularPrice,
       salePrice: data.salePrice,
       quantity: data.quantity,

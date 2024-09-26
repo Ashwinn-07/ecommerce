@@ -13,7 +13,7 @@ const productSchema = new mongoose.Schema(
     brand: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Brand",
-      required: false,
+      required: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,

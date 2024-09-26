@@ -53,13 +53,17 @@
               />
               <div id="productName-error" class="error-message"></div>
             </div>
-            <!-- <div class="col-lg-4 mb-4">
+            <div class="col-lg-4 mb-4">
               <label class="form-label">Brand</label>
               <select class="form-select border" name="brand">
-                <option value=""></option>
+                <% for(let i = 0;i < brand.length;i++) {%>
+                <option value="<%= brand[i].brandName  %>">
+                  <%= brand[i].brandName %>
+                </option>
+                <% } %>
               </select>
               <div id="brand-error" class="error-message"></div>
-            </div> -->
+            </div>
             <div class="mb-4">
               <label class="form-label">Full description</label>
               <input
@@ -346,6 +350,7 @@
     clearErrorMessages();
     const name = document.getElementsByName("productName")[0].value;
     const description = document.getElementsByName("descriptionData")[0].value;
+    const brand = document.getElementsByName("brand")[0].value;
     const price = document.getElementsByName("regularPrice")[0].value;
     const saleprice = document.getElementsByName("salePrice")[0].value;
     const color = document.getElementsByName("color")[0].value;
@@ -367,7 +372,7 @@
       isValid = false;
     }
 
-    if (quantity === "" || parseInt(quantity) <= 0) {
+    if (quantity === "" || parseInt(quantity) < 0) {
       displayErrorMessage(
         "quantity-error",
         "Please enter a valid positive quantity."

@@ -7,56 +7,60 @@
     box-sizing: border-box;
     background-color: #f9f9f9;
   }
+
+  .container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+
   .breadcrumb-option {
     background-color: #f3f2ee;
-    padding: 40px 0;
+    padding: 20px 0;
   }
 
   .breadcrumb__text h4 {
     color: #111111;
     font-weight: 700;
     margin-bottom: 8px;
+    font-size: 24px;
   }
 
-  .breadcrumb__links a {
-    font-size: 15px;
+  .breadcrumb__links a,
+  .breadcrumb__links span {
+    font-size: 14px;
     color: #111111;
-    margin-right: 18px;
+    margin-right: 10px;
     display: inline-block;
     position: relative;
   }
 
   .breadcrumb__links span {
-    font-size: 15px;
     color: #b7b7b7;
-    display: inline-block;
   }
 
   .breadcrumb__links a:after {
     position: absolute;
-    right: -12px;
+    right: -8px;
     top: 0;
     content: "/";
     color: #888888;
   }
 
   .account-section {
-    padding: 40px 0;
+    padding: 30px 0;
     background-color: #fff;
-  }
-
-  .container {
-    width: 80%;
-    margin: 0 auto;
   }
 
   .account-wrapper {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
   }
 
   .account-sidebar {
-    width: 25%;
+    width: 100%;
+    margin-bottom: 30px;
   }
 
   .account-sidebar ul {
@@ -68,10 +72,11 @@
 
   .account-sidebar ul li a {
     display: block;
-    padding: 15px 20px;
+    padding: 12px 15px;
     color: #333;
     text-decoration: none;
     border-bottom: 1px solid #ddd;
+    font-size: 14px;
   }
 
   .account-sidebar ul li a:hover {
@@ -84,63 +89,93 @@
   }
 
   .account-content {
-    width: 70%;
+    width: 100%;
   }
 
   .account-content h2 {
-    font-size: 28px;
+    font-size: 24px;
     margin-bottom: 20px;
   }
 
-  .profile-form .form-group {
-    margin-bottom: 15px;
+  .wallet-balance {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
   }
 
-  .profile-form label {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 8px;
-    display: block;
+  .transaction-list {
+    list-style: none;
+    padding: 0;
   }
 
-  .profile-form input {
-    width: 100%;
-    padding: 10px;
-    font-size: 14px;
+  .transaction-item {
     border: 1px solid #ddd;
-    border-radius: 5px;
-    box-sizing: border-box;
+    margin-bottom: 10px;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
   }
 
-  .profile-form button {
-    padding: 10px 15px;
-    background-color: #333;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
-    margin-top: 10px;
+  .transaction-type {
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 5px;
   }
 
-  .profile-form button:hover {
-    background-color: #555;
+  .transaction-amount {
+    font-weight: bold;
   }
+
+  .credit {
+    color: green;
+  }
+
+  .debit {
+    color: red;
+  }
+
   @media (min-width: 768px) {
     .account-wrapper {
-      flex-wrap: nowrap;
+      flex-direction: row;
+      justify-content: space-between;
     }
 
     .account-sidebar {
       width: 30%;
+      margin-bottom: 0;
     }
 
     .account-content {
       width: 65%;
     }
 
-    .account-content h2 {
+    .breadcrumb__text h4 {
       font-size: 28px;
+    }
+
+    .breadcrumb__links a,
+    .breadcrumb__links span {
+      font-size: 15px;
+    }
+
+    .account-content h2 {
+      font-size: 26px;
+    }
+
+    .wallet-balance {
+      font-size: 22px;
+    }
+
+    .transaction-item {
+      font-size: 15px;
+    }
+
+    .transaction-type {
+      width: auto;
+      margin-bottom: 0;
     }
   }
 
@@ -156,34 +191,18 @@
     .account-content {
       width: 70%;
     }
-  }
-  .wallet-balance {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-  .transaction-list {
-    list-style: none;
-    padding: 0;
-  }
-  .transaction-item {
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .transaction-type {
-    font-weight: bold;
-  }
-  .transaction-amount {
-    font-weight: bold;
-  }
-  .credit {
-    color: green;
-  }
-  .debit {
-    color: red;
+
+    .account-content h2 {
+      font-size: 28px;
+    }
+
+    .wallet-balance {
+      font-size: 24px;
+    }
+
+    .transaction-item {
+      font-size: 16px;
+    }
   }
 </style>
 <section class="breadcrumb-option">

@@ -13,6 +13,11 @@
     .content-main {
       margin-left: 300px !important;
     }
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
   </style>
   <body>
     <%- include("../../views/partials/admin/header") %>
@@ -20,6 +25,132 @@
       <div class="content-header">
         <div>
           <h2 class="content-title card-title">Dashboard</h2>
+        </div>
+      </div>
+      <div class="row mb-4">
+        <div class="col-lg-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Total Sales</h5>
+              <h2 class="mt-2 mb-0">$<%= totalSales %></h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Total Orders</h5>
+              <h2 class="mt-2 mb-0"><%= totalOrders %></h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Total Customers</h5>
+              <h2 class="mt-2 mb-0"><%= totalCustomers %></h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Sales Overview</h5>
+          <div class="row g-3 align-items-center mb-3">
+            <div class="col-auto">
+              <select
+                class="form-select"
+                id="chartPeriod"
+                onchange="switchChart()"
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-container">
+            <img
+              id="yearlyChart"
+              src="<%= yearlyChartImage %>"
+              alt="Yearly Sales Chart"
+              style="display: block; max-width: 100%; height: auto"
+            />
+            <img
+              id="monthlyChart"
+              src="<%= monthlyChartImage %>"
+              alt="Monthly Sales Chart"
+              style="display: none; max-width: 100%; height: auto"
+            />
+            <img
+              id="weeklyChart"
+              src="<%= weeklyChartImage %>"
+              alt="Weekly Sales Chart"
+              style="display: none; max-width: 100%; height: auto"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Best Selling Products (Top 10)</h5>
+              <ul class="list-group list-group-flush">
+                <% topProducts.forEach(product => { %>
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <%= product.name %>
+                  <span class="badge bg-primary rounded-pill"
+                    ><%= product.sales %></span
+                  >
+                </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Best Selling Categories (Top 10)</h5>
+              <ul class="list-group list-group-flush">
+                <% topCategories.forEach(category => { %>
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <%= category.name %>
+                  <span class="badge bg-primary rounded-pill"
+                    ><%= category.sales %></span
+                  >
+                </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4"></div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Best Selling Brands (Top 10)</h5>
+              <ul class="list-group list-group-flush">
+                <% topBrands.forEach(brand => { %>
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <%= brand.name %>
+                  <span class="badge bg-primary rounded-pill"
+                    ><%= brand.sales %></span
+                  >
+                </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -108,6 +239,18 @@
         const customDateRange = document.getElementById("customDateRange");
         customDateRange.style.display =
           reportType === "custom" ? "block" : "none";
+      }
+      function switchChart() {
+        const period = document.getElementById("chartPeriod").value;
+
+        document.getElementById("yearlyChart").style.display =
+          period === "yearly" ? "block" : "none";
+
+        document.getElementById("monthlyChart").style.display =
+          period === "monthly" ? "block" : "none";
+
+        document.getElementById("weeklyChart").style.display =
+          period === "weekly" ? "block" : "none";
       }
     </script>
   </body>

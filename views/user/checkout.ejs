@@ -148,6 +148,7 @@
                     value="COD"
                     id="payment"
                     required
+                    <% if (finalAmount > 1000) { %>disabled<% } %>
                   />
                   <span class="checkmark"></span>
                 </label>
@@ -188,11 +189,37 @@
 <!-- Checkout Section End -->
 
 <script>
-  document
-    .getElementById("couponSelect")
-    .addEventListener("change", async function () {
-      const form = document.getElementById("checkoutForm");
-      const formData = new FormData(form);
+  document.addEventListener('DOMContentLoaded', function() {
+    const couponSelect = document.getElementById("couponSelect");
+    const checkoutForm = document.getElementById("checkoutForm");
+    const subtotalElement = document.getElementById("subtotal");
+    const discountElement = document.getElementById("discount");
+    const totalAmountElement = document.getElementById("totalAmount");
+    const couponMessageElement = document.getElementById("couponMessage");
+    const codRadio = document.querySelector('input[value="COD"]');
+    const codLabel = codRadio.parentElement;
+    const codWarning = document.createElement('small');
+    codWarning.classList.add('text-danger');
+    codWarning.textContent = 'COD is not available for orders above Rs 1000';
+
+    function updatePaymentOptions() {
+      const totalAmount = parseFloat(totalAmountElement.textContent);
+      
+      if (totalAmount > 1000) {
+        codRadio.disabled = true;
+        if (!codLabel.contains(codWarning)) {
+          codLabel.appendChild(codWarning);
+        }
+      } else {
+        codRadio.disabled = false;
+        if (codLabel.contains(codWarning)) {
+          codLabel.removeChild(codWarning);
+        }
+      }
+    }
+
+    async function applyCoupon() {
+      const formData = new FormData(checkoutForm);
 
       try {
         const response = await fetch("/apply-coupon", {
@@ -203,25 +230,27 @@
         const result = await response.json();
 
         if (result.success) {
-          document.getElementById("discount").innerText =
-            result.discount.toFixed(2);
-          document.getElementById("totalAmount").innerText =
-            result.newTotal.toFixed(2);
-          document.getElementById("couponMessage").innerText =
-            "Coupon applied successfully!";
+          discountElement.innerText = result.discount.toFixed(2);
+          totalAmountElement.innerText = result.newTotal.toFixed(2);
+          couponMessageElement.innerText = "Coupon applied successfully!";
         } else {
-          document.getElementById("discount").innerText = "0.00";
-          document.getElementById("totalAmount").innerText =
-            document.getElementById("subtotal").innerText;
-          document.getElementById("couponMessage").innerText =
-            result.message || "Coupon is not valid!";
+          discountElement.innerText = "0.00";
+          totalAmountElement.innerText = subtotalElement.innerText;
+          couponMessageElement.innerText = result.message || "Coupon is not valid!";
         }
+
+        updatePaymentOptions();
       } catch (error) {
         console.error("Error applying coupon:", error);
-        document.getElementById("couponMessage").innerText =
-          "An error occurred while applying the coupon.";
+        couponMessageElement.innerText = "An error occurred while applying the coupon.";
       }
-    });
+    }
+
+    couponSelect.addEventListener("change", applyCoupon);
+
+  
+    updatePaymentOptions();
+  });
 </script>
 <!-- Footer Section Begin -->
 <%-include("../../views/partials/user/footer") %>

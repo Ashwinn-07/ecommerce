@@ -1,7 +1,30 @@
 <%-include("../../views/partials/user/header") %>
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+
   .wishlist {
-    padding: 60px 0;
+    padding: 20px 0;
+  }
+
+  .wishlist__table {
+    width: 100%;
+    overflow-x: auto;
   }
 
   .wishlist__table table {
@@ -11,7 +34,7 @@
 
   .wishlist__table th,
   .wishlist__table td {
-    padding: 15px;
+    padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
   }
@@ -19,62 +42,70 @@
   .product__wishlist__item {
     display: flex;
     align-items: center;
-    padding-right: 15px;
+    flex-wrap: wrap;
   }
 
   .product__wishlist__item__pic {
-    margin-right: 20px;
+    width: 80px;
+    margin-right: 15px;
   }
 
   .product__wishlist__item__pic img {
-    width: 100px;
+    width: 100%;
     height: auto;
     border-radius: 5px;
   }
 
   .product__wishlist__item__text {
-    margin-right: 20px;
+    flex: 1;
   }
 
   .product__wishlist__item__text h6 {
     margin: 0;
+    font-size: 16px;
   }
 
   .wishlist__price {
-    margin-right: 20px;
-  }
-
-  .wishlist__price,
-  .wishlist__close {
-    text-align: right;
+    font-weight: bold;
   }
 
   .btn-primary {
-    background-color: black;
+    background-color: #000;
     color: #fff;
     border: none;
-    padding: 10px 20px;
+    padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px;
+    display: inline-block;
     text-align: center;
-    transition: none;
+    text-decoration: none;
   }
+
   .btn-primary:hover,
   .btn-primary:focus {
-    background-color: black;
-    color: #fff;
-    box-shadow: none;
-    outline: none;
+    background-color: #333;
+  }
+
+  .wishlist__close button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
   }
 
   .wishlist__summary {
     background: #f8f8f8;
     padding: 20px;
     border-radius: 5px;
+    margin-top: 20px;
   }
 
   .wishlist__summary h6 {
-    margin-bottom: 20px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
   }
 
   .wishlist__summary ul {
@@ -90,23 +121,91 @@
   }
 
   .primary-btn {
-    background-color: black;
+    background-color: #000;
     color: #fff;
-    padding: 15px 25px;
+    padding: 12px 20px;
     border-radius: 5px;
     text-align: center;
     display: block;
     text-decoration: none;
+    margin-top: 15px;
+    transition: background-color 0.3s;
   }
 
+  .primary-btn:hover {
+    background-color: #333;
+  }
+
+  .continue__btn {
+    margin-top: 20px;
+  }
+
+  .continue__btn a {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #f1f1f1;
+    color: #333;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+
+  .continue__btn a:hover {
+    background-color: #e0e0e0;
+  }
+
+  /* Responsive styles */
   @media (max-width: 768px) {
     .wishlist__table th,
     .wishlist__table td {
-      padding: 10px;
+      padding: 8px;
     }
 
-    .product__wishlist__item__pic img {
-      width: 80px;
+    .product__wishlist__item__pic {
+      width: 60px;
+    }
+
+    .product__wishlist__item__text h6 {
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .wishlist__table table {
+      min-width: 100%;
+    }
+
+    .wishlist__table thead {
+      display: none;
+    }
+
+    .wishlist__table tr {
+      display: block;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+    }
+
+    .wishlist__table td {
+      display: block;
+      text-align: right;
+      padding-left: 50%;
+      position: relative;
+    }
+
+    .wishlist__table td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: bold;
     }
 
     .product__wishlist__item {
@@ -119,17 +218,19 @@
       margin-bottom: 10px;
     }
 
-    .product__wishlist__item__text {
-      margin-right: 0;
-      margin-bottom: 10px;
-    }
-
     .wishlist__price,
     .wishlist__close {
-      margin-right: 0;
+      text-align: left;
     }
 
     .btn-primary {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .continue__btn,
+    .primary-btn {
+      display: block;
       width: 100%;
       text-align: center;
     }
@@ -153,98 +254,89 @@
   </div>
 </section>
 
-<section class="wishlist spad">
+<section class="wishlist">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-8">
-        <div class="wishlist__table">
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (wishlist && wishlist.products && wishlist.products.length >
-              0) { %> <% wishlist.products.forEach(function(item) { %> <% if
-              (item.productId) { %>
-              <tr>
-                <td class="product__wishlist__item">
-                  <div class="product__wishlist__item__pic">
-                    <% if (item.productId.productImage &&
-                    item.productId.productImage.length > 0) { %>
-                    <img
-                      src="/uploads/re-image/<%= item.productId.productImage[0] %>"
-                      alt="<%= item.productId.productName %>"
-                    />
-                    <% } else { %>
-                    <img
-                      src="/path/to/placeholder-image.jpg"
-                      alt="Product image not available"
-                    />
-                    <% } %>
-                  </div>
-                  <div class="product__wishlist__item__text">
-                    <h6><%= item.productId.productName %></h6>
-                  </div>
-                </td>
-                <td class="wishlist__price">
-                  $ <%= item.productId.salePrice %>
-                </td>
-                <td>
-                  <form action="/add-to-cart" method="POST">
-                    <input
-                      type="hidden"
-                      name="productId"
-                      value="<%= item.productId._id %>"
-                    />
-                    <input type="hidden" name="quantity" value="1" />
-                    <button type="submit" class="btn btn-primary">
-                      Add to Cart
-                    </button>
-                  </form>
-                </td>
-                <td class="wishlist__close">
-                  <form
-                    action="/wishlist/remove/<%= item.productId._id %>"
-                    method="POST"
-                  >
-                    <button type="submit"><i class="fa fa-close"></i></button>
-                  </form>
-                </td>
-              </tr>
-              <% } %> <% }); %> <% } else { %>
-              <tr>
-                <td colspan="4">Your wishlist is empty.</td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-        <div class="row">
-          <div class="col-lg-6 col-md-6 col-sm-6">
-            <div class="continue__btn">
-              <a href="/shop">Continue Shopping</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="wishlist__summary">
-          <h6>Wishlist Summary</h6>
-          <ul>
-            <% if (wishlist && wishlist.products) { %>
-            <li>Total Items <span><%= wishlist.products.length %></span></li>
-            <% } %>
-          </ul>
-          <a href="/checkout" class="primary-btn">Proceed to Checkout</a>
-        </div>
-      </div>
+    <div class="wishlist__table">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Action</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (wishlist && wishlist.products && wishlist.products.length > 0)
+          { %> <% wishlist.products.forEach(function(item) { %> <% if
+          (item.productId) { %>
+          <tr>
+            <td data-label="Product">
+              <div class="product__wishlist__item">
+                <div class="product__wishlist__item__pic">
+                  <% if (item.productId.productImage &&
+                  item.productId.productImage.length > 0) { %>
+                  <img
+                    src="/uploads/re-image/<%= item.productId.productImage[0] %>"
+                    alt="<%= item.productId.productName %>"
+                  />
+                  <% } else { %>
+                  <img
+                    src="/path/to/placeholder-image.jpg"
+                    alt="Product image not available"
+                  />
+                  <% } %>
+                </div>
+                <div class="product__wishlist__item__text">
+                  <h6><%= item.productId.productName %></h6>
+                </div>
+              </div>
+            </td>
+            <td data-label="Price" class="wishlist__price">
+              $ <%= item.productId.salePrice %>
+            </td>
+            <td data-label="Action">
+              <form action="/add-to-cart" method="POST">
+                <input
+                  type="hidden"
+                  name="productId"
+                  value="<%= item.productId._id %>"
+                />
+                <input type="hidden" name="quantity" value="1" />
+                <button type="submit" class="btn btn-primary">
+                  Add to Cart
+                </button>
+              </form>
+            </td>
+            <td data-label="Remove" class="wishlist__close">
+              <form
+                action="/wishlist/remove/<%= item.productId._id %>"
+                method="POST"
+              >
+                <button type="submit"><i class="fa fa-close"></i></button>
+              </form>
+            </td>
+          </tr>
+          <% } %> <% }); %> <% } else { %>
+          <tr>
+            <td colspan="4">Your wishlist is empty.</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="continue__btn">
+      <a href="/shop">Continue Shopping</a>
+    </div>
+    <div class="wishlist__summary">
+      <h6>Wishlist Summary</h6>
+      <ul>
+        <% if (wishlist && wishlist.products) { %>
+        <li>Total Items <span><%= wishlist.products.length %></span></li>
+        <% } %>
+      </ul>
+      <a href="/checkout" class="primary-btn">Proceed to Checkout</a>
     </div>
   </div>
 </section>
-
 <%-include("../../views/partials/user/footer") %>

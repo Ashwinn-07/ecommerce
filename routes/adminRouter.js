@@ -6,7 +6,8 @@ const categoryController = require("../controllers/admin/categoryController");
 const productController = require("../controllers/admin/productController");
 const orderlistController = require("../controllers/admin/orderlistController");
 const couponController = require("../controllers/admin/couponController");
-const salesreportController = require("../controllers/admin/salesreportController");
+const brandController = require("../controllers/admin/brandContoller");
+const dashboardController = require("../controllers/admin/dashboardController");
 const { userAuth, adminAuth } = require("../middlewares/auth");
 const multer = require("multer");
 const storage = require("../helpers/multer");
@@ -14,12 +15,23 @@ const uploads = multer({ storage: storage });
 
 router.get("/login", adminController.loadLogin);
 router.post("/login", adminController.login);
-router.get("/", adminAuth, adminController.loadDashboard);
+router.get("/", adminAuth, dashboardController.getDashboardData);
 router.get("/logout", adminController.logout);
 
 router.get("/users", adminAuth, customerController.customerInfo);
 router.get("/blockCustomer", adminAuth, customerController.customerBlocked);
 router.get("/unblockCustomer", adminAuth, customerController.customerUnblocked);
+
+router.get("/brands", adminAuth, brandController.getBrandPage);
+router.post(
+  "/addBrand",
+  adminAuth,
+  uploads.single("image"),
+  brandController.addBrand
+);
+router.get("/blockBrand", adminAuth, brandController.blockBrand);
+router.get("/unBlockBrand", adminAuth, brandController.unBlockBrand);
+router.get("/deleteBrand", adminAuth, brandController.deleteBrand);
 
 router.get("/category", adminAuth, categoryController.categoryInfo);
 router.post("/addCategory", adminAuth, categoryController.addCategory);
@@ -86,9 +98,7 @@ router.post(
 router.get("/editCoupon", adminAuth, couponController.getEditCouponPage);
 router.post("/updateCoupon", adminAuth, couponController.updatedCoupon);
 
-router.post(
-  "/generate-sales-report",
-  salesreportController.generateSalesReport
-);
-router.get("/download-report", salesreportController.downloadReport);
+router.post("/generate-sales-report", dashboardController.generateSalesReport);
+router.get("/download-report", dashboardController.downloadReport);
+
 module.exports = router;

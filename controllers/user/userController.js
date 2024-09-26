@@ -14,7 +14,8 @@ const loadHomepage = async (req, res) => {
     if (userId) {
       user = await User.findById(userId);
     }
-    res.render("home", { user });
+    const products = await Product.find().limit(8);
+    res.render("home", { user, products });
   } catch (error) {
     console.log("homepage not found");
     res.status(500).send("server error");

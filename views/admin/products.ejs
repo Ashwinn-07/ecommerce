@@ -21,7 +21,7 @@
 <header class="card-header text-center mb-20">
     <form action="" method="get" class="d-inline">
         <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px;">
-            <input type="text" class="form-control border-0 rounded-pill" placeholder="Search products or brands" name="search">
+            <input type="text" class="form-control border-0 rounded-pill" placeholder="Search products" name="search">
             <button class="btn  border-0" type="submit">Search</button>
         </div>
     </form>
@@ -46,7 +46,7 @@
             
             <tr>
                 <td><%= data[i].productName %></td>
-                <td></td>
+                <td><%= data[i].brand.brandName  %></td>
                 <td><%= data[i].category.name %></td>
                 <td><%=data[i].salePrice  %></td>
                 <td>

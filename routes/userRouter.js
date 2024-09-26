@@ -8,6 +8,7 @@ const checkoutController = require("../controllers/user/checkoutController");
 const orderController = require("../controllers/user/orderController");
 const wishlistController = require("../controllers/user/wishlistController");
 const walletController = require("../controllers/user/walletController");
+const { userAuth, adminAuth } = require("../middlewares/auth");
 const passport = require("passport");
 
 router.use((req, res, next) => {
@@ -32,6 +33,9 @@ router.get(
   "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/signup" }),
   (req, res) => {
+    console.log("User logged in");
+    req.session.userId = req.user._id;
+    res.locals.user = req.user;
     res.redirect("/");
   }
 );
@@ -49,7 +53,7 @@ router.get("/reset-password", profileController.getResetPassPage);
 router.post("/reset-password", profileController.postNewPassword);
 router.post("/resend-forgot-otp", profileController.resendOtp);
 
-router.get("/profile", profileController.getProfile);
+router.get("/profile", userAuth, profileController.getProfile);
 router.post("/profile/edit", profileController.editProfile);
 
 router.get("/cart", cartController.getCart);

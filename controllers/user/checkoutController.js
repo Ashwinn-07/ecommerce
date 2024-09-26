@@ -102,10 +102,22 @@ const initiatePayPalPayment = async (req, res) => {
 
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
 
-    const { appliedCouponId, discount } = req.body;
-    if (appliedCouponId && discount) {
-      totalPrice -= parseFloat(discount);
+    const appliedCouponId = req.session.appliedCouponId;
+    const discount = 0;
+    let couponApplied = false;
+    if (appliedCouponId) {
+      const coupon = await Coupon.findById(appliedCouponId);
+      if (
+        coupon &&
+        coupon.isList &&
+        new Date() <= coupon.expireOn &&
+        totalPrice >= coupon.minimumPrice
+      ) {
+        discount = coupon.offerPrice;
+        couponApplied = true;
+      }
     }
+    const finalAmount = totalPrice - discount;
 
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
@@ -134,9 +146,9 @@ const initiatePayPalPayment = async (req, res) => {
       userId,
       cartItems: cart.items,
       totalPrice,
-      finalAmount: totalPrice,
+      finalAmount,
       selectedAddress: req.body.selectedAddress,
-      couponApplied: !!appliedCouponId,
+      couponApplied: appliedCouponId ? true : false,
       appliedCouponId,
       discount,
     };
@@ -177,8 +189,10 @@ const paypalSuccess = async (req, res) => {
         cartItems,
         totalPrice,
         finalAmount,
+        discount,
         selectedAddress,
         couponApplied,
+        appliedCouponId,
       } = checkoutDetails;
 
       const orderData = {
@@ -190,10 +204,12 @@ const paypalSuccess = async (req, res) => {
         })),
         totalPrice: totalPrice,
         finalAmount: finalAmount,
+        discount: discount,
         address: selectedAddress,
         status: "Pending",
         paymentMethod: "PayPal",
         couponApplied: couponApplied,
+        appliedCouponId: appliedCouponId,
       };
 
       const order = new Order(orderData);
@@ -232,6 +248,31 @@ const checkout = async (req, res) => {
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
+
+    let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
+    let discount = 0;
+    let couponApplied = false;
+
+    if (couponSelect) {
+      const coupon = await Coupon.findById(couponSelect);
+      if (
+        coupon &&
+        coupon.isList &&
+        new Date() <= coupon.expireOn &&
+        totalPrice >= coupon.minimumPrice
+      ) {
+        discount = coupon.offerPrice;
+        couponApplied = true;
+        console.log("Applied discount: ", discount);
+      }
+    }
+    const finalAmount = totalPrice - discount;
+    if (paymentMethod === "COD" && finalAmount > 1000) {
+      return res
+        .status(400)
+        .json({ message: "COD is not available for orders above Rs 1000" });
+    }
+
     if (!paymentMethod) {
       return res.status(400).json({ message: "payment method is required" });
     }
@@ -265,25 +306,6 @@ const checkout = async (req, res) => {
     } else {
       return res.status(400).json({ message: "Address is required" });
     }
-
-    let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
-    let discount = 0;
-    let couponApplied = false;
-
-    if (couponSelect) {
-      const coupon = await Coupon.findById(couponSelect);
-      if (
-        coupon &&
-        coupon.isList &&
-        new Date() <= coupon.expireOn &&
-        totalPrice >= coupon.minimumPrice
-      ) {
-        discount = coupon.offerPrice;
-        couponApplied = true;
-        console.log("Applied discount: ", discount);
-      }
-    }
-    const finalAmount = totalPrice - discount;
 
     if (paymentMethod === "COD") {
       const orderData = {

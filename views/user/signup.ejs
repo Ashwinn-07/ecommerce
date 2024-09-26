@@ -10,32 +10,32 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
-    <link rel="stylesheet" href="styles.css" />
     <style>
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        background-color: #f7f7f7;
-      }
       body,
       html {
         margin: 0;
         padding: 0;
         height: 100%;
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
       }
       .outer-wrappers {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
+        padding: 20px;
       }
-
       .container {
         display: flex;
-        align-items: stretch;
+        flex-direction: column;
+        max-width: 1000px;
+        width: 100%;
+        background-color: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
-
       .image-section {
         background-color: #f0f0f0;
         padding: 2rem;
@@ -43,18 +43,15 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 50%;
       }
-
       .image-section h1 {
         font-size: 2rem;
         margin-bottom: 2rem;
       }
-
       .image-section img {
         width: 100%;
-        height: auto;
         max-width: 300px;
+        height: auto;
         margin: 0 auto;
       }
       .logo img {
@@ -63,20 +60,13 @@
         display: block;
         margin: 20px auto;
       }
-
       .form-section {
-        background-color: #ffffff;
         padding: 2rem;
-        border-radius: 10px;
-        width: 400px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
-
       .form-section h2 {
         font-size: 1.5rem;
         margin-bottom: 1rem;
       }
-
       .google-signup {
         display: flex;
         align-items: center;
@@ -89,7 +79,6 @@
         cursor: pointer;
         width: 100%;
       }
-
       .google-signup img {
         width: 20px;
         margin-right: 10px;
@@ -97,13 +86,11 @@
       .form-group {
         margin-bottom: 15px;
       }
-
       .form-section p {
         text-align: center;
         color: #888;
         margin: 1rem 0;
       }
-
       form input {
         width: 100%;
         padding: 10px;
@@ -111,7 +98,6 @@
         border-radius: 5px;
         border: 1px solid #ddd;
       }
-
       form button {
         width: 100%;
         padding: 10px;
@@ -120,17 +106,14 @@
         border-radius: 5px;
         cursor: pointer;
       }
-
       form button:hover {
         background-color: #ddd;
       }
-
       .form-section a {
         color: #000;
         text-decoration: none;
         font-weight: bold;
       }
-
       .form-section a:hover {
         text-decoration: underline;
       }
@@ -138,6 +121,15 @@
         color: #dc143c;
         font-size: 0.75rem;
         display: none;
+      }
+      @media (min-width: 768px) {
+        .container {
+          flex-direction: row;
+        }
+        .image-section,
+        .form-section {
+          width: 50%;
+        }
       }
     </style>
   </head>
@@ -148,7 +140,6 @@
           <div class="logo">
             <img src="/img/logo.png" alt="male fashion logo" />
           </div>
-
           <img src="/img/banner/banner-1.jpg" alt="Fashion Image" />
         </div>
         <div class="form-section">
@@ -168,7 +159,6 @@
               />
               <div id="error1" class="error-message"></div>
             </div>
-
             <div class="form-group">
               <input
                 type="email"
@@ -178,7 +168,6 @@
               />
               <div id="error2" class="error-message"></div>
             </div>
-
             <div class="form-group">
               <input
                 type="password"
@@ -188,7 +177,6 @@
               />
               <div id="error3" class="error-message"></div>
             </div>
-
             <div class="form-group">
               <input
                 type="password"
@@ -201,7 +189,6 @@
             <% if(locals.message && message.length>0){ %>
             <div class="alert alert-danger text-center"><%= message %></div>
             <% } %>
-
             <button type="submit">Create Account</button>
           </form>
           <p>Already have an Account? <a href="/login">Log in</a></p>
