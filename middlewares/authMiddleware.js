@@ -1,7 +1,6 @@
 const User = require("../models/userSchema");
 
 const authMiddleware = async (req, res, next) => {
-  console.log("Auth middleware executed");
   res.locals.user = null;
   if (req.session.userId) {
     try {

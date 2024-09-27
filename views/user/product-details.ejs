@@ -36,6 +36,77 @@
     border-radius: 5px;
     text-align: center;
   }
+
+  #tabs-6 {
+    padding: 20px;
+  }
+
+  .product__details__tab__content__item {
+    border: 1px solid #eee;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+  }
+
+  .product__details__tab__content__item h5 {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .product__details__tab__content__item .rating {
+    color: #fcb900;
+    margin-bottom: 10px;
+  }
+
+  .product__details__tab__content__item p {
+    margin-bottom: 10px;
+  }
+
+  .product__details__tab__content__item small {
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+
+  .review-form {
+    margin-top: 30px;
+  }
+
+  .review-form .form-group {
+    margin-bottom: 15px;
+  }
+
+  .review-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .review-form select,
+  .review-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    resize: vertical;
+  }
+
+  .review-form textarea {
+    min-height: 120px;
+  }
+
+  .review-form button[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .review-form button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
 </style>
 
 <!-- Shop Details Section Begin -->
@@ -111,9 +182,11 @@
             <h4><%= product.productName %></h4>
             <div class="rating">
               <% for (let i = 0; i < 5; i++) { %>
-              <i class="fa <%= i < 4 ? 'fa-star' : 'fa-star-o' %>"></i>
+              <i
+                class="fa <%= i < Math.round(product.averageRating) ? 'fa-star' : 'fa-star-o' %>"
+              ></i>
               <% } %>
-              <span> - 5 Reviews</span>
+              <span> - <%= product.reviews.length %> Reviews</span>
             </div>
             <h3>
               <%= product.salePrice %>
@@ -122,26 +195,7 @@
             <% if (product.quantity === 0) { %> Out of Stock <% } else{%> In
             Stock:<%= product.quantity %> <% } %>
             <p><%= product.description %></p>
-            <!-- <div class="product__details__option">
-              <div class="product__details__option__color">
-                <span>Color:</span>
-                <label class="c-1" for="sp-1">
-                  <input type="radio" id="sp-1" />
-                </label>
-                <label class="c-2" for="sp-2">
-                  <input type="radio" id="sp-2" />
-                </label>
-                <label class="c-3" for="sp-3">
-                  <input type="radio" id="sp-3" />
-                </label>
-                <label class="c-4" for="sp-4">
-                  <input type="radio" id="sp-4" />
-                </label>
-                <label class="c-9" for="sp-9">
-                  <input type="radio" id="sp-9" />
-                </label>
-              </div>
-            </div> -->
+
             <form id="add-to-cart-form" action="/add-to-cart" method="POST">
               <input
                 type="hidden"
@@ -199,13 +253,12 @@
                   data-toggle="tab"
                   href="#tabs-5"
                   role="tab"
+                  >Description</a
                 >
-                  Description
-                </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#tabs-6" role="tab">
-                  Customer Reviews(5)
+                  Customer Reviews(<%= product.reviews.length %>)
                 </a>
               </li>
             </ul>
@@ -217,41 +270,60 @@
               </div>
               <div class="tab-pane" id="tabs-6" role="tabpanel">
                 <div class="product__details__tab__content">
+                  <% if (product.reviews.length > 0) { %> <%
+                  product.reviews.forEach(review => { %>
                   <div class="product__details__tab__content__item">
-                    <h5>Products Information</h5>
-                    <p>
-                      A Pocket PC is a handheld computer, which features many of
-                      the same capabilities as a modern PC. These handy little
-                      devices allow individuals to retrieve and store e-mail
-                      messages, create a contact file, coordinate appointments,
-                      surf the internet, exchange text messages and more. Every
-                      product that is labeled as a Pocket PC must be accompanied
-                      with specific software to operate the unit and must
-                      feature a touchscreen and touchpad.
-                    </p>
-                    <p>
-                      As is the case with any new technology product, the cost
-                      of a Pocket PC was substantial during its early release.
-                      For approximately $700.00, consumers could purchase one of
-                      top-of-the-line Pocket PCs in 2003. These days, customers
-                      are finding that prices have become much more reasonable
-                      now that the newness is wearing off. For approximately
-                      $350.00, a new Pocket PC can now be purchased.
-                    </p>
+                    <h5><%= review.user.username %></h5>
+                    <div class="rating">
+                      <% for (let i = 0; i < 5; i++) { %>
+                      <i
+                        class="fa <%= i < review.rating ? 'fa-star' : 'fa-star-o' %>"
+                      ></i>
+                      <% } %>
+                    </div>
+                    <p><%= review.comment %></p>
+                    <small
+                      ><%= new Date(review.createdAt).toLocaleDateString()
+                      %></small
+                    >
                   </div>
-                  <div class="product__details__tab__content__item">
-                    <h5>Material used</h5>
-                    <p>
-                      Polyester is deemed lower quality due to its non-natural
-                      qualities. Made from synthetic materials, not natural like
-                      wool. Polyester suits become creased easily and are known
-                      for not being breathable. Polyester suits tend to have a
-                      shine to them compared to wool and cotton suits, this can
-                      make the suit look cheap. The texture of velvet is
-                      luxurious and breathable. Velvet is a great choice for
-                      dinner party jackets and can be worn all year round.
-                    </p>
-                  </div>
+                  <% }); %> <% } else { %>
+                  <p>No reviews yet. Be the first to review this product!</p>
+                  <% } %>
+
+                  <form
+                    action="/product/review"
+                    method="POST"
+                    class="review-form"
+                  >
+                    <input
+                      type="hidden"
+                      name="productId"
+                      value="<%= product._id %>"
+                    />
+                    <div class="form-group">
+                      <label for="rating">Rating:</label>
+                      <select name="rating" id="rating" required>
+                        <option value="5">5 stars</option>
+                        <option value="4">4 stars</option>
+                        <option value="3">3 stars</option>
+                        <option value="2">2 stars</option>
+                        <option value="1">1 star</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="comment">Your Review:</label>
+                      <textarea
+                        name="comment"
+                        id="comment"
+                        rows="4"
+                        required
+                      ></textarea>
+                    </div>
+                    <button type="submit" class="site-btn">
+                      Submit Review
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>

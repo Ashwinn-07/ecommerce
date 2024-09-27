@@ -177,6 +177,62 @@ const editProfile = async (req, res) => {
   }
 };
 
+const getChangePassword = async (req, res) => {
+  try {
+    res.render("change-password");
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const userId = req.session.user;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.render("change-password", {
+        errorMessage: "All fields are required.",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.render("change-password", {
+        errorMessage: "New password must be atleast 8 characters long",
+      });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.render("change-password", {
+        errorMessage: "Passwords do not match",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.render("change-password", { errorMessage: "User not found" });
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.render("change-password", {
+        errorMessage: "Incorrect current password",
+      });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.render("change-password", {
+      successMessage: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getForgotPassPage,
   forgotEmailValid,
@@ -186,4 +242,6 @@ module.exports = {
   postNewPassword,
   getProfile,
   editProfile,
+  getChangePassword,
+  changePassword,
 };

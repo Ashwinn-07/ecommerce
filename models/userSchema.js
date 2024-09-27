@@ -29,28 +29,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  cart: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Cart",
-    },
-  ],
-  wallet: {
-    type: Number,
-    default: 0,
-  },
-  wishlist: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Wishlist",
-    },
-  ],
-  orderHistory: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
-    },
-  ],
+
   createdOn: {
     type: Date,
     default: Date.now,
@@ -65,21 +44,6 @@ const userSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    },
-  ],
-  searchHistory: [
-    {
-      category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-      },
-      brand: {
-        type: String,
-      },
-      searchOn: {
-        type: Date,
-        default: Date.now,
-      },
     },
   ],
 });

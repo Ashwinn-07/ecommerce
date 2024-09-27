@@ -60,6 +60,7 @@ const orderSchema = new mongoose.Schema({
       "Cancelled",
       "Return Request",
       "Returned",
+      "Payment Pending",
     ],
   },
   paymentMethod: {

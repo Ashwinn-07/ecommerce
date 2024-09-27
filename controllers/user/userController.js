@@ -1,6 +1,7 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
+const Review = require("../../models/reviewSchema");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
@@ -282,12 +283,21 @@ const loadProductDetails = async (req, res) => {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid product ID" });
     }
-    const product = await Product.findById(id).populate("category");
+    const product = await Product.findById(id)
+      .populate("category")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "user",
+          select: "username",
+        },
+      });
 
     const limit = 4;
     const relatedProducts = await Product.find({
       category: product.category._id,
       isBlocked: false,
+      _id: { $ne: product._id },
     })
       .limit(limit)
       .populate("category");
@@ -304,6 +314,41 @@ const loadProductDetails = async (req, res) => {
     res.status(500).json({ message: "internal server error" });
   }
 };
+const addReview = async (req, res) => {
+  try {
+    const { productId, rating, comment } = req.body;
+    const userId = req.session.user;
+
+    const newReview = await Review.create({
+      user: userId,
+      product: productId,
+      rating: rating,
+      comment: comment,
+    });
+
+    await Product.findByIdAndUpdate(productId, {
+      $push: { reviews: newReview._id },
+      $inc: { reviewCount: 1 },
+    });
+
+    const updatedProduct = await Product.findById(productId).populate(
+      "reviews"
+    );
+
+    const totalRating = updatedProduct.reviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    updatedProduct.averageRating = totalRating / updatedProduct.reviews.length;
+
+    await updatedProduct.save();
+
+    res.redirect(`/product/${productId}`);
+  } catch (error) {
+    console.error("Error adding review", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
   loadHomepage,
@@ -316,4 +361,5 @@ module.exports = {
   logout,
   loadShopPage,
   loadProductDetails,
+  addReview,
 };

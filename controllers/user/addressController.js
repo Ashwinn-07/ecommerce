@@ -7,6 +7,16 @@ const getAddress = async (req, res) => {
     const userId = req.session.user;
     const userAddress = await Address.findOne({ userId });
 
+    if (!userAddress) {
+      return res.render("addresses", {
+        userId,
+        addresses: [],
+        currentPage: 1,
+        totalPages: 0,
+        totalAddresses: 0,
+      });
+    }
+
     const totalAddresses = userAddress.address.length;
     const totalPages = Math.ceil(totalAddresses / limit);
     const startIndex = (page - 1) * limit;
