@@ -36,11 +36,13 @@ const userSchema = new mongoose.Schema({
   },
   referralCode: {
     type: String,
+    unique: true,
   },
-  redeemed: {
-    type: Boolean,
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
-  redeemedUsers: [
+  referredUsers: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

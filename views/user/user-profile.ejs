@@ -267,6 +267,23 @@
             />
             <div class="error-message" id="phoneError"></div>
           </div>
+          <div class="form-group">
+            <label for="referralCode">Your Referral Code</label>
+            <input
+              type="text"
+              id="referralCode"
+              value="<%= user.referralCode %>"
+              readonly
+            />
+            <button type="button" id="copyReferralCode">Copy</button>
+          </div>
+          <div class="form-group">
+            <label>Referred Users</label>
+            <p>
+              <%= user.referredUsers.length %> user(s) have used your referral
+              code
+            </p>
+          </div>
 
           <div class="form-group">
             <button type="submit" class="btn btn-primary">Save</button>
@@ -339,5 +356,13 @@
         event.preventDefault();
       }
     });
+  });
+  const copyReferralCodeBtn = document.getElementById("copyReferralCode");
+  const referralCodeInput = document.getElementById("referralCode");
+
+  copyReferralCodeBtn.addEventListener("click", function () {
+    referralCodeInput.select();
+    document.execCommand("copy");
+    alert("Referral code copied to clipboard!");
   });
 </script>

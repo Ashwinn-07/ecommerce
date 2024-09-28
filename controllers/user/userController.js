@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
+const crypto = require("crypto");
 dotenv.config();
 
 const loadHomepage = async (req, res) => {
@@ -63,7 +64,7 @@ async function sendVerificationEmail(email, otp) {
 
 const signup = async (req, res) => {
   try {
-    const { name, email, password, cPassword } = req.body;
+    const { name, email, password, cPassword, referralCode } = req.body;
 
     if (password !== cPassword) {
       return res.render("signup", { message: "Passwords do not match" });
@@ -82,8 +83,16 @@ const signup = async (req, res) => {
       return res.json("email-error");
     }
 
+    const newReferralCode = crypto.randomBytes(4).toString("hex");
+
     req.session.userOtp = otp;
-    req.session.userData = { name, email, password };
+    req.session.userData = {
+      name,
+      email,
+      password,
+      referralCode,
+      newReferralCode,
+    };
 
     res.render("verify-otp");
     console.log("otp sent", otp);
@@ -109,16 +118,33 @@ const verifyOtp = async (req, res) => {
     const { otp } = req.body;
     console.log(otp);
     if (otp === req.session.userOtp) {
-      const user = req.session.userData;
-      const passwordHash = await securePassword(user.password);
+      const userData = req.session.userData;
+      const passwordHash = await securePassword(userData.password);
+
+      let referredBy;
+      if (userData.referralCode) {
+        const referringUser = await User.findOne({
+          referralCode: userData.referralCode,
+        });
+        if (referringUser) {
+          referredBy = referringUser._id;
+        }
+      }
 
       const saveUserData = new User({
-        name: user.name,
-        email: user.email,
+        name: userData.name,
+        email: userData.email,
         password: passwordHash,
+        referralCode: userData.newReferralCode,
+        referredBy: referredBy,
       });
 
       await saveUserData.save();
+      if (referredBy) {
+        await User.findByIdAndUpdate(referredBy, {
+          $push: { referredUsers: saveUserData._id },
+        });
+      }
       req.session.user = saveUserData._id;
       res.json({ success: true, redirectUrl: "/" });
     } else {

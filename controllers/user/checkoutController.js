@@ -39,6 +39,7 @@ const getCheckoutPage = async (req, res) => {
       isList: true,
       expireOn: { $gte: new Date() },
       minimumPrice: { $lte: total },
+      usedBy: { $ne: userId },
     });
 
     res.render("checkout", {
@@ -73,6 +74,17 @@ const applyCoupon = async (req, res) => {
     }
 
     const coupon = await Coupon.findById(couponSelect);
+    if (!coupon) {
+      return res.json({ success: false, message: "Coupon not found" });
+    }
+
+    if (coupon.usedBy.includes(userId)) {
+      return res.json({
+        success: false,
+        message: "You have already used this coupon",
+        error: "coupon_already_used",
+      });
+    }
     if (
       coupon &&
       coupon.isList &&
@@ -83,6 +95,11 @@ const applyCoupon = async (req, res) => {
       const newTotal = subtotal - discount;
       req.session.appliedCouponId = coupon._id;
       return res.json({ success: true, discount, newTotal });
+    } else if (coupon.usedBy.includes(userId)) {
+      return res.json({
+        success: false,
+        message: "You have already used this coupon",
+      });
     } else {
       return res.json({ success: false, message: "Coupon is not valid" });
     }
@@ -238,6 +255,11 @@ const paypalSuccess = async (req, res) => {
         order = new Order(orderData);
         await order.save();
       }
+      if (couponApplied && appliedCouponId) {
+        await Coupon.findByIdAndUpdate(appliedCouponId, {
+          $addToSet: { usedBy: userId },
+        });
+      }
 
       for (const item of cartItems) {
         await Product.findByIdAndUpdate(item.productId, {
@@ -283,7 +305,8 @@ const checkout = async (req, res) => {
         coupon &&
         coupon.isList &&
         new Date() <= coupon.expireOn &&
-        totalPrice >= coupon.minimumPrice
+        totalPrice >= coupon.minimumPrice &&
+        !coupon.usedBy.includes(userId)
       ) {
         discount = coupon.offerPrice;
         couponApplied = true;
@@ -350,6 +373,11 @@ const checkout = async (req, res) => {
 
       const order = new Order(orderData);
       const savedOrder = await order.save();
+      if (couponApplied) {
+        await Coupon.findByIdAndUpdate(couponSelect, {
+          $addToSet: { usedBy: userId },
+        });
+      }
 
       for (const item of cart.items) {
         await Product.findByIdAndUpdate(item.productId, {

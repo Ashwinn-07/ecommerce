@@ -69,6 +69,53 @@
         position: relative;
         z-index: 500;
       }
+
+      /* New responsive styles */
+      .mobile-menu-btn {
+        display: none;
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-menu-btn {
+          display: block;
+        }
+
+        .header__menu {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background-color: white;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header__menu.active {
+          display: block;
+        }
+
+        .header__menu ul {
+          flex-direction: column;
+          padding: 0;
+        }
+
+        .header__menu ul li {
+          width: 100%;
+          text-align: center;
+        }
+
+        .header__menu ul li a {
+          padding: 15px;
+          display: block;
+        }
+
+        .header__nav__option {
+          justify-content: flex-end;
+          padding-right: 50px;
+        }
+      }
     </style>
   </head>
 
@@ -112,35 +159,8 @@
 
     <!-- Header Section Begin -->
     <header class="header">
-      <!-- <div class="header__top">
-        <div class="container">
-          <div class="row">
-            <div class="col-lg-6 col-md-7">
-              <div class="header__top__left">
-                <p>Free shipping, 30-day return or refund guarantee.</p>
-              </div>
-            </div>
-            <div class="col-lg-6 col-md-5">
-              <div class="header__top__right">
-                <div class="header__top__links">
-                  <a href="#">Sign in</a>
-                  <a href="#">FAQs</a>
-                </div>
-                <div class="header__top__hover">
-                  <span>Usd <i class="arrow_carrot-down"></i></span>
-                  <ul>
-                    <li>USD</li>
-                    <li>EUR</li>
-                    <li>USD</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> -->
       <div class="container">
-        <div class="row">
+        <div class="row align-items-center">
           <div class="col-lg-3 col-md-3">
             <div class="header__logo">
               <a href="/"><img src="/img/logo.png" alt="" /></a>
@@ -151,25 +171,12 @@
               <ul>
                 <li class="active"><a href="/">Home</a></li>
                 <li><a href="/shop">Shop</a></li>
-                <!-- <li>
-                  <a href="#">Pages</a>
-                  <ul class="dropdown">
-                    <li><a href="./about.html">About Us</a></li>
-                    <li><a href="./shop-details.html">Shop Details</a></li>
-                    <li><a href="./shopping-cart.html">Shopping Cart</a></li>
-                    <li><a href="./checkout.html">Check Out</a></li>
-                    <li><a href="./blog-details.html">Blog Details</a></li>
-                  </ul>
-                </li> -->
-                <!-- <li><a href="./blog.html">Blog</a></li>
-                <li><a href="./contact.html">Contacts</a></li> -->
               </ul>
             </nav>
           </div>
           <div class="col-lg-3 col-md-3">
             <div class="header__nav__option">
               <% if(locals.user){ %>
-
               <div class="dropdown">
                 <a href="#" class="sign-in-link"><%= locals.user.name %></a>
                 <div class="dropdown-content">
@@ -177,19 +184,28 @@
                   <a href="/logout">Logout</a>
                 </div>
               </div>
-              <% }else{ %>
+              <% } else { %>
               <a href="/signup" class="sign-in-link">Sign Up</a>
               <a href="/login" class="sign-in-link">Log in</a>
               <% } %>
-
               <a href="/wishlist"><img src="/img/icon/heart.png" alt="" /></a>
               <a href="/cart"><img src="/img/icon/cart.png" alt="" /></a>
-              <div class="price"></div>
             </div>
           </div>
         </div>
-        <div class="canvas__open"><i class="fa fa-bars"></i></div>
+        <div class="mobile-menu-btn"><i class="fa fa-bars"></i></div>
       </div>
     </header>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+        const mobileMenu = document.querySelector(".header__menu");
+
+        mobileMenuBtn.addEventListener("click", function () {
+          mobileMenu.classList.toggle("active");
+        });
+      });
+    </script>
   </body>
 </html>
