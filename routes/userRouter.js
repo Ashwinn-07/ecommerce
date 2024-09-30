@@ -35,7 +35,7 @@ router.get(
   passport.authenticate("google", { failureRedirect: "/signup" }),
   (req, res) => {
     console.log("User logged in");
-    req.session.userId = req.user._id;
+    req.session.user = req.user._id;
     res.locals.user = req.user;
     res.redirect("/");
   }
