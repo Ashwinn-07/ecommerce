@@ -1,10 +1,74 @@
 <%- include("../../views/partials/admin/header") %>
 <style>
-  .content-main {
-    margin-left: 300px;
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
   }
+
+  .content-main {
+    margin-left: 0;
+    padding: 20px;
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  .card {
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .form-label {
+    margin-bottom: 8px;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
   .pagination-container {
     text-align: center;
+    margin-top: 20px;
   }
 
   .pagination {
@@ -24,8 +88,95 @@
   .pagination a:hover {
     background-color: #f5f5f5;
   }
-  .error-message {
-    color: red;
+
+  .brand-image-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+
+  .brand-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  @media (min-width: 768px) {
+    .content-main {
+      margin-left: 250px;
+    }
+
+    .col-md-3 {
+      width: 25%;
+      float: left;
+    }
+
+    .col-md-7 {
+      width: 58.33333333%;
+      float: left;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .content-main {
+      margin-left: 300px;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .content-header {
+      text-align: center;
+    }
+
+    .col-md-3,
+    .col-md-7 {
+      width: 100%;
+      padding: 0 15px;
+    }
+
+    .table-responsive {
+      border: 0;
+    }
+
+    .table th,
+    .table td {
+      display: block;
+      width: 100%;
+      text-align: right;
+      padding-left: 50%;
+      position: relative;
+    }
+
+    .table th:before,
+    .table td:before {
+      content: attr(data-label);
+      position: absolute;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .brand-image-container {
+      margin: 0;
+    }
   }
 </style>
 <section class="content-main">
@@ -69,10 +220,10 @@
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Brand</th>
-                  <th>Logo</th>
-                  <th>Status</th>
-                  <th>Block/Unblock/Delete</th>
+                  <th data-label="Brand">Brand</th>
+                  <th data-label="Logo">Logo</th>
+                  <th data-label="Status">Status</th>
+                  <th data-label="Actions">Block/Unblock/Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,7 +264,7 @@
                     >
                     <% } %>
                   </td>
-                  <td class="text-start">
+                  <td class="text-start" data-label="Actions">
                     <% if(brand.isBlocked === false) {%>
                     <button class="btn btn-danger" style="width: 90px">
                       <a

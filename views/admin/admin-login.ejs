@@ -18,22 +18,28 @@
         font-family: Arial, sans-serif;
         background-color: #f7f7f7;
       }
+
       body,
       html {
         margin: 0;
         padding: 0;
         height: 100%;
       }
+
       .outer-wrappers {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
+        padding: 20px;
       }
 
       .container {
         display: flex;
-        align-items: stretch;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 1200px;
       }
 
       .image-section {
@@ -43,65 +49,47 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 50%;
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 2rem;
       }
 
       .image-section h1 {
-        font-size: 2rem;
-        margin-bottom: 2rem;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
       }
 
       .image-section img {
         width: 100%;
         height: auto;
-        max-width: 300px;
+        max-width: 250px;
         margin: 0 auto;
       }
+
       .logo img {
-        width: 150px;
+        width: 120px;
         height: auto;
         display: block;
-        margin: 20px auto;
+        margin: 0 auto 20px;
       }
 
       .form-section {
         background-color: #ffffff;
         padding: 2rem;
         border-radius: 10px;
-        width: 400px;
+        width: 100%;
+        max-width: 400px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
 
       .form-section h2 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         margin-bottom: 1rem;
+        text-align: center;
       }
 
-      .google-signup {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #ddd;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 1rem;
-        cursor: pointer;
-        width: 100%;
-      }
-
-      .google-signup img {
-        width: 20px;
-        margin-right: 10px;
-      }
       .form-group {
         margin-bottom: 15px;
-      }
-
-      .form-section p {
-        text-align: center;
-        color: #888;
-        margin: 1rem 0;
       }
 
       form input {
@@ -110,6 +98,7 @@
         margin-bottom: 1rem;
         border-radius: 5px;
         border: 1px solid #ddd;
+        font-size: 14px;
       }
 
       form button {
@@ -119,25 +108,69 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+        font-size: 16px;
       }
 
       form button:hover {
         background-color: #ddd;
       }
 
-      .form-section a {
-        color: #000;
-        text-decoration: none;
-        font-weight: bold;
-      }
-
-      .form-section a:hover {
-        text-decoration: underline;
-      }
       .error-message {
         color: #dc143c;
         font-size: 0.75rem;
         display: none;
+      }
+
+      @media (min-width: 768px) {
+        .container {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: stretch;
+        }
+
+        .image-section {
+          width: 50%;
+          margin-bottom: 0;
+          margin-right: 2rem;
+        }
+
+        .form-section {
+          width: 50%;
+        }
+
+        .image-section h1 {
+          font-size: 1.8rem;
+        }
+
+        .image-section img {
+          max-width: 300px;
+        }
+
+        .logo img {
+          width: 150px;
+        }
+
+        .form-section h2 {
+          font-size: 1.5rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .image-section h1 {
+          font-size: 2rem;
+        }
+
+        .form-section {
+          padding: 2.5rem;
+        }
+
+        form input {
+          font-size: 16px;
+        }
+
+        form button {
+          font-size: 18px;
+        }
       }
     </style>
   </head>

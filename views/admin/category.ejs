@@ -5,14 +5,27 @@
     href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"
   />
   <style>
-    .content-main {
-      margin-left: 300px;
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
     }
-    .col-md-3 {
+
+    .content-main {
+      margin-left: 0;
       padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      margin: 10px;
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
 
     .form-label {
@@ -28,26 +41,39 @@
       box-sizing: border-box;
     }
 
-    .d-grid {
-      margin-top: 20px;
-    }
-
     .btn-primary {
+      width: 100%;
+      padding: 10px;
       background-color: #007bff;
       color: #fff;
-      border: 1px solid #007bff;
+      border: none;
       border-radius: 5px;
-      padding: 10px 20px;
       cursor: pointer;
     }
 
     .btn-primary:hover {
       background-color: #0056b3;
-      border-color: #0056b3;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
     }
 
     .pagination-container {
       text-align: center;
+      margin-top: 20px;
     }
 
     .pagination {
@@ -68,8 +94,81 @@
       background-color: #f5f5f5;
     }
 
-    .error-message {
-      color: red;
+    @media (min-width: 768px) {
+      .content-main {
+        margin-left: 250px;
+      }
+
+      .col-md-3 {
+        width: 25%;
+        float: left;
+      }
+
+      .col-md-8 {
+        width: 66.66666667%;
+        float: left;
+      }
+
+      .card-title {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .content-main {
+        margin-left: 300px;
+      }
+
+      .card-title {
+        font-size: 1.3rem;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .content-header {
+        text-align: center;
+      }
+
+      .input-group {
+        width: 100% !important;
+        margin-left: 0 !important;
+      }
+
+      .col-md-3,
+      .col-md-8 {
+        width: 100%;
+        padding: 0 15px;
+      }
+
+      .table-responsive {
+        border: 0;
+      }
+
+      .table th,
+      .table td {
+        display: block;
+        width: 100%;
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+      }
+
+      .table th:before,
+      .table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+      }
+
+      .btn {
+        width: 100%;
+        margin-bottom: 10px;
+      }
     }
   </style>
 </head>
@@ -138,14 +237,14 @@
               <table class="table table-hover">
                 <thead>
                   <tr>
-                    <th class="text-center"></th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Offer Price</th>
-                    <th>Offer</th>
-                    <th>Status</th>
-                    <th>List/Unlist</th>
-                    <th class="text-start">Edit</th>
+                    <th data-label="" class="text-center"></th>
+                    <th data-label="Name">Name</th>
+                    <th data-label="Description">Description</th>
+                    <th data-label="Offer Price">Offer Price</th>
+                    <th data-label="Offer">Offer</th>
+                    <th data-label="Status">Status</th>
+                    <th data-label="List/Unlist">List/Unlist</th>
+                    <th data-label="Edit" class="text-start">Edit</th>
                   </tr>
                 </thead>
                 <tbody>
