@@ -4,7 +4,7 @@ const Product = require("../../models/productSchema");
 const listOrders = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 3;
+    const limit = 10;
     const skip = (page - 1) * limit;
     const orders = await Order.find()
       .populate("userId", "name email")

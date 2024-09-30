@@ -234,6 +234,11 @@ const logout = async (req, res) => {
 
 const loadShopPage = async (req, res) => {
   try {
+    const userId = req.session.user;
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId);
+    }
     const page = req.query.page || 1;
     const limit = 6;
     const sort = req.query.sort || "new_arrivals";
@@ -289,7 +294,7 @@ const loadShopPage = async (req, res) => {
       itemsPerPage: limit,
       totalResults: count,
       totalPages: Math.ceil(count / limit),
-      user: res.locals.user,
+      user,
       sort,
       categoryFilter,
       stockFilter,
@@ -304,6 +309,11 @@ const loadShopPage = async (req, res) => {
 
 const loadProductDetails = async (req, res) => {
   try {
+    const userId = req.session.user;
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId);
+    }
     const id = req.params.id;
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -334,6 +344,7 @@ const loadProductDetails = async (req, res) => {
     res.render("product-details", {
       product: product,
       relatedProducts: relatedProducts,
+      user,
     });
   } catch (error) {
     console.error("error finding product", error);

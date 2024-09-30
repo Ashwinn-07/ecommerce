@@ -341,9 +341,25 @@
               </ul>
             </div>
             <% if (order.status === 'Delivered') { %>
-            <form action="/orders/<%= order._id %>/return" method="POST">
-              <button type="submit" class="return-btn">Return Order</button>
-            </form>
+            <button
+              class="return-btn"
+              onclick="showReturnForm('<%= order._id %>')"
+            >
+              Return Order
+            </button>
+            <div id="returnForm-<%= order._id %>" style="display: none">
+              <form action="/orders/<%= order._id %>/return" method="POST">
+                <textarea
+                  name="returnReason"
+                  rows="3"
+                  placeholder="Please provide a reason for return"
+                  required
+                ></textarea>
+                <button type="submit" class="return-btn">
+                  Submit Return Request
+                </button>
+              </form>
+            </div>
             <% } else if (order.status !== 'Cancelled' && order.status !==
             'Returned') { %>
             <form action="/orders/<%= order._id %>/cancel" method="POST">
@@ -385,3 +401,10 @@
   </div>
 </section>
 <%-include("../../views/partials/user/footer") %>
+
+<script>
+  function showReturnForm(orderId) {
+    const form = document.getElementById(`returnForm-${orderId}`);
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  }
+</script>

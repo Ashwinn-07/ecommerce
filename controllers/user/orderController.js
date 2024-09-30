@@ -75,6 +75,7 @@ const returnOrder = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     const userId = req.session.user;
+    const { returnReason } = req.body;
     const order = await Order.findOne({ _id: orderId, userId });
 
     if (!order) {
@@ -93,6 +94,20 @@ const returnOrder = async (req, res) => {
       });
     }
     order.status = "Returned";
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId });
+    }
+
+    wallet.balance += order.totalPrice;
+    wallet.transactions.push({
+      type: "CREDIT",
+      amount: order.totalPrice,
+      description: "Refund for returned order",
+    });
+
+    await wallet.save();
+
     await order.save();
     res.redirect("/orders");
   } catch (error) {

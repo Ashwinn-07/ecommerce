@@ -179,7 +179,12 @@ const editProfile = async (req, res) => {
 
 const getChangePassword = async (req, res) => {
   try {
-    res.render("change-password");
+    const userId = req.session.user;
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId);
+    }
+    res.render("change-password", { user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
