@@ -93,6 +93,12 @@
         <div class="cart__total">
           <h6>Cart total</h6>
           <ul>
+            <% products.forEach((product) => { %>
+            <li>
+              <%= product.name %> x <%= product.quantity %> = $ <%=
+              product.totalPrice %>
+            </li>
+            <% }); %>
             <li>Subtotal <span>$ <%= total %></span></li>
             <li>Total <span>$ <%= total %></span></li>
           </ul>

@@ -9,7 +9,7 @@ const listOrders = async (req, res) => {
     const orders = await Order.find()
       .populate("userId", "name email")
       .populate("orderedItems.product")
-      .sort({ createdAt: -1 })
+      .sort({ createdOn: -1 })
       .skip(skip)
       .limit(limit);
     const totalOrders = await Order.countDocuments();

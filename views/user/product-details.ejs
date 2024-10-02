@@ -109,6 +109,10 @@
   .review-form button[type="submit"]:hover {
     background-color: #0056b3;
   }
+  button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
   /* Responsive styles */
   @media (max-width: 1200px) {
@@ -249,8 +253,8 @@
               <span> - <%= product.reviews.length %> Reviews</span>
             </div>
             <h3>
-              <%= product.salePrice %>
-              <span><%= product.regularPrice %></span>
+              $<%= product.salePrice %>
+              <span><del>$<%= product.regularPrice %></del></span>
             </h3>
             <% if (product.quantity === 0) { %> Out of Stock <% } else{%> In
             Stock:<%= product.quantity %> <% } %>
@@ -268,7 +272,13 @@
                     <input type="number" name="quantity" value="1" min="1" />
                   </div>
                 </div>
-                <button type="submit" class="primary-btn">Add to Cart</button>
+                <button
+      type="submit"
+      class="primary-btn"
+      <%= product.quantity === 0 ? 'disabled' : '' %>
+    >
+      <%= product.quantity === 0 ? 'Out of Stock' : 'Add to Cart' %>
+    </button>
               </div>
             </form>
 
@@ -290,7 +300,6 @@
                   <i class="fa fa-heart"></i> add to wishlist
                 </button>
               </form>
-              <a href="#"><i class="fa fa-exchange"></i> Add To Compare</a>
             </div>
             <div class="product__details__last__option">
               <h5><span>Guaranteed Safe Checkout</span></h5>
@@ -414,12 +423,7 @@
               <li>
                 <a href="#"><img src="/img/icon/heart.png" alt="" /></a>
               </li>
-              <li>
-                <a href="#"
-                  ><img src="/img/icon/compare.png" alt="" />
-                  <span>Compare</span></a
-                >
-              </li>
+
               <li>
                 <a href="#"><img src="/img/icon/search.png" alt="" /></a>
               </li>

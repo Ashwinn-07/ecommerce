@@ -16,7 +16,6 @@
 
     <!-- Css Styles -->
     <link rel="stylesheet" href="/css/product-details.css" />
-
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -33,6 +32,10 @@
     <link rel="stylesheet" href="/css/style.css" type="text/css" />
 
     <style>
+      .header {
+        position: relative;
+        z-index: 500;
+      }
       .dropdown {
         position: relative;
         display: inline-block;
@@ -65,114 +68,80 @@
         visibility: visible !important;
         opacity: 1 !important;
       }
-      .header {
-        position: relative;
-        z-index: 500;
-      }
-
-      /* New responsive styles */
-      .mobile-menu-btn {
+      .mobile-nav-dropdown {
         display: none;
-        font-size: 24px;
-        cursor: pointer;
       }
 
-      @media (max-width: 768px) {
-        .mobile-menu-btn {
-          display: block;
-        }
-
+      @media (max-width: 991px) {
         .header__menu {
           display: none;
-          position: absolute;
-          top: 100%;
-          left: 0;
-          width: 100%;
-          background-color: white;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-
-        .header__menu.active {
-          display: block;
+        .mobile-nav-dropdown {
+          display: inline-block;
+          margin-right: 15px;
         }
-
-        .header__menu ul {
-          flex-direction: column;
-          padding: 0;
-        }
-
-        .header__menu ul li {
-          width: 100%;
-          text-align: center;
-        }
-
-        .header__menu ul li a {
-          padding: 15px;
-          display: block;
-        }
-
         .header__nav__option {
+          display: flex;
+          align-items: center;
           justify-content: flex-end;
-          padding-right: 50px;
+        }
+        .header .container > .row {
+          align-items: center;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .header .container > .row {
+          flex-wrap: wrap;
+        }
+        .header__logo {
+          flex-basis: 100%;
+          text-align: center;
+          margin-bottom: 10px;
+        }
+        .mobile-nav-dropdown {
+          flex-basis: auto;
+          margin-right: 0;
+        }
+        .header__nav__option {
+          flex-basis: auto;
+          justify-content: flex-end;
         }
       }
     </style>
   </head>
 
   <body>
-    <!-- Page Preloder -->
-    <div id="preloder">
-      <div class="loader"></div>
-    </div>
-
-    <!-- Offcanvas Menu Begin -->
-    <!-- <div class="offcanvas-menu-overlay"></div>
-    <div class="offcanvas-menu-wrapper">
-      <div class="offcanvas__option">
-        <div class="offcanvas__links">
-          <a href="#">Sign in</a>
-          <a href="#">FAQs</a>
-        </div>
-        <div class="offcanvas__top__hover">
-          <span>Usd <i class="arrow_carrot-down"></i></span>
-          <ul>
-            <li>USD</li>
-            <li>EUR</li>
-            <li>USD</li>
-          </ul>
-        </div>
-      </div>
-      <div class="offcanvas__nav__option">
-        <a href="#" class="search-switch"
-          ><img src="img/icon/search.png" alt=""
-        /></a>
-        <a href="#"><img src="img/icon/heart.png" alt="" /></a>
-        <a href="#"><img src="img/icon/cart.png" alt="" /> <span>0</span></a>
-        <div class="price">$0.00</div>
-      </div>
-      <div id="mobile-menu-wrap"></div>
-      <div class="offcanvas__text">
-        <p>Free shipping, 30-day return or refund guarantee.</p>
-      </div>
-    </div> -->
-    <!-- Offcanvas Menu End -->
-
-    <!-- Header Section Begin -->
     <header class="header">
       <div class="container">
-        <div class="row align-items-center">
+        <div class="row">
           <div class="col-lg-3 col-md-3">
             <div class="header__logo">
               <a href="/"><img src="/img/logo.png" alt="" /></a>
             </div>
           </div>
           <div class="col-lg-6 col-md-6">
-            <nav class="header__menu mobile-menu">
+            <nav class="header__menu">
               <ul>
                 <li class="active"><a href="/">Home</a></li>
                 <li><a href="/shop">Shop</a></li>
               </ul>
             </nav>
+            <div class="mobile-nav-dropdown dropdown">
+              <button
+                class="btn btn-secondary dropdown-toggle"
+                type="button"
+                id="mobileNavDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Menu
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="mobileNavDropdown">
+                <li><a class="dropdown-item" href="/">Home</a></li>
+                <li><a class="dropdown-item" href="/shop">Shop</a></li>
+              </ul>
+            </div>
           </div>
           <div class="col-lg-3 col-md-3">
             <div class="header__nav__option">
@@ -193,19 +162,13 @@
             </div>
           </div>
         </div>
-        <div class="mobile-menu-btn"><i class="fa fa-bars"></i></div>
       </div>
     </header>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
-        const mobileMenu = document.querySelector(".header__menu");
-
-        mobileMenuBtn.addEventListener("click", function () {
-          mobileMenu.classList.toggle("active");
-        });
-      });
-    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>

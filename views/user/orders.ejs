@@ -362,9 +362,14 @@
             </div>
             <% } else if (order.status !== 'Cancelled' && order.status !==
             'Returned') { %>
-            <form action="/orders/<%= order._id %>/cancel" method="POST">
-              <button type="submit" class="cancel-btn">Cancel Order</button>
-            </form>
+
+            <button
+              onclick="confirmCancel('<%= order._id %>')"
+              class="cancel-btn"
+            >
+              Cancel Order
+            </button>
+
             <% } %> <% if (order.status === 'Payment Pending') { %>
             <form action="/continue-payment/<%= order._id %>" method="POST">
               <button type="submit" class="btn btn-warning">
@@ -402,9 +407,31 @@
 </section>
 <%-include("../../views/partials/user/footer") %>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
   function showReturnForm(orderId) {
     const form = document.getElementById(`returnForm-${orderId}`);
     form.style.display = form.style.display === "none" ? "block" : "none";
+  }
+
+  function confirmCancel(orderId) {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, cancel it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = `/orders/${orderId}/cancel`;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
   }
 </script>

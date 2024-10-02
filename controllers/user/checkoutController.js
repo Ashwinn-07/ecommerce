@@ -120,7 +120,7 @@ const initiatePayPalPayment = async (req, res) => {
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
 
     const appliedCouponId = req.session.appliedCouponId;
-    const discount = 0;
+    let discount = 0;
     let couponApplied = false;
     if (appliedCouponId) {
       const coupon = await Coupon.findById(appliedCouponId);
@@ -144,7 +144,7 @@ const initiatePayPalPayment = async (req, res) => {
         {
           amount: {
             currency_code: "USD",
-            value: totalPrice.toFixed(2),
+            value: finalAmount.toFixed(2),
           },
         },
       ],
@@ -159,13 +159,28 @@ const initiatePayPalPayment = async (req, res) => {
     });
 
     const order = await client.execute(request);
+    const selectedAddress = req.body.selectedAddress || req.body.addressId;
+    if (!selectedAddress) {
+      return res.status(400).json({ message: "Address is required" });
+    }
+
+    const address = await Address.findOne({
+      userId,
+      "address._id": selectedAddress,
+    });
+
+    if (!address) {
+      return res.status(400).json({ message: "Address not found" });
+    }
+
+    const selectedAddressDetails = address.address.id(selectedAddress);
     const checkoutDetails = {
       userId,
       cartItems: cart.items,
       totalPrice,
       finalAmount,
-      selectedAddress: req.body.selectedAddress,
-      couponApplied: appliedCouponId ? true : false,
+      selectedAddress: selectedAddressDetails,
+      couponApplied,
       appliedCouponId,
       discount,
     };

@@ -46,11 +46,18 @@ const getCart = async (req, res) => {
   try {
     const userId = req.session.user;
     const cart = await Cart.findOne({ userId }).populate("items.productId");
+
     if (!cart) {
       return res.render("cart", { cart: { items: [] }, total: 0 });
     }
     const total = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
-    res.render("cart", { cart, total });
+    const products = cart.items.map((item) => ({
+      name: item.productId.productName,
+      quantity: item.quantity,
+      price: item.price,
+      totalPrice: item.totalPrice,
+    }));
+    res.render("cart", { cart, total, products });
   } catch (error) {
     console.error(error);
     res

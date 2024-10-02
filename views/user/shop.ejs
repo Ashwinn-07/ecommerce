@@ -1,5 +1,55 @@
 <%- include("../../views/partials/user/header") %>
 <!-- Header Section End -->
+ <style>
+  .shop__sidebar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #3498db; 
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.shop__sidebar__search input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.shop__sidebar__search button[type="submit"] {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.apply-filters-btn {
+  background-color: #3498db; 
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.apply-filters-btn:hover {
+  background-color: #2ecc71; 
+}
+
+.apply-filters-btn i {
+  margin-right: 10px;
+}
+ </style>
  
 
 <!-- Breadcrumb Section Begin -->
@@ -44,7 +94,7 @@
           <div class="shop__sidebar">
             <div class="shop__sidebar__search">
               <input type="text" name="search" placeholder="Search..." value="<%= searchQuery || '' %>">
-              <button type="submit"><span class="icon_search"></span></button>
+              <button type="submit"><i class="fa fa-search"></i></button>
             </div>
             
             <div class="shop__sidebar__accordion">
@@ -53,7 +103,7 @@
                   <div class="card-heading">
                     <a data-toggle="collapse" data-target="#collapseOne">CATEGORIES</a>
                   </div>
-                  <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
+                  <div id="collapseOne" class="collapse" data-parent="#accordionExample">
                     <div class="card-body">
                       <div class="shop__sidebar__categories">
                         <ul>
@@ -82,7 +132,9 @@
               </label>
             </div>
             
-            <button type="submit" class="apply-filters-btn">Apply Filters</button>
+            <button type="submit" class="apply-filters-btn btn btn-primary">
+              <i class="fa fa-filter"></i> Apply Filters
+            </button>
           </div>
         </form>
       </div>

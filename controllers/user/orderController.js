@@ -52,10 +52,10 @@ const cancelOrder = async (req, res) => {
       wallet = new Wallet({ userId });
     }
 
-    wallet.balance += order.totalPrice;
+    wallet.balance += order.finalAmount;
     wallet.transactions.push({
       type: "CREDIT",
-      amount: order.totalPrice,
+      amount: order.finalAmount,
       description: "Refund for cancelled order",
     });
 
@@ -99,10 +99,10 @@ const returnOrder = async (req, res) => {
       wallet = new Wallet({ userId });
     }
 
-    wallet.balance += order.totalPrice;
+    wallet.balance += order.finalAmount;
     wallet.transactions.push({
       type: "CREDIT",
-      amount: order.totalPrice,
+      amount: order.finalAmount,
       description: "Refund for returned order",
     });
 
