@@ -4,13 +4,32 @@ const Order = require("../../models/orderSchema");
 const getWalletPage = async (req, res) => {
   try {
     const userId = req.session.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       wallet = new Wallet({ userId });
       await wallet.save();
     }
+    const totalTransactions = wallet.transactions.length;
+    const totalPages = Math.ceil(totalTransactions / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
 
-    res.render("wallet", { wallet });
+    wallet.transactions.sort((a, b) => b.date - a.date);
+
+    const paginatedTransactions = wallet.transactions.slice(
+      startIndex,
+      endIndex
+    );
+    wallet.transactions = paginatedTransactions;
+
+    res.render("wallet", {
+      wallet,
+      transactions: paginatedTransactions,
+      currentPage: page,
+      totalPages: totalPages,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ messaage: "Internal server error" });
@@ -37,7 +56,10 @@ const addMoney = async (req, res) => {
 
     await wallet.save();
 
-    res.redirect("/wallet");
+    res.status(200).json({
+      message: "Money added successfully",
+      newBalance: wallet.balance,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ messaage: "Internal server error" });
@@ -66,7 +88,10 @@ const withdrawMoney = async (req, res) => {
 
     await wallet.save();
 
-    res.redirect("/wallet");
+    res.status(200).json({
+      message: "Money withdrawn successfully",
+      newBalance: wallet.balance,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

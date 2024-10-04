@@ -474,6 +474,20 @@ const checkout = async (req, res) => {
       const order = new Order(orderData);
       const savedOrder = await order.save();
 
+      for (const item of cart.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { quantity: -item.quantity },
+        });
+      }
+      cart.items = [];
+      await cart.save();
+
+      if (couponApplied) {
+        await Coupon.findByIdAndUpdate(couponSelect, {
+          $addToSet: { usedBy: userId },
+        });
+      }
+
       req.session.lastOrderId = savedOrder._id;
 
       return res.redirect("/order-confirmation");
@@ -494,7 +508,9 @@ const getOrderConfirmation = async (req, res) => {
       return res.status(404).render("error", { message: "Order not found" });
     }
 
-    const order = await Order.findById(orderId).populate("address");
+    const order = await Order.findById(orderId)
+      .populate("address")
+      .populate("orderedItems.product");
 
     if (!order) {
       console.log("Order not found in database:", orderId);
