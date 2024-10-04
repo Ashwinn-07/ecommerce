@@ -6,25 +6,46 @@ const addToCart = async (req, res) => {
     const { productId, quantity } = req.body;
     const userId = req.session.user;
     const product = await Product.findById(productId);
+    const referer = req.get("Referer");
+
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.redirect(
+        `${referer}?action=addtocart&result=error&message=Product not found`
+      );
     }
-    if (product.quantity < quantity) {
-      return res.status(400).json({ message: "Not enough stock" });
-    }
+
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({ userId, items: [] });
     }
+
     const existingProductIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
 
     if (existingProductIndex !== -1) {
-      cart.items[existingProductIndex].quantity = quantity;
+      const newQuantity =
+        cart.items[existingProductIndex].quantity + parseInt(quantity);
+
+      if (product.quantity < newQuantity) {
+        return res.redirect(
+          `${referer}?action=addtocart&result=error&message=Not enough stock`
+        );
+      }
+
+      cart.items[existingProductIndex].quantity = newQuantity;
       cart.items[existingProductIndex].totalPrice =
-        product.salePrice * quantity;
+        product.salePrice * newQuantity;
+
+      await cart.save();
+      return res.redirect(`${referer}?action=addtocart&result=updated`);
     } else {
+      if (product.quantity < quantity) {
+        return res.redirect(
+          `${referer}?action=addtocart&result=error&message=Not enough stock`
+        );
+      }
+
       cart.items.push({
         productId,
         quantity,
@@ -32,13 +53,14 @@ const addToCart = async (req, res) => {
         totalPrice: product.salePrice * quantity,
       });
     }
+
     await cart.save();
-    res.redirect("/cart");
+    res.redirect(`${referer}?action=addtocart&result=success`);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error adding to cart", error: error.message });
+    res.redirect(
+      `${referer}?action=addtocart&result=error&message=An unexpected error occurred`
+    );
   }
 };
 

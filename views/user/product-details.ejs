@@ -114,7 +114,7 @@
   cursor: not-allowed;
 }
 
-  /* Responsive styles */
+  
   @media (max-width: 1200px) {
     #imageZoom {
       height: 600px;
@@ -457,6 +457,8 @@
 </section>
 <!-- Related Product Section End -->
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     function activateImageZoom() {
@@ -489,6 +491,71 @@
         }, 100);
       });
     });
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const wishlistStatus = urlParams.get('wishlist');
+
+  if (wishlistStatus === 'added') {
+    Swal.fire({
+      title: 'Success!',
+      text: 'Product added to your wishlist.',
+      icon: 'success',
+      confirmButtonText: 'OK'
+    });
+  } else if (wishlistStatus === 'exists') {
+    Swal.fire({
+      title: 'Already in Wishlist',
+      text: 'This product is already in your wishlist.',
+      icon: 'info',
+      confirmButtonText: 'OK'
+    });
+  } else if (wishlistStatus === 'error') {
+    Swal.fire({
+      title: 'Oops...',
+      text: 'There was an error adding the product to your wishlist. Please try again.',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+  }
+});
+document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get("action");
+    const result = urlParams.get("result");
+    const message = urlParams.get("message");
+
+    if (action === "addtocart") {
+      switch (result) {
+        case "success":
+          Swal.fire({
+            title: "Added to Cart!",
+            text: "Item has been added to your cart.",
+            icon: "success",
+            confirmButtonText: "OK",
+          });
+          break;
+        case "updated":
+          Swal.fire({
+            title: "Cart Updated!",
+            text: "This item was already in your cart. We've updated the quantity.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          break;
+        case "error":
+          Swal.fire({
+            title: "Oops...",
+            text:
+              message ||
+              "There was an error adding the item to your cart. Please try again.",
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+          break;
+      }
+    }
   });
 </script>
 

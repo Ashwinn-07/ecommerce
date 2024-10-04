@@ -2,6 +2,7 @@ const Order = require("../../models/orderSchema");
 const Cart = require("../../models/cartSchema");
 const Address = require("../../models/addressSchema");
 const Product = require("../../models/productSchema");
+const Wallet = require("../../models/walletSchema");
 const Coupon = require("../../models/couponSchema");
 const paypal = require("@paypal/checkout-server-sdk");
 const CheckoutSession = require("../../models/checkoutSessionSchema");
@@ -16,6 +17,7 @@ const getCheckoutPage = async (req, res) => {
     const userId = req.session.user;
     const addresses = await Address.find({ userId });
     const cart = await Cart.findOne({ userId }).populate("items.productId");
+    const wallet = await Wallet.findOne({ userId });
 
     if (!cart || cart.items.length === 0) {
       return res.redirect("/cart");
@@ -49,6 +51,7 @@ const getCheckoutPage = async (req, res) => {
       discount,
       finalAmount,
       availableCoupons,
+      wallet,
       appliedCouponId: req.session.appliedCouponId || null,
     });
   } catch (error) {
@@ -438,6 +441,42 @@ const checkout = async (req, res) => {
         req.session.lastOrderId = savedOrder._id;
         return res.redirect("/order-confirmation?status=payment_failed");
       }
+    } else if (paymentMethod === "Wallet") {
+      const wallet = await Wallet.findOne({ userId });
+      if (!wallet || wallet.balance < finalAmount) {
+        return res.status(400).json({ message: "Insufficient wallet balance" });
+      }
+
+      wallet.balance -= finalAmount;
+      wallet.transactions.push({
+        type: "DEBIT",
+        amount: finalAmount,
+        description: `Payment for order`,
+      });
+      await wallet.save();
+
+      const orderData = {
+        userId,
+        orderedItems: cart.items.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+          price: item.totalPrice,
+        })),
+        totalPrice: totalPrice,
+        finalAmount: finalAmount,
+        discount: discount,
+        address: selectedAddress,
+        status: "Pending",
+        paymentMethod,
+        couponApplied: couponApplied,
+      };
+
+      const order = new Order(orderData);
+      const savedOrder = await order.save();
+
+      req.session.lastOrderId = savedOrder._id;
+
+      return res.redirect("/order-confirmation");
     } else {
       return res.status(400).json({ message: "Invalid payment method" });
     }

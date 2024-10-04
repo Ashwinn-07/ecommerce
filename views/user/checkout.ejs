@@ -1,5 +1,148 @@
 <%-include("../../views/partials/user/header") %>
 <!-- Header Section End -->
+ <style>
+
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+
+.checkout__input select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+#couponMessage {
+  font-size: 14px;
+  margin-top: 5px;
+  color: #28a745;
+}
+
+
+.saved-addresses {
+  margin-bottom: 30px;
+}
+
+.saved-addresses h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #f3f3f3;
+  padding-bottom: 10px;
+}
+
+.address-option {
+  background-color: #f9f9f9;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.address-option:hover {
+  background-color: #f0f0f0;
+}
+
+.address-option input[type="radio"] {
+  margin-right: 10px;
+}
+
+.address-option label {
+  font-weight: 500;
+}
+
+
+.checkout__title {
+  font-size: 22px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f3f3f3;
+  padding-bottom: 10px;
+}
+
+.checkout__input {
+  margin-bottom: 20px;
+}
+
+.checkout__input p {
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.checkout__input input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+
+.checkout__order {
+  background-color: #f9f9f9;
+  padding: 30px;
+  border-radius: 8px;
+}
+
+.order__title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e1e1e1;
+  padding-bottom: 10px;
+}
+
+.checkout__order__products {
+  font-weight: 700;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.checkout__total__products li,
+.checkout__total__all li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.checkout__total__all {
+  border-top: 1px solid #e1e1e1;
+  padding-top: 15px;
+  margin-top: 15px;
+}
+
+.checkout__input__checkbox {
+  margin-bottom: 15px;
+}
+
+.site-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: #ca1515;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.site-btn:hover {
+  background-color: #a51212;
+}
+ </style>
 
 <!-- Breadcrumb Section Begin -->
 <section class="breadcrumb-option">
@@ -21,6 +164,8 @@
 <!-- Breadcrumb Section End -->
 
 <!-- Checkout Section Begin -->
+
+
 <section class="checkout spad">
   <div class="container">
     <div class="checkout__form">
@@ -44,30 +189,32 @@
               <p id="couponMessage"></p>
             </div>
 
-            <div>
+            <div class="saved-addresses">
               <h3>Saved Addresses</h3>
-              <% if (addresses && addresses.length > 0) { %> <%
-              addresses.forEach((addressEntry) => { %> <% if
-              (addressEntry.address && addressEntry.address.length > 0) { %> <%
-              addressEntry.address.forEach((address) => { %>
-              <div>
-                <input
-                  type="radio"
-                  name="addressId"
-                  value="<%= address._id %>"
-                />
-                <label
-                  ><%= address.name %>, <%= address.addressType %>, <%=
-                  address.city %>, <%= address.state %>, <%= address.pincode
-                  %></label
-                >
-              </div>
-              <% }) %> <% } %> <% }) %> <% } else { %>
-              <p>No saved addresses. Please add a new address below.</p>
+              <% if (addresses && addresses.length > 0) { %>
+                <% addresses.forEach((addressEntry) => { %>
+                  <% if (addressEntry.address && addressEntry.address.length > 0) { %>
+                    <% addressEntry.address.forEach((address) => { %>
+                      <div class="address-option">
+                        <input
+                          type="radio"
+                          name="addressId"
+                          value="<%= address._id %>"
+                          id="address_<%= address._id %>"
+                        />
+                        <label for="address_<%= address._id %>">
+                          <%= address.name %>, <%= address.addressType %>, <%= address.city %>, <%= address.state %>, <%= address.pincode %>
+                        </label>
+                      </div>
+                    <% }) %>
+                  <% } %>
+                <% }) %>
+              <% } else { %>
+                <p>No saved addresses. Please add a new address below.</p>
               <% } %>
             </div>
 
-            <!-- New Address Form -->
+           
             <h6 class="checkout__title">Add New Address</h6>
             <div class="row">
               <div class="col-lg-6">
@@ -118,25 +265,15 @@
               <ul class="checkout__total__all">
                 <li>
                   Subtotal
-                  <span
-                    >$<span id="subtotal"><%= total.toFixed(2) %></span></span
-                  >
+                  <span>$<span id="subtotal"><%= total.toFixed(2) %></span></span>
                 </li>
                 <li>
                   Discount
-                  <span
-                    >$<span id="discount"
-                      ><%= discount.toFixed(2) %></span
-                    ></span
-                  >
+                  <span>$<span id="discount"><%= discount.toFixed(2) %></span></span>
                 </li>
                 <li>
                   Total
-                  <span
-                    >$<span id="totalAmount"
-                      ><%= finalAmount.toFixed(2) %></span
-                    ></span
-                  >
+                  <span>$<span id="totalAmount"><%= finalAmount.toFixed(2) %></span></span>
                 </li>
               </ul>
               <div class="checkout__input__checkbox">
@@ -165,6 +302,20 @@
                   <span class="checkmark"></span>
                 </label>
               </div>
+              <div class="checkout__input__checkbox">
+                <label for="wallet">
+                  Wallet
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="Wallet"
+                    id="wallet"
+                    <% if (wallet.balance < finalAmount) { %>disabled<% } %>
+                  />
+                  <span class="checkmark"></span>
+                </label>
+                <small>Available balance: $<%= wallet.balance.toFixed(2) %></small>
+              </div>
               <button type="submit" class="site-btn">PLACE ORDER</button>
             </div>
           </div>
@@ -186,6 +337,8 @@
     </div>
   </div>
 </section>
+
+
 <!-- Checkout Section End -->
 
 <script>

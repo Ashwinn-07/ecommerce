@@ -121,6 +121,13 @@ router.post(
 router.post("/apply-coupon", userAuth, checkoutController.applyCoupon);
 
 router.get("/wallet", userAuth, walletController.getWalletPage);
+router.post("/wallet/add", userAuth, walletController.addMoney);
+router.post("/wallet/withdraw", userAuth, walletController.withdrawMoney);
+router.post(
+  "/wallet/use-for-order",
+  userAuth,
+  walletController.useWalletForOrder
+);
 
 router.get(
   "/download-invoice/:orderId",

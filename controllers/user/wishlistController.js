@@ -28,13 +28,13 @@ const addToWishlist = async (req, res) => {
     if (!productExists) {
       wishlist.products.push({ productId });
       await wishlist.save();
-      res.redirect("/wishlist");
+      res.redirect(`/product/${productId}?wishlist=added`);
     } else {
-      res.status(400).json({ message: "product is already in wishlist" });
+      res.redirect(`/product/${productId}?wishlist=exists`);
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.redirect(`/product/${productId}?wishlist=error`);
   }
 };
 
@@ -49,7 +49,7 @@ const removeFromWishlist = async (req, res) => {
         (item) => item.productId.toString() !== productId
       );
       await wishlist.save();
-      res.redirect("/wishlist");
+      res.redirect("/wishlist?action=remove&result=success");
     } else {
       res.status(404).json({ message: "wishlist not found" });
     }

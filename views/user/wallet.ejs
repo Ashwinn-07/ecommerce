@@ -2,9 +2,8 @@
 <style>
   body {
     font-family: "Arial", sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    line-height: 1.6;
+    color: #333;
     background-color: #f9f9f9;
   }
 
@@ -17,23 +16,25 @@
 
   .breadcrumb-option {
     background-color: #f3f2ee;
-    padding: 20px 0;
+    padding: 30px 0;
+    margin-bottom: 40px;
   }
 
   .breadcrumb__text h4 {
     color: #111111;
     font-weight: 700;
     margin-bottom: 8px;
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .breadcrumb__links a,
   .breadcrumb__links span {
-    font-size: 14px;
+    font-size: 15px;
     color: #111111;
     margin-right: 10px;
     display: inline-block;
     position: relative;
+    text-decoration: none;
   }
 
   .breadcrumb__links span {
@@ -49,7 +50,7 @@
   }
 
   .account-section {
-    padding: 30px 0;
+    padding: 40px 0;
     background-color: #fff;
   }
 
@@ -66,41 +67,83 @@
   .account-sidebar ul {
     list-style: none;
     padding: 0;
-    border: 1px solid #ddd;
-    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .account-sidebar ul li a {
     display: block;
-    padding: 12px 15px;
+    padding: 15px 20px;
     color: #333;
     text-decoration: none;
-    border-bottom: 1px solid #ddd;
-    font-size: 14px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .account-sidebar ul li:last-child a {
+    border-bottom: none;
   }
 
   .account-sidebar ul li a:hover {
-    background-color: #f0f0f0;
+    background-color: #f5f5f5;
     color: #000;
   }
 
   .account-sidebar .logout {
-    color: red;
+    color: #dc3545;
   }
 
   .account-content {
     width: 100%;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .account-content h2 {
     font-size: 24px;
     margin-bottom: 20px;
+    color: #111111;
   }
 
   .wallet-balance {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    color: #28a745;
+    background-color: #e9f7ef;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  form {
+    margin-bottom: 30px;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  button[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button[type="submit"]:hover {
+    background-color: #0056b3;
   }
 
   .transaction-list {
@@ -109,14 +152,20 @@
   }
 
   .transaction-item {
-    border: 1px solid #ddd;
+    border: 1px solid #e0e0e0;
     margin-bottom: 10px;
-    padding: 10px;
+    padding: 15px;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    font-size: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .transaction-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .transaction-type {
@@ -130,11 +179,11 @@
   }
 
   .credit {
-    color: green;
+    color: #28a745;
   }
 
   .debit {
-    color: red;
+    color: #dc3545;
   }
 
   @media (min-width: 768px) {
@@ -150,27 +199,6 @@
 
     .account-content {
       width: 65%;
-    }
-
-    .breadcrumb__text h4 {
-      font-size: 28px;
-    }
-
-    .breadcrumb__links a,
-    .breadcrumb__links span {
-      font-size: 15px;
-    }
-
-    .account-content h2 {
-      font-size: 26px;
-    }
-
-    .wallet-balance {
-      font-size: 22px;
-    }
-
-    .transaction-item {
-      font-size: 15px;
     }
 
     .transaction-type {
@@ -240,6 +268,17 @@
         <div class="wallet-balance">
           Current Balance: $<%= wallet.balance.toFixed(2) %>
         </div>
+        <h3>Add Money</h3>
+        <form action="/wallet/add" method="POST">
+          <input type="number" name="amount" step="0.01" required />
+          <button type="submit">Add Money</button>
+        </form>
+
+        <h3>Withdraw Money</h3>
+        <form action="/wallet/withdraw" method="POST">
+          <input type="number" name="amount" step="0.01" required />
+          <button type="submit">Withdraw</button>
+        </form>
         <h3>Transaction History</h3>
         <ul class="transaction-list">
           <% wallet.transactions.reverse().forEach(transaction => { %>
