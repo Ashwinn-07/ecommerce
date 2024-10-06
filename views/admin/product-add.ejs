@@ -453,7 +453,7 @@
     if (name === "") {
       displayErrorMessage("productName-error", "Please enter a product name.");
       isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+    } else if (!/^[a-zA-Z\s]+$/i.test(name)) {
       displayErrorMessage(
         "productName-error",
         "Product name should contain only alphabetic characters."
@@ -475,7 +475,7 @@
       isValid = false;
     }
 
-    if (quantity === "" || parseInt(quantity) < 0) {
+    if (quantity === "" || parseInt(quantity) <= 0) {
       displayErrorMessage(
         "quantity-error",
         "Please enter a valid positive quantity."
@@ -491,7 +491,7 @@
       isValid = false;
     }
 
-    if (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0) {
+    if (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) <= 0) {
       displayErrorMessage(
         "salePrice-error",
         "Please enter a valid non-negative sale price."

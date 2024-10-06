@@ -122,11 +122,11 @@ const initiatePayPalPayment = async (req, res) => {
 
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
 
-    const appliedCouponId = req.session.appliedCouponId;
-    let discount = 0;
-    let couponApplied = false;
-    if (appliedCouponId) {
-      const coupon = await Coupon.findById(appliedCouponId);
+    let discount;
+    let couponApplied;
+    let appliedCouponId;
+    if (req.session.appliedCouponId) {
+      const coupon = await Coupon.findById(req.session.appliedCouponId);
       if (
         coupon &&
         coupon.isList &&
@@ -135,9 +135,13 @@ const initiatePayPalPayment = async (req, res) => {
       ) {
         discount = coupon.offerPrice;
         couponApplied = true;
+        totalPrice -= discount;
+        appliedCouponId = coupon._id;
+      } else {
+        delete req.session.appliedCouponId;
       }
     }
-    const finalAmount = totalPrice - discount;
+    const finalAmount = totalPrice;
 
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
@@ -192,6 +196,9 @@ const initiatePayPalPayment = async (req, res) => {
       checkoutDetails,
     });
     await checkoutSession.save();
+    await CheckoutSession.findByIdAndUpdate(checkoutSession._id, {
+      $set: { "checkoutDetails.couponApplied": couponApplied },
+    });
 
     const approvalUrl = order.result.links.find(
       (link) => link.rel === "approve"
@@ -245,7 +252,7 @@ const paypalSuccess = async (req, res) => {
             address: selectedAddress,
             status: "Pending",
             paymentMethod: "PayPal",
-            couponApplied,
+            couponApplied: couponApplied,
             appliedCouponId,
           },
         },
@@ -266,8 +273,8 @@ const paypalSuccess = async (req, res) => {
           address: selectedAddress,
           status: "Pending",
           paymentMethod: "PayPal",
-          couponApplied: couponApplied,
-          appliedCouponId: appliedCouponId,
+          couponApplied,
+          appliedCouponId,
         };
 
         order = new Order(orderData);

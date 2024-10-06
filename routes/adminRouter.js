@@ -87,6 +87,16 @@ router.post(
   adminAuth,
   orderlistController.cancelOrder
 );
+router.post(
+  "/orderList/:orderId/approve-return",
+  adminAuth,
+  orderlistController.approveReturn
+);
+router.post(
+  "/orderList/:orderId/cancel-return",
+  adminAuth,
+  orderlistController.cancelReturnRequest
+);
 
 router.get("/coupons", adminAuth, couponController.getCouponManagementPage);
 router.post("/addCoupon", adminAuth, couponController.addCoupon);

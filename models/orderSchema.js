@@ -54,6 +54,7 @@ const orderSchema = new mongoose.Schema({
     required: true,
     enum: [
       "Pending",
+      "Return Pending",
       "Processing",
       "Shipped",
       "Delivered",

@@ -342,7 +342,7 @@
                   <% if (product.reviews.length > 0) { %> <%
                   product.reviews.forEach(review => { %>
                   <div class="product__details__tab__content__item">
-                    <h5><%= review.user.username %></h5>
+                    <h5><%= review.user.name %></h5>
                     <div class="rating">
                       <% for (let i = 0; i < 5; i++) { %>
                       <i

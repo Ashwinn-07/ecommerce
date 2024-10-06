@@ -88,25 +88,7 @@ const returnOrder = async (req, res) => {
         .json({ message: "Order cannot be returned unless delivered" });
     }
 
-    for (const item of order.orderedItems) {
-      await Product.findByIdAndUpdate(item.product._id, {
-        $inc: { quantity: item.quantity },
-      });
-    }
-    order.status = "Returned";
-    let wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      wallet = new Wallet({ userId });
-    }
-
-    wallet.balance += order.finalAmount;
-    wallet.transactions.push({
-      type: "CREDIT",
-      amount: order.finalAmount,
-      description: "Refund for returned order",
-    });
-
-    await wallet.save();
+    order.status = "Return Pending";
 
     await order.save();
     res.redirect("/orders");
