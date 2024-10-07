@@ -2,6 +2,8 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
+const Cart = require("../../models/cartSchema");
+const { updateCartPrices } = require("../user/cartController");
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -245,6 +247,11 @@ const addProductOffer = async (req, res) => {
     await findProduct.save();
     findCategory.categoryOffer = 0;
     await findCategory.save();
+
+    const carts = await Cart.find({ "items.productId": productId });
+    for (let cart of carts) {
+      await updateCartPrices(cart.userId);
+    }
     res.json({ status: true });
   } catch (error) {
     res.status(500).json({ status: false, message: "Internal server error" });
@@ -261,6 +268,10 @@ const removeProductOffer = async (req, res) => {
       Math.floor(findProduct.regularPrice * (percentage / 100));
     findProduct.productOffer = 0;
     await findProduct.save();
+    const carts = await Cart.find({ "items.productId": productId });
+    for (let cart of carts) {
+      await updateCartPrices(cart.userId);
+    }
     res.json({ status: true });
   } catch (error) {
     console.error(error);

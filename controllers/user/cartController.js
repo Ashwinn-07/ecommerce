@@ -1,6 +1,31 @@
 const Cart = require("../../models/cartSchema");
 const Product = require("../../models/productSchema");
 
+const updateCartPrices = async (userId) => {
+  try {
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart) return;
+
+    let updated = false;
+    for (let item of cart.items) {
+      const product = item.productId;
+      const currentPrice = product.salePrice;
+
+      if (item.price !== currentPrice) {
+        item.price = currentPrice;
+        item.totalPrice = currentPrice * item.quantity;
+        updated = true;
+      }
+    }
+
+    if (updated) {
+      await cart.save();
+    }
+  } catch (error) {
+    console.error("Error updating cart prices:", error);
+  }
+};
+
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
@@ -67,6 +92,7 @@ const addToCart = async (req, res) => {
 const getCart = async (req, res) => {
   try {
     const userId = req.session.user;
+    await updateCartPrices(userId);
     const cart = await Cart.findOne({ userId }).populate("items.productId");
 
     if (!cart) {
@@ -191,4 +217,5 @@ module.exports = {
   removeFromCart,
   updateCartQuantity,
   getCartTotal,
+  updateCartPrices,
 };

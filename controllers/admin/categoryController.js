@@ -1,5 +1,7 @@
 const Category = require("../../models/categorySchema");
 const Product = require("../../models/productSchema");
+const Cart = require("../../models/cartSchema");
+const { updateCartPrices } = require("../user/cartController");
 
 const categoryInfo = async (req, res) => {
   try {
@@ -82,6 +84,12 @@ const addCategoryOffer = async (req, res) => {
       product.salePrice = product.regularPrice;
       await product.save();
     }
+    const carts = await Cart.find({
+      "items.productId": { $in: products.map((p) => p._id) },
+    });
+    for (let cart of carts) {
+      await updateCartPrices(cart.userId);
+    }
     res.json({ status: true });
   } catch (error) {
     res.status(500).json({ status: false, message: "server error" });
@@ -107,6 +115,13 @@ const removeCategoryOffer = async (req, res) => {
         );
         product.productOffer = 0;
         await product.save();
+      }
+
+      const carts = await Cart.find({
+        "items.productId": { $in: products.map((p) => p._id) },
+      });
+      for (let cart of carts) {
+        await updateCartPrices(cart.userId);
       }
     }
     category.categoryOffer = 0;
