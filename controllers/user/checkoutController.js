@@ -122,26 +122,11 @@ const initiatePayPalPayment = async (req, res) => {
 
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
 
-    let discount;
-    let couponApplied;
-    let appliedCouponId;
-    if (req.session.appliedCouponId) {
-      const coupon = await Coupon.findById(req.session.appliedCouponId);
-      if (
-        coupon &&
-        coupon.isList &&
-        new Date() <= coupon.expireOn &&
-        totalPrice >= coupon.minimumPrice
-      ) {
-        discount = coupon.offerPrice;
-        couponApplied = true;
-        totalPrice -= discount;
-        appliedCouponId = coupon._id;
-      } else {
-        delete req.session.appliedCouponId;
-      }
-    }
-    const finalAmount = totalPrice;
+    let discount = req.body.discount || 0;
+    let couponApplied = req.body.couponApplied || false;
+    let appliedCouponId = req.body.appliedCouponId || null;
+
+    const finalAmount = req.body.finalAmount || totalPrice - discount;
 
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
@@ -252,7 +237,7 @@ const paypalSuccess = async (req, res) => {
             address: selectedAddress,
             status: "Pending",
             paymentMethod: "PayPal",
-            couponApplied: couponApplied,
+            couponApplied,
             appliedCouponId,
           },
         },
@@ -418,6 +403,11 @@ const checkout = async (req, res) => {
       return res.redirect("/order-confirmation");
     } else if (paymentMethod === "PayPal") {
       try {
+        req.body.discount = discount;
+        req.body.couponApplied = couponApplied;
+        req.body.appliedCouponId = couponSelect;
+        req.body.totalPrice = totalPrice;
+        req.body.finalAmount = finalAmount;
         const paypalResult = await initiatePayPalPayment(req, res);
         if (paypalResult.success) {
           return res.redirect(paypalResult.approvalUrl);
