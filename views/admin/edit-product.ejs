@@ -372,7 +372,7 @@
       isValid = false;
     }
 
-    if (quantity === "" || parseInt(quantity) <= 0) {
+    if (quantity === "" || parseInt(quantity) < 0) {
       displayErrorMessage(
         "quantity-error",
         "Please enter a valid positive quantity."

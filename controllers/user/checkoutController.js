@@ -305,6 +305,15 @@ const checkout = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
+    for (const item of cart.items) {
+      const product = await Product.findById(item.productId);
+      if (!product || product.quantity < item.quantity) {
+        return res.status(400).json({
+          message: `Product "${product.productName}" is out of stock or has insufficient quantity.`,
+        });
+      }
+    }
+
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
     let discount = 0;
     let couponApplied = false;
