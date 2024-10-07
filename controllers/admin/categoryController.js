@@ -34,7 +34,10 @@ const addCategory = async (req, res) => {
   }
 
   try {
-    const existingCategory = await Category.findOne({ name });
+    const lowercaseName = name.toLowerCase();
+    const existingCategory = await Category.findOne({
+      name: { $regex: new RegExp(`^${lowercaseName}$`, "i") },
+    });
     if (existingCategory) {
       return res.status(400).json({ error: "Category already exists" });
     }
@@ -152,7 +155,11 @@ const editCategory = async (req, res) => {
   try {
     const id = req.params.id;
     const { categoryName, description } = req.body;
-    const existingCategory = await Category.findOne({ name: categoryName });
+    const lowercaseName = categoryName.toLowerCase();
+    const existingCategory = await Category.findOne({
+      _id: { $ne: id },
+      name: { $regex: new RegExp(`^${lowercaseName}$`, "i") },
+    });
     if (existingCategory) {
       return res.render("edit-category", {
         category: { _id: id, name: categoryName, description },

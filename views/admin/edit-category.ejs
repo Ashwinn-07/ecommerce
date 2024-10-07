@@ -29,4 +29,57 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const categoryNameInput = document.querySelector(
+      'input[name="categoryName"]'
+    );
+    const descriptionTextarea = document.querySelector(
+      'textarea[name="description"]'
+    );
+
+    form.addEventListener("submit", function (event) {
+      let isValid = true;
+
+      clearErrorMessages();
+
+      const categoryName = categoryNameInput.value.trim();
+      if (categoryName === "") {
+        displayErrorMessage(categoryNameInput, "Category name is required");
+        isValid = false;
+      } else if (!/^[a-zA-Z\s]+$/i.test(categoryName)) {
+        displayErrorMessage(
+          categoryNameInput,
+          "Category name should only contain alphabetic characters and spaces"
+        );
+        isValid = false;
+      }
+
+      const description = descriptionTextarea.value.trim();
+      if (description === "") {
+        displayErrorMessage(descriptionTextarea, "Description is required");
+        isValid = false;
+      }
+
+      if (!isValid) {
+        event.preventDefault();
+      }
+    });
+
+    function displayErrorMessage(element, message) {
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "error-message text-danger mt-2";
+      errorDiv.textContent = message;
+      element.parentNode.appendChild(errorDiv);
+    }
+
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll(".error-message");
+      errorMessages.forEach((error) => error.remove());
+    }
+  });
+</script>
+
 <%- include("../../views/partials/admin/footer") %>
