@@ -163,6 +163,48 @@ body {
   background-color: #218838;
 }
 
+.quantity {
+  display: flex;
+  align-items: center;
+}
+
+.quantity input {
+  width: 40px;
+  text-align: center;
+  border: 1px solid #ced4da;
+  border-radius: 0;
+  padding: 5px;
+}
+
+.quantity input::-webkit-outer-spin-button,
+.quantity input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  color: #495057;
+  font-size: 16px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.quantity-btn:hover {
+  background-color: #e9ecef;
+}
+
+.quantity-btn.minus {
+  border-radius: 4px 0 0 4px;
+}
+
+.quantity-btn.plus {
+  border-radius: 0 4px 4px 0;
+}
+
+
 
 @media (max-width: 768px) {
   .col-lg-8, .col-lg-4 {
@@ -230,18 +272,14 @@ body {
                   </div>
                 </td>
                 <td class="quantity__item">
-                  <div class="quantity">
-                    <div class="pro-qty-2">
-                      <input
-                        type="number"
-                        value="<%= item.quantity %>"
-                        min="1"
-                        data-product-id="<%= item.productId ? item.productId._id : '' %>"
-                        onchange="updateQuantity(this)"
-                      />
-                    </div>
-                  </div>
-                </td>
+  <div class="quantity">
+    <button class="quantity-btn minus" onclick="changeQuantity(this, -1)">-</button>
+    <input type="text" value="<%= item.quantity %>" readonly
+           data-product-id="<%= item.productId ? item.productId._id : '' %>"
+           onchange="updateQuantity(this)">
+    <button class="quantity-btn plus" onclick="changeQuantity(this, 1)">+</button>
+  </div>
+</td>
                 <td class="cart__price">$ <%= item.totalPrice %></td>
                 <td class="cart__close">
                   <button onclick="removeFromCart('<%= item.productId._id %>')">
@@ -310,55 +348,63 @@ body {
     }
   });
 
-  function updateQuantity(input) {
-    const productId = input.dataset.productId;
-    const newQuantity = input.value;
+  function changeQuantity(button, change) {
+  const input = button.parentElement.querySelector('input');
+  let newValue = parseInt(input.value) + change;
+  newValue = Math.max(1, newValue); 
+  input.value = newValue;
+  updateQuantity(input);
+}
 
-    fetch("/cart/update", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ productId, quantity: newQuantity }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          const row = input.closest("tr");
-          const totalPriceCell = row.querySelector(".cart__price");
-          totalPriceCell.textContent = `$ ${data.newItemTotal.toFixed(2)}`;
+function updateQuantity(input) {
+  const productId = input.dataset.productId;
+  const newQuantity = input.value;
 
-          updateCartTotal(data.newCartTotal);
+  fetch("/cart/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ productId, quantity: newQuantity }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const row = input.closest("tr");
+        const totalPriceCell = row.querySelector(".cart__price");
+        totalPriceCell.textContent = `$ ${data.newItemTotal.toFixed(2)}`;
 
-          Swal.fire({
-            title: 'Updated!',
-            text: 'Cart quantity has been updated.',
-            icon: 'success',
-            confirmButtonText: 'OK'
-          }).then(() => {
+        updateCartTotal(data.newCartTotal);
+
+        Swal.fire({
+          title: 'Updated!',
+          text: 'Cart quantity has been updated.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        }).then(() => {
           location.reload();
         });
-        } else {
-          Swal.fire({
-            title: 'Error!',
-            text: data.message || 'Failed to update cart.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
-          input.value = input.defaultValue;
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+      } else {
         Swal.fire({
           title: 'Error!',
-          text: 'An unexpected error occurred.',
+          text: data.message || 'Failed to update cart.',
           icon: 'error',
           confirmButtonText: 'OK'
         });
         input.value = input.defaultValue;
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'An unexpected error occurred.',
+        icon: 'error',
+        confirmButtonText: 'OK'
       });
-  }
+      input.value = input.defaultValue;
+    });
+}
 
   function removeFromCart(productId) {
     Swal.fire({
