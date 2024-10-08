@@ -165,8 +165,8 @@
                   <% coupons.forEach((coupon) => { %>
                   <tr>
                     <td><%= coupon.name %></td>
-                    <td>₹<%= coupon.offerPrice %></td>
-                    <td>₹<%= coupon.minimumPrice %></td>
+                    <td>$<%= coupon.offerPrice %></td>
+                    <td>$<%= coupon.minimumPrice %></td>
                     <td>
                       <%= new Date(coupon.expireOn).toLocaleDateString() %>
                     </td>
