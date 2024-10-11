@@ -29,12 +29,16 @@
             <form action="/admin/orderList/change-status" method="POST">
               <input type="hidden" name="orderId" value="<%= order._id %>">
               <select name="newStatus" onchange="this.form.submit()">
-                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
-                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                <% if (order.status !== "Delivered") { %>
+                  <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                  <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                  <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                <% } %>
                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
+                <% if (order.status !== "Delivered") { %>
+                  <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                  <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
+                <% } %>
               </select>
             </form>
           </td>
