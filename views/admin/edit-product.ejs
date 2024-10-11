@@ -147,6 +147,7 @@
                 </div>
                 <% }) %>
               </div>
+              <div id="sizes-error" class="error-message"></div>
               <button
                 type="button"
                 onclick="addSizeInput()"
@@ -395,7 +396,8 @@
     const color = document.getElementsByName("color")[0].value;
     const category = document.getElementsByName("category")[0].value;
     const images = document.getElementById("input1");
-    // const quantity = document.getElementsByName("quantity")[0].value;
+    const sizeInputs = document.getElementsByName("sizes[]");
+    const quantityInputs = document.getElementsByName("quantities[]");
     imageDatas = document.getElementById("imageDatas")?.value;
     let isValid = true;
     if (name.trim() === "") {
@@ -411,13 +413,27 @@
       isValid = false;
     }
 
-    // if (quantity === "" || parseInt(quantity) < 0) {
-    //   displayErrorMessage(
-    //     "quantity-error",
-    //     "Please enter a valid positive quantity."
-    //   );
-    //   isValid = false;
-    // }
+    if (sizeInputs.length === 0) {
+      displayErrorMessage("sizes-error", "Please add at least one size.");
+      isValid = false;
+    }
+    for (let i = 0; i < sizeInputs.length; i++) {
+      const size = sizeInputs[i].value.trim();
+      const quantity = quantityInputs[i].value.trim();
+
+      if (size === "") {
+        displayErrorMessage("sizes-error", "Please enter a size.");
+        isValid = false;
+      }
+
+      if (quantity === "" || isNaN(quantity) || parseInt(quantity) < 0) {
+        displayErrorMessage(
+          "sizes-error",
+          "Please enter a valid positive quantity."
+        );
+        isValid = false;
+      }
+    }
 
     if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) <= 0) {
       displayErrorMessage(
