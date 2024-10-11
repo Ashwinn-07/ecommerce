@@ -119,6 +119,7 @@ router.post(
 );
 
 router.post("/apply-coupon", userAuth, checkoutController.applyCoupon);
+router.post("/remove-coupon", userAuth, checkoutController.removeCoupon);
 
 router.get("/wallet", userAuth, walletController.getWalletPage);
 router.post("/wallet/add", userAuth, walletController.addMoney);

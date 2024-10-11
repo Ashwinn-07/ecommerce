@@ -97,7 +97,7 @@ const applyCoupon = async (req, res) => {
       const discount = coupon.offerPrice;
       const newTotal = subtotal - discount;
       req.session.appliedCouponId = coupon._id;
-      return res.json({ success: true, discount, newTotal });
+      return res.json({ success: true, subtotal, discount, newTotal });
     } else if (coupon.usedBy.includes(userId)) {
       return res.json({
         success: false,
@@ -111,6 +111,34 @@ const applyCoupon = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+const removeCoupon = async (req, res) => {
+  try {
+    const { appliedCouponId } = req.body;
+    const userId = req.session.user;
+
+    if (appliedCouponId) {
+      delete req.session.appliedCouponId;
+
+      await Coupon.findByIdAndUpdate(appliedCouponId, {
+        $pull: { usedBy: userId },
+      });
+    }
+
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    const subtotal = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
+
+    res.json({
+      success: true,
+      message: "Coupon removed successfully",
+      subtotal,
+    });
+  } catch (error) {
+    console.error("Error removing coupon:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 const initiatePayPalPayment = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -593,6 +621,7 @@ module.exports = {
   checkout,
   getOrderConfirmation,
   applyCoupon,
+  removeCoupon,
   paypalSuccess,
   paypalCancel,
   initiatePayPalPayment,

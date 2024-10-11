@@ -174,20 +174,27 @@ body {
           <div class="col-lg-8 col-md-6">
             <div class="checkout__input">
               <p>Select Coupon</p>
-              <select id="couponSelect" name="couponSelect">
-                <option value="">Select Coupon</option>
-                <% availableCoupons.forEach((coupon) => { %>
-                  <option
-                    value="<%= coupon._id %>"
-                    data-discount="<%= coupon.offerPrice %>"
-                    <%= (appliedCouponId && appliedCouponId.toString() === coupon._id.toString()) ? 'selected' : '' %>
-                  >
-                    <%= coupon.name %> - Save $<%= coupon.offerPrice %> (Min Order $<%= coupon.minimumPrice %>)
-                  </option>
-                <% }); %>
-              </select>
+              <div class="coupon-container">
+                <select id="couponSelect" name="couponSelect">
+                  <option value="">Select Coupon</option>
+                  <% availableCoupons.forEach((coupon) => { %>
+                    <option
+                      value="<%= coupon._id %>"
+                      data-discount="<%= coupon.offerPrice %>"
+                      <%= (appliedCouponId && appliedCouponId.toString() === coupon._id.toString()) ? 'selected' : '' %>
+                    >
+                      <%= coupon.name %> - Save $<%= coupon.offerPrice %> (Min Order $<%= coupon.minimumPrice %>)
+                    </option>
+                  <% }); %>
+                </select>
+                <button type="button" id="applyCouponBtn" class="btn btn-primary">Apply Coupon</button>
+                <button type="button" id="removeCouponBtn" class="btn btn-secondary" style="display: none;">Remove Coupon</button>
+              </div>
               <p id="couponMessage"></p>
             </div>
+            
+            <input type="hidden" name="appliedCouponId" id="appliedCouponId" value="<%= appliedCouponId || '' %>">
+            <input type="hidden" name="discountAmount" id="discountAmount" value="<%= discount || 0 %>">
 
             <div class="saved-addresses">
               <h3>Saved Addresses</h3>
@@ -343,67 +350,118 @@ body {
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const couponSelect = document.getElementById("couponSelect");
-    const checkoutForm = document.getElementById("checkoutForm");
-    const subtotalElement = document.getElementById("subtotal");
-    const discountElement = document.getElementById("discount");
-    const totalAmountElement = document.getElementById("totalAmount");
-    const couponMessageElement = document.getElementById("couponMessage");
-    const codRadio = document.querySelector('input[value="COD"]');
-    const codLabel = codRadio.parentElement;
-    const codWarning = document.createElement('small');
-    codWarning.classList.add('text-danger');
-    codWarning.textContent = 'COD is not available for orders above Rs 1000';
+  const couponSelect = document.getElementById("couponSelect");
+  const applyCouponBtn = document.getElementById("applyCouponBtn");
+  const removeCouponBtn = document.getElementById("removeCouponBtn");
+  const checkoutForm = document.getElementById("checkoutForm");
+  const subtotalElement = document.getElementById("subtotal");
+  const discountElement = document.getElementById("discount");
+  const totalAmountElement = document.getElementById("totalAmount");
+  const couponMessageElement = document.getElementById("couponMessage");
+  const codRadio = document.querySelector('input[value="COD"]');
+  const codLabel = codRadio.parentElement;
+  const codWarning = document.createElement('small');
+  codWarning.classList.add('text-danger');
+  codWarning.textContent = 'COD is not available for orders above Rs 1000';
 
-    function updatePaymentOptions() {
-      const totalAmount = parseFloat(totalAmountElement.textContent);
-      
-      if (totalAmount > 1000) {
-        codRadio.disabled = true;
-        if (!codLabel.contains(codWarning)) {
-          codLabel.appendChild(codWarning);
-        }
-      } else {
-        codRadio.disabled = false;
-        if (codLabel.contains(codWarning)) {
-          codLabel.removeChild(codWarning);
-        }
+  let appliedCouponId = null;
+
+  function updatePaymentOptions() {
+    const totalAmount = parseFloat(totalAmountElement.textContent);
+    
+    if (totalAmount > 1000) {
+      codRadio.disabled = true;
+      if (!codLabel.contains(codWarning)) {
+        codLabel.appendChild(codWarning);
+      }
+    } else {
+      codRadio.disabled = false;
+      if (codLabel.contains(codWarning)) {
+        codLabel.removeChild(codWarning);
       }
     }
+  }
 
-    async function applyCoupon() {
-      const formData = new FormData(checkoutForm);
+  async function applyCoupon() {
+    const selectedCouponId = couponSelect.value;
+    if (!selectedCouponId) {
+      couponMessageElement.innerText = "Please select a coupon first.";
+      return;
+    }
 
-      try {
-        const response = await fetch("/apply-coupon", {
-          method: "POST",
-          body: formData,
-        });
+    const formData = new FormData(checkoutForm);
+    formData.set('couponSelect', selectedCouponId);
 
-        const result = await response.json();
+    try {
+      const response = await fetch("/apply-coupon", {
+        method: "POST",
+        body: formData,
+      });
 
-        if (result.success) {
-          discountElement.innerText = result.discount.toFixed(2);
-          totalAmountElement.innerText = result.newTotal.toFixed(2);
-          couponMessageElement.innerText = "Coupon applied successfully!";
-        } else {
-          discountElement.innerText = "0.00";
-          totalAmountElement.innerText = subtotalElement.innerText;
-          couponMessageElement.innerText = result.message || "Coupon is not valid!";
-        }
+      const result = await response.json();
+
+      if (result.success) {
+        discountElement.innerText = result.discount.toFixed(2);
+        totalAmountElement.innerText = result.newTotal.toFixed(2);
+        couponMessageElement.innerText = "Coupon applied successfully!";
+        appliedCouponId = selectedCouponId;
+        removeCouponBtn.style.display = 'inline-block';
+        applyCouponBtn.style.display = 'none';
+        
+      
+        document.getElementById('appliedCouponId').value = appliedCouponId;
+        document.getElementById('discountAmount').value = result.discount;
+      } else {
+        couponMessageElement.innerText = result.message || "Coupon is not valid!";
+      }
+
+      updatePaymentOptions();
+    } catch (error) {
+      console.error("Error applying coupon:", error);
+      couponMessageElement.innerText = "An error occurred while applying the coupon.";
+    }
+  }
+
+  async function removeCoupon() {
+    try {
+      const response = await fetch("/remove-coupon", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ appliedCouponId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        discountElement.innerText = "0.00";
+        totalAmountElement.innerText = subtotalElement.innerText;
+        couponMessageElement.innerText = "Coupon removed.";
+        appliedCouponId = null;
+        removeCouponBtn.style.display = 'none';
+        applyCouponBtn.style.display = 'inline-block';
+        couponSelect.value = ""; 
+        
+        
+        document.getElementById('appliedCouponId').value = '';
+        document.getElementById('discountAmount').value = '0';
 
         updatePaymentOptions();
-      } catch (error) {
-        console.error("Error applying coupon:", error);
-        couponMessageElement.innerText = "An error occurred while applying the coupon.";
+      } else {
+        couponMessageElement.innerText = "Error removing coupon. Please try again.";
       }
+    } catch (error) {
+      console.error("Error removing coupon:", error);
+      couponMessageElement.innerText = "An error occurred while removing the coupon.";
     }
+  }
 
-    couponSelect.addEventListener("change", applyCoupon);
+  applyCouponBtn.addEventListener("click", applyCoupon);
+  removeCouponBtn.addEventListener("click", removeCoupon);
 
-  
-    updatePaymentOptions();
-  });
+  updatePaymentOptions();
+});
 </script>
 <!-- Footer Section Begin -->
 <%-include("../../views/partials/user/footer") %>
