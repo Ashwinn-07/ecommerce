@@ -32,10 +32,12 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    quantity: {
-      type: Number,
-      required: true,
-    },
+    sizes: [
+      {
+        size: String,
+        quantity: Number,
+      },
+    ],
     color: {
       type: String,
       required: true,

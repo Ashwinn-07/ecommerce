@@ -143,47 +143,53 @@
       <div class="col-lg-9">
         <div class="row">
           <% products.forEach(product => { %>
-          <div class="col-lg-4 col-md-6 col-sm-6">
-            <div class="product__item <%= product.salePrice < product.regularPrice ? 'sale' : '' %>">
-              <div class="product__item__pic set-bg" data-setbg="/uploads/re-image/<%= product.productImage[0] %>">
-                <ul class="product__hover">
-                  <li>
-                    <a href="#"><img src="/img/icon/heart.png" alt="" /></a>
-                  </li>
-                  <li>
-                    <a href="#"><img src="/img/icon/compare.png" alt="" /><span>Compare</span></a>
-                  </li>
-                  <li>
-                    <a href="#"><img src="/img/icon/search.png" alt="" /></a>
-                  </li>
-                </ul>
-              </div>
-              <div class="product__item__text">
-                <h6>
-                  <a href="/product/<%= product._id %>"><%= product.productName %></a>
-                </h6>
-                <div class="rating">
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
-                  <i class="fa fa-star"></i>
+            <div class="col-lg-4 col-md-6 col-sm-6">
+              <div class="product__item <%= product.salePrice < product.regularPrice ? 'sale' : '' %>">
+                <div class="product__item__pic set-bg" data-setbg="/uploads/re-image/<%= product.productImage[0] %>">
+                  <ul class="product__hover">
+                    <li>
+                      <a href="#"><img src="/img/icon/heart.png" alt="" /></a>
+                    </li>
+                    <li>
+                      <a href="#"><img src="/img/icon/compare.png" alt="" /><span>Compare</span></a>
+                    </li>
+                    <li>
+                      <a href="#"><img src="/img/icon/search.png" alt="" /></a>
+                    </li>
+                  </ul>
                 </div>
-                <div class="product__price">
-                  $<%= product.salePrice.toFixed(2) %> 
-                  <% if (product.salePrice < product.regularPrice) { %>
-                    <span><del>$<%= product.regularPrice.toFixed(2) %></del></span>
+                <div class="product__item__text">
+                  <h6>
+                    <a href="/product/<%= product._id %>"><%= product.productName %></a>
+                  </h6>
+                  <div class="rating">
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                  </div>
+                  <div class="product__price">
+                    $<%= product.salePrice.toFixed(2) %> 
+                    <% if (product.salePrice < product.regularPrice) { %>
+                      <span><del>$<%= product.regularPrice.toFixed(2) %></del></span>
+                    <% } %>
+                  </div>
+                  <% if (product.sizeQuantities.some(sq => sq.quantity > 0)) { %>
+                    <p>In Stock:
+                      <% product.sizeQuantities.forEach(sq => { %>
+                        <% if (sq.quantity > 0) { %>
+                          <%= sq.size %> (<%= sq.quantity %>)
+                        <% } %>
+                      <% }); %>
+                    </p>
+                  <% } else { %>
+                    <p>Out of Stock</p>
                   <% } %>
                 </div>
-                <% if (product.quantity === 0) { %>
-                  Out of Stock
-                <% } else { %>
-                  In Stock: <%= product.quantity %>
-                <% } %>
               </div>
             </div>
-          </div>
-          <% }) %>
+          <% }); %>
         </div>
         <div class="row">
           <div class="col-lg-12">

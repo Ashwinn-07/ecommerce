@@ -256,50 +256,60 @@
               $<%= product.salePrice %>
               <span><del>$<%= product.regularPrice %></del></span>
             </h3>
-            <% if (product.quantity === 0) { %> Out of Stock <% } else{%> In
-            Stock:<%= product.quantity %> <% } %>
-            <p><%= product.description %></p>
+            
+
+            <div class="product__details__option">
+              <div class="product__details__option__size" data-available-sizes='<%= JSON.stringify(availableSizes) %>'>
+                <span>Size:</span>
+                <% availableSizes.forEach(sizeObj => { %>
+                  <label for="<%= sizeObj.size %>">
+                    <%= sizeObj.size %> (<%= sizeObj.quantity %>)
+                    <input type="radio" id="<%= sizeObj.size %>" name="size" value="<%= sizeObj.size %>">
+                  </label>
+                <% }); %>
+              </div>
+            </div>
+            
+            <% if (availableSizes.length === 0) { %>
+              <p class="out-of-stock">Out of Stock</p>
+            <% } else { %>
+              <p>Available Sizes: <%= availableSizes.map(s => s.size).join(', ') %></p>
+            <% } %>
 
             <form id="add-to-cart-form" action="/add-to-cart" method="POST">
-              <input
-                type="hidden"
-                name="productId"
-                value="<%= product._id %>"
-              />
+              <input type="hidden" name="productId" value="<%= product._id %>">
+              <input type="hidden" name="selectedSize" id="selectedSize">
               <div class="product__details__cart__option">
                 <div class="quantity">
                   <div class="pro-qty">
-                    <input type="number" name="quantity" value="1" min="1" />
+                    <input type="number" name="quantity" value="1" min="1" max="<%= Math.max(...availableSizes.map(s => s.quantity)) %>">
                   </div>
                 </div>
-                <button
-      type="submit"
-      class="primary-btn"
-      <%= product.quantity === 0 ? 'disabled' : '' %>
-    >
-      <%= product.quantity === 0 ? 'Out of Stock' : 'Add to Cart' %>
-    </button>
+                <button type="submit" class="primary-btn" <%= availableSizes.length === 0 ? 'disabled' : '' %>>
+                  <%= availableSizes.length === 0 ? 'Out of Stock' : 'Add to Cart' %>
+                </button>
               </div>
             </form>
 
             <div class="product__details__btns__option">
               <form
-                action="/wishlist/add/<%= product._id %>"
-                method="POST"
-                style="display: inline"
-              >
-                <button
-                  type="submit"
-                  style="
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    padding: 0;
-                  "
-                >
-                  <i class="fa fa-heart"></i> add to wishlist
-                </button>
-              </form>
+  action="/wishlist/add/<%= product._id %>"
+  method="POST"
+  style="display: inline"
+>
+  <input type="hidden" name="size" id="wishlist-size">
+  <button
+    type="submit"
+    style="
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    "
+  >
+    <i class="fa fa-heart"></i> add to wishlist
+  </button>
+</form>
             </div>
             <div class="product__details__last__option">
               <h5><span>Guaranteed Safe Checkout</span></h5>
@@ -460,6 +470,49 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+  const sizeInputs = document.querySelectorAll('input[name="size"]');
+  const selectedSizeInput = document.getElementById('selectedSize');
+  const addToCartForm = document.getElementById('add-to-cart-form');
+  const quantityInput = document.querySelector('input[name="quantity"]');
+  const wishlistSizeInput = document.getElementById('wishlist-size');
+  const sizeContainer = document.querySelector('.product__details__option__size');
+  const availableSizes = JSON.parse(sizeContainer.dataset.availableSizes);
+  
+  if (availableSizes.length > 0) {
+    wishlistSizeInput.value = availableSizes[0].size;
+  }
+
+  sizeInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      const selectedSizeObj = availableSizes.find(s => s.size === this.value);
+      selectedSizeInput.value = this.value.toString();
+      wishlistSizeInput.value = this.value.toString();
+      updateMaxQuantity(this.value);
+    });
+  });
+
+function updateMaxQuantity(size) {
+  const selectedSizeObj = availableSizes.find(s => s.size === size);
+  if (selectedSizeObj) {
+    quantityInput.max = selectedSizeObj.quantity;
+    quantityInput.value = Math.min(quantityInput.value, selectedSizeObj.quantity);
+  }
+}
+
+addToCartForm.addEventListener('submit', function(e) {
+  if (!selectedSizeInput.value) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Oops...',
+      text: 'Please select a size before adding to cart.',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+  }
+});
+});
+  
   document.addEventListener("DOMContentLoaded", function () {
     function activateImageZoom() {
       const activeTabPane = document.querySelector(".tab-pane.active");

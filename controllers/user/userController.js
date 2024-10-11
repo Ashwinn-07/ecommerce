@@ -272,7 +272,7 @@ const loadShopPage = async (req, res) => {
       query.category = categoryFilter;
     }
     if (stockFilter) {
-      query.quantity = { $gt: 0 };
+      query.sizes = { $elemMatch: { quantity: { $gt: 0 } } };
     }
     if (searchQuery) {
       query.$or = [
@@ -286,6 +286,20 @@ const loadShopPage = async (req, res) => {
       .sort(sortOption)
       .limit(limit * 1)
       .skip((page - 1) * limit);
+
+    const sizeQuantities = await Product.aggregate([
+      { $match: query },
+      { $unwind: "$sizes" },
+      {
+        $project: { _id: 1, size: "$sizes.size", quantity: "$sizes.quantity" },
+      },
+    ]);
+    products.forEach((product) => {
+      const sizeQuantitiesForProduct = sizeQuantities.filter(
+        (sq) => sq._id.toString() === product._id.toString()
+      );
+      product.sizeQuantities = sizeQuantitiesForProduct;
+    });
 
     const categories = await Category.find({ isListed: true });
     res.render("shop", {
@@ -329,6 +343,8 @@ const loadProductDetails = async (req, res) => {
         },
       });
 
+    const availableSizes = product.sizes.filter((size) => size.quantity > 0);
+
     const limit = 4;
     const relatedProducts = await Product.find({
       category: product.category._id,
@@ -345,6 +361,7 @@ const loadProductDetails = async (req, res) => {
       product: product,
       relatedProducts: relatedProducts,
       user,
+      availableSizes,
     });
   } catch (error) {
     console.error("error finding product", error);

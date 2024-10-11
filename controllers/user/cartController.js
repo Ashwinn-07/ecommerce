@@ -16,6 +16,12 @@ const updateCartPrices = async (userId) => {
         item.totalPrice = currentPrice * item.quantity;
         updated = true;
       }
+
+      const sizeObj = product.sizes.find((s) => s.size === item.size);
+      if (!sizeObj || sizeObj.quantity === 0) {
+        cart.items = cart.items.filter((cartItem) => cartItem._id !== item._id);
+        updated = true;
+      }
     }
 
     if (updated) {
@@ -28,14 +34,31 @@ const updateCartPrices = async (userId) => {
 
 const addToCart = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, selectedSize } = req.body;
     const userId = req.session.user;
+    console.log("addToCart request body:", req.body);
     const product = await Product.findById(productId);
     const referer = req.get("Referer");
+
+    if (!selectedSize) {
+      console.error("Size not found");
+      return res.status(400).json({ message: "Size is required" });
+    }
 
     if (!product) {
       return res.redirect(
         `${referer}?action=addtocart&result=error&message=Product not found`
+      );
+    }
+    console.log(`Product sizes:`, product.sizes);
+    console.log(`Requested size:`, selectedSize);
+    const sizeObj = product.sizes.find((s) => s.size === selectedSize);
+    console.log(`Size object found:`, sizeObj);
+    console.log(`Requested quantity:`, quantity);
+    console.log(`Available quantity:`, sizeObj.quantity);
+    if (!sizeObj || sizeObj.quantity < quantity) {
+      return res.redirect(
+        `${referer}?action=addtocart&result=error&message=Not enough stock for selected size`
       );
     }
 
@@ -45,35 +68,28 @@ const addToCart = async (req, res) => {
     }
 
     const existingProductIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === productId
+      (item) =>
+        item.productId.toString() === productId && item.size === selectedSize
     );
 
     if (existingProductIndex !== -1) {
       const newQuantity =
         cart.items[existingProductIndex].quantity + parseInt(quantity);
 
-      if (product.quantity < newQuantity) {
+      if (sizeObj.quantity < newQuantity) {
         return res.redirect(
-          `${referer}?action=addtocart&result=error&message=Not enough stock`
+          `${referer}?action=addtocart&result=error&message=Not enough stock for selected size`
         );
       }
 
       cart.items[existingProductIndex].quantity = newQuantity;
       cart.items[existingProductIndex].totalPrice =
         product.salePrice * newQuantity;
-
-      await cart.save();
-      return res.redirect(`${referer}?action=addtocart&result=updated`);
     } else {
-      if (product.quantity < quantity) {
-        return res.redirect(
-          `${referer}?action=addtocart&result=error&message=Not enough stock`
-        );
-      }
-
       cart.items.push({
         productId,
         quantity,
+        size: selectedSize,
         price: product.salePrice,
         totalPrice: product.salePrice * quantity,
       });
@@ -139,7 +155,7 @@ const removeFromCart = async (req, res) => {
 
 const updateCartQuantity = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, size } = req.body;
     const userId = req.session.user;
 
     const product = await Product.findById(productId);
@@ -147,8 +163,11 @@ const updateCartQuantity = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    if (product.quantity < quantity) {
-      return res.status(400).json({ message: "Not enough stock" });
+    const sizeObj = product.sizes.find((s) => s.size === size);
+    if (!sizeObj || sizeObj.quantity < quantity) {
+      return res
+        .status(400)
+        .json({ message: "Not enough stock for selected size" });
     }
 
     const cart = await Cart.findOne({ userId });
@@ -157,7 +176,7 @@ const updateCartQuantity = async (req, res) => {
     }
 
     const itemIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === productId
+      (item) => item.productId.toString() === productId && item.size === size
     );
 
     if (itemIndex > -1) {

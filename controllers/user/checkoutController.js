@@ -228,6 +228,7 @@ const paypalSuccess = async (req, res) => {
           $set: {
             orderedItems: cartItems.map((item) => ({
               product: item.productId,
+              size: item.size,
               quantity: item.quantity,
               price: item.totalPrice,
             })),
@@ -249,6 +250,7 @@ const paypalSuccess = async (req, res) => {
           userId,
           orderedItems: cartItems.map((item) => ({
             product: item.productId,
+            size: item.size,
             quantity: item.quantity,
             price: item.totalPrice,
           })),
@@ -310,6 +312,24 @@ const checkout = async (req, res) => {
       if (!product || product.quantity < item.quantity) {
         return res.status(400).json({
           message: `Product "${product.productName}" is out of stock or has insufficient quantity.`,
+        });
+      }
+    }
+    for (const item of cart.items) {
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        return res.status(400).json({
+          message: `Product "${item.productId.productName}" not found.`,
+        });
+      }
+
+      const sizeIndex = product.sizes.findIndex((s) => s.size === item.size);
+      if (
+        sizeIndex === -1 ||
+        product.sizes[sizeIndex].quantity < item.quantity
+      ) {
+        return res.status(400).json({
+          message: `Product "${product.productName}" (${item.size}) is out of stock or has insufficient quantity.`,
         });
       }
     }
@@ -378,6 +398,7 @@ const checkout = async (req, res) => {
         userId,
         orderedItems: cart.items.map((item) => ({
           product: item.productId,
+          size: item.size,
           quantity: item.quantity,
           price: item.totalPrice,
         })),
@@ -402,6 +423,12 @@ const checkout = async (req, res) => {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { quantity: -item.quantity },
         });
+      }
+      for (const item of cart.items) {
+        await Product.findOneAndUpdate(
+          { _id: item.productId, "sizes.size": item.size },
+          { $inc: { "sizes.$.quantity": -item.quantity } }
+        );
       }
 
       cart.items = [];
@@ -429,6 +456,7 @@ const checkout = async (req, res) => {
           userId,
           orderedItems: cart.items.map((item) => ({
             product: item.productId,
+            size: item.size,
             quantity: item.quantity,
             price: item.totalPrice,
           })),
@@ -465,6 +493,7 @@ const checkout = async (req, res) => {
         userId,
         orderedItems: cart.items.map((item) => ({
           product: item.productId,
+          size: item.size,
           quantity: item.quantity,
           price: item.totalPrice,
         })),
@@ -481,9 +510,10 @@ const checkout = async (req, res) => {
       const savedOrder = await order.save();
 
       for (const item of cart.items) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { quantity: -item.quantity },
-        });
+        await Product.findOneAndUpdate(
+          { _id: item.productId, "sizes.size": item.size },
+          { $inc: { "sizes.$.quantity": -item.quantity } }
+        );
       }
       cart.items = [];
       await cart.save();

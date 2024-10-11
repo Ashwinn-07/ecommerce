@@ -33,7 +33,9 @@ const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     const userId = req.session.user;
-    const order = await Order.findOne({ _id: orderId, userId });
+    const order = await Order.findOne({ _id: orderId, userId }).populate(
+      "orderedItems.product"
+    );
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -42,9 +44,10 @@ const cancelOrder = async (req, res) => {
     }
 
     for (const item of order.orderedItems) {
-      await Product.findByIdAndUpdate(item.product._id, {
-        $inc: { quantity: item.quantity },
-      });
+      await Product.findOneAndUpdate(
+        { _id: item.product, "sizes.size": item.size },
+        { $inc: { "sizes.$.quantity": item.quantity } }
+      );
     }
 
     let wallet = await Wallet.findOne({ userId });
@@ -76,7 +79,9 @@ const returnOrder = async (req, res) => {
     const orderId = req.params.orderId;
     const userId = req.session.user;
     const { returnReason } = req.body;
-    const order = await Order.findOne({ _id: orderId, userId });
+    const order = await Order.findOne({ _id: orderId, userId }).populate(
+      "orderedItems.product"
+    );
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -89,6 +94,13 @@ const returnOrder = async (req, res) => {
     }
 
     order.status = "Return Pending";
+
+    for (const item of order.orderedItems) {
+      await Product.findOneAndUpdate(
+        { _id: item.product, "sizes.size": item.size },
+        { $inc: { "sizes.$.quantity": item.quantity } }
+      );
+    }
 
     await order.save();
     res.redirect("/orders");

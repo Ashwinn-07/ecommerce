@@ -56,6 +56,11 @@ const addProducts = async (req, res) => {
         return res.status(400).json("Invalid brand name");
       }
 
+      const sizes = products.sizes.map((size, index) => ({
+        size: size,
+        quantity: products.quantities[index],
+      }));
+
       const newProduct = new Product({
         productName: products.productName,
         description: products.description,
@@ -65,7 +70,7 @@ const addProducts = async (req, res) => {
         salePrice: products.salePrice,
         createdOn: new Date(),
         quantity: products.quantity,
-        size: products.size,
+        sizes: sizes,
         color: products.color,
         productImage: images,
         status: "Available",
@@ -182,6 +187,11 @@ const editProduct = async (req, res) => {
       return res.status(400).json("Invalid brand name");
     }
 
+    const sizes = data.sizes.map((size, index) => ({
+      size: size,
+      quantity: data.quantities[index],
+    }));
+
     const updateFields = {
       productName: data.productName,
       description: data.description,
@@ -190,7 +200,7 @@ const editProduct = async (req, res) => {
       regularPrice: data.regularPrice,
       salePrice: data.salePrice,
       quantity: data.quantity,
-      size: data.size,
+      sizes: sizes,
       color: data.color,
     };
     if (req.files.length > 0) {

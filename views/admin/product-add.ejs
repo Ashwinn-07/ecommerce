@@ -102,7 +102,7 @@
                 </div>
               </div>
 
-              <div class="col-lg-4">
+              <!-- <div class="col-lg-4">
                 <div class="mb-4">
                   <label class="form-label">Quantity</label>
                   <input
@@ -113,7 +113,7 @@
                   />
                   <div id="quantity-error" class="error-message"></div>
                 </div>
-              </div>
+              </div> -->
             </div>
 
             <div class="row">
@@ -124,6 +124,32 @@
                   <div id="color-error" class="error-message"></div>
                 </div>
               </div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label">Sizes</label>
+              <div id="sizesContainer">
+                <div class="size-input">
+                  <input
+                    type="text"
+                    name="sizes[]"
+                    placeholder="Size"
+                    class="form-control border mb-2"
+                  />
+                  <input
+                    type="number"
+                    name="quantities[]"
+                    placeholder="Quantity"
+                    class="form-control border mb-2"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onclick="addSizeInput()"
+                class="btn btn-secondary"
+              >
+                Add Another Size
+              </button>
             </div>
 
             <div class="card mb-4">
@@ -323,6 +349,17 @@
 <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
 
 <script>
+  function addSizeInput() {
+    const container = document.getElementById("sizesContainer");
+    const newInput = document.createElement("div");
+    newInput.className = "size-input";
+    newInput.innerHTML = `
+    <input type="text" name="sizes[]" placeholder="Size" class="form-control border mb-2">
+    <input type="number" name="quantities[]" placeholder="Quantity" class="form-control border mb-2">
+  `;
+    container.appendChild(newInput);
+  }
+
   function validateAndSubmit() {
     if (validateForm()) {
       document.forms[0].submit();
@@ -445,7 +482,7 @@
     const saleprice = document.getElementsByName("salePrice")[0].value.trim();
     const color = document.getElementsByName("color")[0].value.trim();
     const category = document.getElementsByName("category")[0].value.trim();
-    const quantity = document.getElementsByName("quantity")[0].value.trim();
+    // const quantity = document.getElementsByName("quantity")[0].value.trim();
     const images = document.getElementById("input1");
 
     let isValid = true;
@@ -475,13 +512,13 @@
       isValid = false;
     }
 
-    if (quantity === "" || parseInt(quantity) < 0) {
-      displayErrorMessage(
-        "quantity-error",
-        "Please enter a valid positive quantity."
-      );
-      isValid = false;
-    }
+    // if (quantity === "" || parseInt(quantity) < 0) {
+    //   displayErrorMessage(
+    //     "quantity-error",
+    //     "Please enter a valid positive quantity."
+    //   );
+    //   isValid = false;
+    // }
 
     if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) <= 0) {
       displayErrorMessage(

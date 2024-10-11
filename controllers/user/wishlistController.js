@@ -18,6 +18,7 @@ const addToWishlist = async (req, res) => {
   try {
     const { productId } = req.params;
     const userId = req.session.user;
+    const size = req.body.size;
     let wishlist = await Wishlist.findOne({ userId });
     if (!wishlist) {
       wishlist = new Wishlist({ userId, products: [] });
@@ -26,7 +27,7 @@ const addToWishlist = async (req, res) => {
       (item) => item.productId.toString() === productId
     );
     if (!productExists) {
-      wishlist.products.push({ productId });
+      wishlist.products.push({ productId, size });
       await wishlist.save();
       res.redirect(`/product/${productId}?wishlist=added`);
     } else {
