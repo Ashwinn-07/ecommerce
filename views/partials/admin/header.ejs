@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Male-Fashion</title>
+    <title>Style Craft</title>
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,6 +15,10 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <script
       src="https://kit.fontawesome.com/16d4885483.js"
@@ -48,15 +52,67 @@
         background-color: #1abc9c;
         color: #ffffff;
       }
+      .logo {
+        margin-left: -50px;
+      }
+      .logo .logo-text {
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: #333;
+        letter-spacing: 1.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        text-decoration: none;
+      }
+
+      .logo .highlight {
+        color: #ff5f17;
+        font-weight: 800;
+      }
+
+      .logo .logo-icon {
+        width: 30px;
+        height: auto;
+        margin-right: 6px;
+      }
+
+      .logo .wavy-text {
+        display: inline-block;
+        position: relative;
+        animation: wave 1.5s infinite linear;
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
     </style>
   </head>
   <body>
     <div class="screen-overlay"></div>
     <aside class="navbar-aside" id="offcanvas_aside">
       <div class="aside-top">
-        <a href="#" class="brand-wrap">
+        <!-- <a href="#" class="brand-wrap">
           <img src="/img/logo.png" class="logo" alt="Men Fashion Dashboard" />
+        </a> -->
+        <a href="#" class="brand-wrap">
+          <div class="logo">
+            <a href="#" class="logo-text">
+              <i class="fas fa-shopping-bag logo-icon"></i>
+              <span class="wavy-text">Style</span>
+              <span class="highlight">Craft</span>
+            </a>
+          </div>
         </a>
+
         <div>
           <button class="btn btn-icon btn-aside-minimize">
             <i class="text-muted material-icons md-menu_open"></i>

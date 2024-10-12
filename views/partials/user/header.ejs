@@ -6,12 +6,16 @@
     <meta name="keywords" content="Male_Fashion, unica, creative, html" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Male-Fashion | Template</title>
+    <title>Style Craft</title>
 
     <!-- Google Font -->
     <link
       href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
 
     <!-- Css Styles -->
@@ -71,6 +75,67 @@
       .mobile-nav-dropdown {
         display: none;
       }
+      /* Styling for the logo text */
+      .header__logo {
+        display: flex;
+        align-items: center;
+      }
+
+      .logo-text {
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: #333;
+        letter-spacing: 1.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        text-decoration: none;
+      }
+
+      .logo-text .highlight {
+        color: #ff5f17;
+        font-weight: 800;
+      }
+
+      .logo-icon {
+        width: 30px;
+        height: auto;
+        margin-right: 6px;
+      }
+
+      .logo-text {
+        display: inline-block;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .wavy-text {
+        display: inline-block;
+        position: relative;
+        animation: wave 1.5s infinite linear;
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .logo-text:hover .highlight {
+        color: #f04f00;
+        transition: color 0.3s ease;
+      }
+
+      .logo-text:hover {
+        color: #555;
+        transition: color 0.3s ease;
+      }
 
       @media (max-width: 991px) {
         .header__menu {
@@ -116,8 +181,15 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-3 col-md-3">
-            <div class="header__logo">
+            <!-- <div class="header__logo">
               <a href="/"><img src="/img/logo.png" alt="" /></a>
+            </div> -->
+            <div class="header__logo">
+              <a href="/" class="logo-text">
+                <i class="fas fa-shopping-bag logo-icon"></i>
+                <span class="wavy-text">Style</span
+                ><span class="highlight">Craft</span>
+              </a>
             </div>
           </div>
           <div class="col-lg-6 col-md-6">
