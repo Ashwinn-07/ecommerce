@@ -357,6 +357,8 @@ const generateSalesReport = async (req, res) => {
 
     const reportData = await generateReportData(reportType, startDate, endDate);
 
+    req.session.reportData = reportData;
+
     const chartUrl = await generateChartImage(
       reportData.labels,
       reportData.salesData
@@ -390,11 +392,7 @@ const generateSalesReport = async (req, res) => {
 const downloadReport = async (req, res) => {
   try {
     const { type } = req.query;
-    const reportData = await generateReportData(
-      req.session.lastReportType,
-      req.session.lastStartDate,
-      req.session.lastEndDate
-    );
+    const reportData = req.session.reportData;
 
     if (type === "pdf") {
       await generatePdf(res, reportData);
@@ -445,31 +443,33 @@ async function generateReportData(reportType, startDate, endDate) {
   const result = await Order.aggregate([
     { $match: query },
     {
-      $group: {
-        _id: groupBy,
-        totalSales: { $sum: "$finalAmount" },
-        totalOrders: { $sum: 1 },
-        totalDiscount: { $sum: "$discount" },
+      $project: {
+        _id: 1,
+        userId: 1,
+        orderedItems: 1,
+        totalPrice: 1,
+        finalAmount: 1,
+        discount: 1,
+        status: 1,
+        paymentMethod: 1,
+        createdOn: 1,
       },
     },
-    { $sort: { _id: 1 } },
   ]);
-  const labels = result.map((item) => item._id);
-  const salesData = result.map((item) => item.totalSales);
-  const totalSales = result.reduce((sum, item) => sum + item.totalSales, 0);
-  const totalOrders = result.reduce((sum, item) => sum + item.totalOrders, 0);
-  const totalDiscount = result.reduce(
-    (sum, item) => sum + item.totalDiscount,
-    0
-  );
 
-  return {
-    labels,
-    salesData,
-    totalSales,
-    totalOrders,
-    totalDiscount,
-  };
+  const orders = result.map((order) => ({
+    orderId: order._id,
+    userId: order.userId,
+    orderedItems: order.orderedItems,
+    totalPrice: order.totalPrice,
+    finalAmount: order.finalAmount,
+    discount: order.discount,
+    status: order.status,
+    paymentMethod: order.paymentMethod,
+    createdOn: order.createdOn,
+  }));
+
+  return orders;
 }
 
 async function generateChartImage(labels, salesData) {
@@ -504,24 +504,86 @@ async function generateChartImage(labels, salesData) {
 }
 
 async function generatePdf(res, reportData) {
-  const doc = new PDFDocument();
+  const doc = new PDFDocument({ margin: 50, size: "A4", layout: "landscape" });
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=sales_report.pdf");
 
   doc.pipe(res);
+
+  const truncate = (text, length) => {
+    return text.length > length ? text.substring(0, length - 3) + "..." : text;
+  };
+
   doc.fontSize(18).text("Sales Report", { align: "center" });
   doc.moveDown();
-  doc.fontSize(12).text(`Total Sales: ${reportData.totalSales}`);
-  doc.text(`Total Orders: ${reportData.totalOrders}`);
-  doc.text(`Total Discount: ${reportData.totalDiscount}`);
-  const chartImage = await generateChartImage(
-    reportData.labels,
-    reportData.salesData
-  );
-  doc.image(chartImage, {
-    fit: [500, 300],
-    align: "center",
-    valign: "center",
+
+  const table = {
+    headers: [
+      "Order ID",
+      "User ID",
+      "Total Price",
+      "Final Amount",
+      "Discount",
+      "Status",
+      "Payment",
+      "Created On",
+    ],
+    rows: reportData.map((order) => [
+      truncate(order.orderId.toString(), 8),
+      truncate(order.userId.toString(), 8),
+      order.totalPrice.toFixed(2),
+      order.finalAmount.toFixed(2),
+      order.discount.toFixed(2),
+      truncate(order.status, 10),
+      truncate(order.paymentMethod, 10),
+      new Date(order.createdOn).toLocaleDateString(),
+    ]),
+  };
+
+  const tableTop = 100;
+  const tableLeft = 50;
+  const columnWidths = [70, 70, 80, 80, 70, 80, 80, 90];
+
+  doc.font("Helvetica-Bold").fontSize(12);
+  table.headers.forEach((header, i) => {
+    doc.text(
+      header,
+      tableLeft + columnWidths.slice(0, i).reduce((sum, w) => sum + w, 0),
+      tableTop,
+      {
+        width: columnWidths[i],
+        align: "left",
+      }
+    );
+  });
+
+  doc.font("Helvetica").fontSize(10);
+  table.rows.forEach((row, rowIndex) => {
+    const rowTop = tableTop + 25 + rowIndex * 20;
+    row.forEach((cell, columnIndex) => {
+      doc.text(
+        cell.toString(),
+        tableLeft +
+          columnWidths.slice(0, columnIndex).reduce((sum, w) => sum + w, 0),
+        rowTop,
+        {
+          width: columnWidths[columnIndex],
+          align: columnIndex > 1 && columnIndex < 5 ? "right" : "left",
+        }
+      );
+    });
+  });
+
+  table.rows.forEach((row, rowIndex) => {
+    const rowTop = tableTop + 25 + rowIndex * 20;
+    doc
+      .rect(
+        tableLeft,
+        rowTop,
+        columnWidths.reduce((sum, w) => sum + w, 0),
+        20
+      )
+      .stroke();
   });
 
   doc.end();
@@ -531,13 +593,32 @@ async function generateExcel(res, reportData) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Sales Report");
 
-  worksheet.addRow(["Date", "Sales"]);
-  reportData.labels.forEach((label, index) => {
-    worksheet.addRow([label, reportData.salesData[index]]);
+  worksheet.columns = [
+    { header: "Order ID", key: "orderId", width: 15 },
+    { header: "User ID", key: "userId", width: 15 },
+    { header: "Total Price", key: "totalPrice", width: 12 },
+    { header: "Final Amount", key: "finalAmount", width: 12 },
+    { header: "Discount", key: "discount", width: 10 },
+    { header: "Status", key: "status", width: 15 },
+    { header: "Payment Method", key: "paymentMethod", width: 15 },
+    { header: "Created On", key: "createdOn", width: 20 },
+  ];
+
+  reportData.forEach((order) => {
+    worksheet.addRow({
+      orderId: order.orderId,
+      userId: order.userId,
+      totalPrice: order.totalPrice,
+      finalAmount: order.finalAmount,
+      discount: order.discount,
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      createdOn: new Date(order.createdOn),
+    });
   });
-  worksheet.addRow(["Total Sales", reportData.totalSales]);
-  worksheet.addRow(["Total Orders", reportData.totalOrders]);
-  worksheet.addRow(["Total Discount", reportData.totalDiscount]);
+
+  worksheet.getColumn("createdOn").numFmt = "yyyy-mm-dd hh:mm:ss";
+
   res.setHeader(
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
