@@ -316,9 +316,10 @@ const paypalSuccess = async (req, res) => {
       }
 
       for (const item of cartItems) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { quantity: -item.quantity },
-        });
+        await Product.findOneAndUpdate(
+          { _id: item.productId, "sizes.size": item.size },
+          { $inc: { "sizes.$.quantity": -item.quantity } }
+        );
       }
 
       await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
