@@ -349,7 +349,7 @@ body {
 <!-- Checkout Section End -->
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
   const couponSelect = document.getElementById("couponSelect");
   const applyCouponBtn = document.getElementById("applyCouponBtn");
   const removeCouponBtn = document.getElementById("removeCouponBtn");
@@ -382,45 +382,47 @@ body {
     }
   }
 
-  async function applyCoupon() {
-    const selectedCouponId = couponSelect.value;
-    if (!selectedCouponId) {
-      couponMessageElement.innerText = "Please select a coupon first.";
-      return;
-    }
+  function updateOrderSummary(subtotal, discount, total) {
+  subtotalElement.textContent = isNaN(parseFloat(subtotal)) ? '' : parseFloat(subtotal).toFixed(2);
+  discountElement.textContent = isNaN(parseFloat(discount)) ? '' : parseFloat(discount).toFixed(2);
+  totalAmountElement.textContent = isNaN(parseFloat(total)) ? '' : parseFloat(total).toFixed(2);
+}
 
-    const formData = new FormData(checkoutForm);
-    formData.set('couponSelect', selectedCouponId);
-
-    try {
-      const response = await fetch("/apply-coupon", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        discountElement.innerText = result.discount.toFixed(2);
-        totalAmountElement.innerText = result.newTotal.toFixed(2);
-        couponMessageElement.innerText = "Coupon applied successfully!";
-        appliedCouponId = selectedCouponId;
-        removeCouponBtn.style.display = 'inline-block';
-        applyCouponBtn.style.display = 'none';
-        
-      
-        document.getElementById('appliedCouponId').value = appliedCouponId;
-        document.getElementById('discountAmount').value = result.discount;
-      } else {
-        couponMessageElement.innerText = result.message || "Coupon is not valid!";
-      }
-
-      updatePaymentOptions();
-    } catch (error) {
-      console.error("Error applying coupon:", error);
-      couponMessageElement.innerText = "An error occurred while applying the coupon.";
-    }
+async function applyCoupon() {
+  const selectedCouponId = couponSelect.value;
+  if (!selectedCouponId) {
+    couponMessageElement.innerText = "Please select a coupon first.";
+    return;
   }
+
+  try {
+    const response = await fetch("/apply-coupon", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ couponSelect: selectedCouponId }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      updateOrderSummary(result.subtotal, result.discount, result.newTotal);
+      couponMessageElement.innerText = "Coupon applied successfully!";
+      appliedCouponId = selectedCouponId;
+      removeCouponBtn.style.display = 'inline-block';
+      applyCouponBtn.style.display = 'none';
+      
+      document.getElementById('appliedCouponId').value = appliedCouponId;
+      document.getElementById('discountAmount').value = result.discount;
+    } else {
+      couponMessageElement.innerText = result.message || "Coupon is not valid!";
+    }
+
+    updatePaymentOptions();
+  } catch (error) {
+    console.error("Error applying coupon:", error);
+    couponMessageElement.innerText = "An error occurred while applying the coupon.";
+  }
+}
 
   async function removeCoupon() {
     try {
@@ -435,14 +437,12 @@ body {
       const result = await response.json();
 
       if (result.success) {
-        discountElement.innerText = "0.00";
-        totalAmountElement.innerText = subtotalElement.innerText;
+        updateOrderSummary(result.subtotal, 0, result.subtotal);
         couponMessageElement.innerText = "Coupon removed.";
         appliedCouponId = null;
         removeCouponBtn.style.display = 'none';
         applyCouponBtn.style.display = 'inline-block';
         couponSelect.value = ""; 
-        
         
         document.getElementById('appliedCouponId').value = '';
         document.getElementById('discountAmount').value = '0';

@@ -17,7 +17,12 @@ const getCheckoutPage = async (req, res) => {
     const userId = req.session.user;
     const addresses = await Address.find({ userId });
     const cart = await Cart.findOne({ userId }).populate("items.productId");
-    const wallet = await Wallet.findOne({ userId });
+    let wallet = await Wallet.findOne({ userId });
+
+    if (!wallet) {
+      wallet = new Wallet({ userId, balance: 0 });
+      await wallet.save();
+    }
 
     if (!cart || cart.items.length === 0) {
       return res.redirect("/cart");
@@ -81,6 +86,10 @@ const applyCoupon = async (req, res) => {
       return res.json({ success: false, message: "Coupon not found" });
     }
 
+    const discount = coupon.offerPrice;
+
+    const newTotal = subtotal - discount;
+
     if (coupon.usedBy.includes(userId)) {
       return res.json({
         success: false,
@@ -97,7 +106,12 @@ const applyCoupon = async (req, res) => {
       const discount = coupon.offerPrice;
       const newTotal = subtotal - discount;
       req.session.appliedCouponId = coupon._id;
-      return res.json({ success: true, subtotal, discount, newTotal });
+      return res.json({
+        success: true,
+        subtotal: subtotal,
+        discount,
+        newTotal,
+      });
     } else if (coupon.usedBy.includes(userId)) {
       return res.json({
         success: false,
