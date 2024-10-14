@@ -403,3 +403,67 @@
     </script>
   </body>
 </html>
+
+<script>
+  function toggleCustomDateRange() {
+    const reportType = document.getElementById("reportType").value;
+    const customDateRange = document.getElementById("customDateRange");
+    customDateRange.style.display = reportType === "custom" ? "block" : "none";
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const itemsPerPage = 10;
+    const reportTable = document.querySelector("#reportResults table");
+    const paginationContainer = document.createElement("div");
+    paginationContainer.className = "pagination justify-content-center mt-3";
+    reportTable.parentNode.insertBefore(
+      paginationContainer,
+      reportTable.nextSibling
+    );
+
+    function showPage(pageNum) {
+      const rows = reportTable.querySelectorAll("tbody tr");
+      const start = (pageNum - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+
+      rows.forEach((row, index) => {
+        if (index >= start && index < end) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+
+    function setupPagination() {
+      const rows = reportTable.querySelectorAll("tbody tr");
+      const pageCount = Math.ceil(rows.length / itemsPerPage);
+
+      paginationContainer.innerHTML = "";
+      const ul = document.createElement("ul");
+      ul.className = "pagination";
+
+      for (let i = 1; i <= pageCount; i++) {
+        const li = document.createElement("li");
+        li.className = "page-item";
+        const a = document.createElement("a");
+        a.className = "page-link";
+        a.href = "#";
+        a.innerText = i;
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          showPage(i);
+        });
+        li.appendChild(a);
+        ul.appendChild(li);
+      }
+
+      paginationContainer.appendChild(ul);
+    }
+
+    if (reportTable) {
+      setupPagination();
+      showPage(1);
+    }
+  });
+</script>
