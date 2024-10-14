@@ -142,6 +142,12 @@ body {
 .site-btn:hover {
   background-color: #a51212;
 }
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
  </style>
 
 <!-- Breadcrumb Section Begin -->
@@ -228,30 +234,36 @@ body {
                 <div class="checkout__input">
                   <p>Name<span>*</span></p>
                   <input type="text" name="newAddress[name]" />
+                  <span class="error" id="nameError"></span>
                 </div>
               </div>
               <div class="col-lg-6">
                 <div class="checkout__input">
                   <p>Address Type<span>*</span></p>
                   <input type="text" name="newAddress[addressType]" />
+                  <span class="error" id="addressTypeError"></span>
                 </div>
               </div>
             </div>
             <div class="checkout__input">
               <p>City<span>*</span></p>
               <input type="text" name="newAddress[city]" />
+              <span class="error" id="cityError"></span>
             </div>
             <div class="checkout__input">
               <p>State<span>*</span></p>
               <input type="text" name="newAddress[state]" />
+              <span class="error" id="stateError"></span>
             </div>
             <div class="checkout__input">
               <p>Pincode<span>*</span></p>
               <input type="text" name="newAddress[pincode]" />
+              <span class="error" id="pincodeError"></span>
             </div>
             <div class="checkout__input">
               <p>Phone<span>*</span></p>
               <input type="text" name="newAddress[phone]" />
+              <span class="error" id="phoneError"></span>
             </div>
           </div>
 
@@ -351,22 +363,63 @@ body {
 <script>
 
 function validateForm() {
-    const addressId = document.querySelector('input[name="addressId"]:checked');
-    const newAddressName = document.querySelector('input[name="newAddress[name]"]');
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+  let isValid = true;
+  const errorMessages = {
+    name: "Please enter a valid name",
+    addressType: "Please enter a valid address type",
+    city: "Please enter a valid city",
+    state: "Please enter a valid state",
+    pincode: "Please enter a valid 6-digit pincode",
+    phone: "Please enter a valid 10-digit phone number"
+  };
 
-    if (!addressId && (!newAddressName || newAddressName.value.trim() === "")) {
-      alert("Please select an existing address or add a new one.");
-      return false;
-    }
-
-    if (!paymentMethod) {
-      alert("Please select a payment method.");
-      return false;
-    }
-
-    return true;
+  
+  const savedAddress = document.querySelector('input[name="addressId"]:checked');
+  const newAddressName = document.querySelector('input[name="newAddress[name]"]').value.trim();
+  
+  if (!savedAddress && !newAddressName) {
+    alert("Please select an existing address or add a new one.");
+    isValid = false;
   }
+
+  
+  if (newAddressName) {
+    const fields = ['name', 'addressType', 'city', 'state', 'pincode', 'phone'];
+    fields.forEach(field => {
+      const input = document.querySelector(`input[name="newAddress[${field}]"]`);
+      const error = document.getElementById(`${field}Error`);
+      if (!input.value.trim()) {
+        error.textContent = errorMessages[field];
+        isValid = false;
+      } else {
+        error.textContent = '';
+      }
+    });
+
+    
+    const pincode = document.querySelector('input[name="newAddress[pincode]"]').value.trim();
+    const phone = document.querySelector('input[name="newAddress[phone]"]').value.trim();
+    
+    if (!/^\d{6}$/.test(pincode)) {
+      document.getElementById('pincodeError').textContent = errorMessages.pincode;
+      isValid = false;
+    }
+    
+    if (!/^\d{10}$/.test(phone)) {
+      document.getElementById('phoneError').textContent = errorMessages.phone;
+      isValid = false;
+    }
+  }
+
+ 
+  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+  if (!paymentMethod) {
+    alert("Please select a payment method.");
+    isValid = false;
+  }
+
+  return isValid;
+}
 
 
 
