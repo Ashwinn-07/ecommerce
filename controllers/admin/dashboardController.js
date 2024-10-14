@@ -158,6 +158,7 @@ const getSalesData = async (period) => {
       });
     });
   }
+  salesData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return salesData;
 };
