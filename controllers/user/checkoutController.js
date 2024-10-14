@@ -411,6 +411,11 @@ const checkout = async (req, res) => {
       });
     }
     let selectedAddress;
+    if (!addressId && (!newAddress || Object.keys(newAddress).length === 0)) {
+      return res.status(400).json({
+        message: "Please select an existing address or add a new one.",
+      });
+    }
     if (addressId) {
       const addressDoc = await Address.findOne({
         userId,

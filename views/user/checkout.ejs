@@ -169,7 +169,7 @@ body {
 <section class="checkout spad">
   <div class="container">
     <div class="checkout__form">
-      <form action="/checkout/place-order" method="post" id="checkoutForm">
+      <form action="/checkout/place-order" method="post" id="checkoutForm" onsubmit="return validateForm()">
         <div class="row">
           <div class="col-lg-8 col-md-6">
             <div class="checkout__input">
@@ -349,6 +349,27 @@ body {
 <!-- Checkout Section End -->
 
 <script>
+
+function validateForm() {
+    const addressId = document.querySelector('input[name="addressId"]:checked');
+    const newAddressName = document.querySelector('input[name="newAddress[name]"]');
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+
+    if (!addressId && (!newAddressName || newAddressName.value.trim() === "")) {
+      alert("Please select an existing address or add a new one.");
+      return false;
+    }
+
+    if (!paymentMethod) {
+      alert("Please select a payment method.");
+      return false;
+    }
+
+    return true;
+  }
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
   const couponSelect = document.getElementById("couponSelect");
   const applyCouponBtn = document.getElementById("applyCouponBtn");
