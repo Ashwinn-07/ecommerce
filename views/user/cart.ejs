@@ -293,7 +293,7 @@
                     </button>
                   </div>
                 </td>
-                <td class="cart__price">$ <%= item.totalPrice.toFixed(2) %></td>
+                <td class="cart__price">₹ <%= item.totalPrice.toFixed(2) %></td>
                 <td class="cart__close">
                   <button
                     onclick="removeFromCart('<%= item.productId._id %>', '<%= item.size %>')"
@@ -325,11 +325,11 @@
             <% products.forEach((product) => { %>
             <li>
               <%= product.name %> (Size: <%= product.size %>) x <%=
-              product.quantity %> = $ <%= product.totalPrice.toFixed(2) %>
+              product.quantity %> = ₹ <%= product.totalPrice.toFixed(2) %>
             </li>
             <% }); %>
-            <li>Subtotal <span>$ <%= total.toFixed(2) %></span></li>
-            <li>Total <span>$ <%= total.toFixed(2) %></span></li>
+            <li>Subtotal <span>₹ <%= total.toFixed(2) %></span></li>
+            <li>Total <span>₹ <%= total.toFixed(2) %></span></li>
           </ul>
           <a href="/checkout" class="primary-btn">Proceed to checkout</a>
         </div>

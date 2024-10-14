@@ -183,7 +183,7 @@ body {
                       data-discount="<%= coupon.offerPrice %>"
                       <%= (appliedCouponId && appliedCouponId.toString() === coupon._id.toString()) ? 'selected' : '' %>
                     >
-                      <%= coupon.name %> - Save $<%= coupon.offerPrice %> (Min Order $<%= coupon.minimumPrice %>)
+                      <%= coupon.name %> - Save ₹<%= coupon.offerPrice %> (Min Order ₹<%= coupon.minimumPrice %>)
                     </option>
                   <% }); %>
                 </select>
@@ -265,22 +265,22 @@ body {
                 <% cart.items.forEach((item) => { %>
                 <li>
                   <%= item.productId.productName %>
-                  <span>$ <%= item.totalPrice.toFixed(2) %></span>
+                  <span>₹ <%= item.totalPrice.toFixed(2) %></span>
                 </li>
                 <% }); %>
               </ul>
               <ul class="checkout__total__all">
                 <li>
                   Subtotal
-                  <span>$<span id="subtotal"><%= total.toFixed(2) %></span></span>
+                  <span>₹<span id="subtotal"><%= total.toFixed(2) %></span></span>
                 </li>
                 <li>
                   Discount
-                  <span>$<span id="discount"><%= discount.toFixed(2) %></span></span>
+                  <span>₹<span id="discount"><%= discount.toFixed(2) %></span></span>
                 </li>
                 <li>
                   Total
-                  <span>$<span id="totalAmount"><%= finalAmount.toFixed(2) %></span></span>
+                  <span>₹<span id="totalAmount"><%= finalAmount.toFixed(2) %></span></span>
                 </li>
               </ul>
               <div class="checkout__input__checkbox">
@@ -321,7 +321,7 @@ body {
                   />
                   <span class="checkmark"></span>
                 </label>
-                <small>Available balance: $<%= wallet.balance.toFixed(2) %></small>
+                <small>Available balance: ₹<%= wallet.balance.toFixed(2) %></small>
               </div>
               <button type="submit" class="site-btn">PLACE ORDER</button>
             </div>

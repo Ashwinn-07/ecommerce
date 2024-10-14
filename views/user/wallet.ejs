@@ -283,7 +283,7 @@
       <div class="account-content">
         <h2>My Wallet</h2>
         <div class="wallet-balance">
-          Current Balance: $<%= wallet.balance.toFixed(2) %>
+          Current Balance: ₹<%= wallet.balance.toFixed(2) %>
         </div>
         <div class="wallet-actions">
           <div class="wallet-form">
@@ -326,7 +326,7 @@
             <span
               class="transaction-amount <%= transaction.type.toLowerCase() %>"
             >
-              <%= transaction.type === 'CREDIT' ? '+' : '-' %>$<%=
+              <%= transaction.type === 'CREDIT' ? '+' : '-' %>₹<%=
               transaction.amount.toFixed(2) %>
             </span>
             <span><%= transaction.date.toLocaleDateString() %></span>

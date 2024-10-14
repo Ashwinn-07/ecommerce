@@ -319,7 +319,7 @@
             </div>
             <div class="order-details">
               <p>Status: <%= order.status %></p>
-              <p>Total: $<%= order.finalAmount.toFixed(2) %></p>
+              <p>Total: ₹<%= order.finalAmount.toFixed(2) %></p>
               <p>
                 Payment Method:
                 <span
@@ -335,7 +335,7 @@
                     ><%= item.product.productName %> x <%= item.quantity
                     %></span
                   >
-                  <span>$<%= item.price.toFixed(2) %></span>
+                  <span>₹<%= item.price.toFixed(2) %></span>
                 </li>
                 <% }) %>
               </ul>
