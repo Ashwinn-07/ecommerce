@@ -52,36 +52,61 @@ const generateChart = async (labels, data) => {
 };
 
 const getSalesData = async (period) => {
-  let dateFormat, groupBy;
+  let groupBy, dateProject;
 
   switch (period) {
     case "yearly":
-      dateFormat = "%Y";
       groupBy = { $year: "$createdOn" };
+      dateProject = { $toString: "$_id" };
       break;
-
     case "monthly":
-      dateFormat = "%Y-%m";
       groupBy = {
         year: { $year: "$createdOn" },
         month: { $month: "$createdOn" },
       };
-
+      dateProject = {
+        $concat: [
+          { $toString: "$_id.year" },
+          "-",
+          {
+            $cond: [
+              { $lt: ["$_id.month", 10] },
+              { $concat: ["0", { $toString: "$_id.month" }] },
+              { $toString: "$_id.month" },
+            ],
+          },
+        ],
+      };
       break;
-
     case "weekly":
-      dateFormat = "%Y-W%V";
       groupBy = {
         year: { $year: "$createdOn" },
         week: { $week: "$createdOn" },
       };
-
+      dateProject = {
+        $concat: [
+          { $toString: "$_id.year" },
+          "-W",
+          {
+            $cond: [
+              { $lt: ["$_id.week", 10] },
+              { $concat: ["0", { $toString: "$_id.week" }] },
+              { $toString: "$_id.week" },
+            ],
+          },
+        ],
+      };
       break;
-
     default:
       throw new Error("Invalid period");
   }
+
   const salesData = await Order.aggregate([
+    {
+      $match: {
+        createdOn: { $lte: new Date() },
+      },
+    },
     {
       $group: {
         _id: groupBy,
@@ -92,12 +117,47 @@ const getSalesData = async (period) => {
     {
       $project: {
         _id: 0,
-        date: "$_id",
-
+        date: dateProject,
         sales: 1,
       },
     },
   ]);
+
+  if (period === "monthly") {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    const months = Array.from({ length: currentMonth }, (_, i) => i + 1);
+    const missingMonths = months.filter((month) => {
+      const existingMonth = salesData.find((data) =>
+        data.date.includes(`${currentYear}-${month}`)
+      );
+      return !existingMonth;
+    });
+    missingMonths.forEach((month) => {
+      salesData.push({
+        date: `${currentYear}-${month.toString().padStart(2, "0")}`,
+        sales: 0,
+      });
+    });
+  } else if (period === "yearly") {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from(
+      { length: currentYear - 2010 },
+      (_, i) => i + 2010
+    );
+    const missingYears = years.filter((year) => {
+      const existingYear = salesData.find((data) =>
+        data.date.includes(`${year}`)
+      );
+      return !existingYear;
+    });
+    missingYears.forEach((year) => {
+      salesData.push({
+        date: `${year}`,
+        sales: 0,
+      });
+    });
+  }
 
   return salesData;
 };
