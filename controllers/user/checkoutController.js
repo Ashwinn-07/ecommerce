@@ -86,10 +86,6 @@ const applyCoupon = async (req, res) => {
       return res.json({ success: false, message: "Coupon not found" });
     }
 
-    const discount = coupon.offerPrice;
-
-    const newTotal = subtotal - discount;
-
     if (coupon.usedBy.includes(userId)) {
       return res.json({
         success: false,

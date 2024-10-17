@@ -1,11 +1,8 @@
 const User = require("../../models/userSchema");
-const Order = require("../../models/orderSchema");
-const Address = require("../../models/addressSchema");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 dotenv.config();
-const session = require("express-session");
 
 async function sendVerificationEmail(email, otp) {
   try {

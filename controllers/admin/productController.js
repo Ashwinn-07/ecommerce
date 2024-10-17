@@ -1,7 +1,6 @@
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
-const User = require("../../models/userSchema");
 const Cart = require("../../models/cartSchema");
 const { updateCartPrices } = require("../user/cartController");
 const fs = require("fs");
@@ -217,7 +216,7 @@ const editProduct = async (req, res) => {
 const deleteSingleImage = async (req, res) => {
   try {
     const { imageNameToServer, productIdToServer } = req.body;
-    const product = await Product.findByIdAndUpdate(productIdToServer, {
+    await Product.findByIdAndUpdate(productIdToServer, {
       $pull: { productImage: imageNameToServer },
     });
     const imagePath = path.join(

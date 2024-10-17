@@ -36,7 +36,6 @@ const addToCart = async (req, res) => {
   try {
     const { productId, quantity, selectedSize } = req.body;
     const userId = req.session.user;
-    console.log("addToCart request body:", req.body);
     const product = await Product.findById(productId);
     const referer = req.get("Referer");
 
@@ -50,12 +49,8 @@ const addToCart = async (req, res) => {
         `${referer}?action=addtocart&result=error&message=Product not found`
       );
     }
-    console.log(`Product sizes:`, product.sizes);
-    console.log(`Requested size:`, selectedSize);
+
     const sizeObj = product.sizes.find((s) => s.size === selectedSize);
-    console.log(`Size object found:`, sizeObj);
-    console.log(`Requested quantity:`, quantity);
-    console.log(`Available quantity:`, sizeObj.quantity);
     if (!sizeObj || sizeObj.quantity < quantity) {
       return res.redirect(
         `${referer}?action=addtocart&result=error&message=Not enough stock for selected size`

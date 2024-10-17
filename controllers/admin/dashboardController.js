@@ -1,7 +1,4 @@
 const Order = require("../../models/orderSchema");
-const Product = require("../../models/productSchema");
-const Brand = require("../../models/brandSchema");
-const Category = require("../../models/categorySchema");
 const User = require("../../models/userSchema");
 const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const PDFDocument = require("pdfkit");
@@ -416,9 +413,14 @@ const generateSalesReport = async (req, res) => {
       weeklySalesData.map((item) => item.sales)
     );
 
-    const reportData = await generateReportData(reportType, startDate, endDate);
+    const { orders: reportData, summary } = await generateReportData(
+      reportType,
+      startDate,
+      endDate
+    );
 
     req.session.reportData = reportData;
+    req.session.summary = summary;
 
     const chartUrl = await generateChartImage(
       reportData.labels,
@@ -427,6 +429,7 @@ const generateSalesReport = async (req, res) => {
 
     res.render("dashboard", {
       reportData,
+      summary,
       chartUrl,
       totalSales: totalSales[0]?.total || 0,
       totalOrders,
@@ -454,11 +457,12 @@ const downloadReport = async (req, res) => {
   try {
     const { type } = req.query;
     const reportData = req.session.reportData;
+    const summary = req.session.summary;
 
     if (type === "pdf") {
-      await generatePdf(res, reportData);
+      await generatePdf(res, reportData, summary);
     } else if (type === "excel") {
-      await generateExcel(res, reportData);
+      await generateExcel(res, reportData, summary);
     } else {
       res.status(400).json({ message: "Invalid download type" });
     }
@@ -504,10 +508,41 @@ async function generateReportData(reportType, startDate, endDate) {
   const result = await Order.aggregate([
     { $match: query },
     {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    {
+      $lookup: {
+        from: "products",
+        localField: "orderedItems.product",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
+    {
       $project: {
-        _id: 1,
-        userId: 1,
-        orderedItems: 1,
+        orderId: 1,
+        userName: "$user.name",
+        orderedItems: {
+          $map: {
+            input: "$orderedItems",
+            as: "item",
+            in: {
+              productName: {
+                $arrayElemAt: [
+                  "$productDetails.productName",
+                  { $indexOfArray: ["$productDetails._id", "$$item.product"] },
+                ],
+              },
+              quantity: "$$item.quantity",
+            },
+          },
+        },
         totalPrice: 1,
         finalAmount: 1,
         discount: 1,
@@ -517,11 +552,12 @@ async function generateReportData(reportType, startDate, endDate) {
       },
     },
   ]);
-
   const orders = result.map((order) => ({
-    orderId: order._id,
-    userId: order.userId,
-    orderedItems: order.orderedItems,
+    orderId: order.orderId.substring(0, 6),
+    userName: order.userName,
+    orderedItems: order.orderedItems
+      .map((item) => `${item.productName} x ${item.quantity}`)
+      .join(", "),
     totalPrice: order.totalPrice,
     finalAmount: order.finalAmount,
     discount: order.discount,
@@ -530,7 +566,13 @@ async function generateReportData(reportType, startDate, endDate) {
     createdOn: order.createdOn,
   }));
 
-  return orders;
+  const summary = {
+    totalOrders: orders.length,
+    totalSales: orders.reduce((sum, order) => sum + order.finalAmount, 0),
+    totalDiscount: orders.reduce((sum, order) => sum + order.discount, 0),
+  };
+
+  return { orders, summary };
 }
 
 async function generateChartImage(labels, salesData) {
@@ -564,52 +606,41 @@ async function generateChartImage(labels, salesData) {
   return `data:image/png;base64,${image.toString("base64")}`;
 }
 
-async function generatePdf(res, reportData) {
+async function generatePdf(res, reportData, summary) {
   const doc = new PDFDocument({ margin: 50, size: "A4", layout: "landscape" });
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=sales_report.pdf");
 
   doc.pipe(res);
 
-  const truncate = (text, length) => {
-    return text.length > length ? text.substring(0, length - 3) + "..." : text;
-  };
+  doc.fontSize(24).text("Sales Report", { align: "center" });
+  doc.moveDown(2);
 
-  doc.fontSize(18).text("Sales Report", { align: "center" });
-  doc.moveDown();
+  doc.fontSize(16).text("Summary", { underline: true });
+  doc.fontSize(12);
+  doc.text(`Total Orders: ${summary.totalOrders}`);
+  doc.text(`Total Sales: ₹${summary.totalSales.toFixed(2)}`);
+  doc.text(`Total Discount: ₹${summary.totalDiscount.toFixed(2)}`);
+  doc.moveDown(2);
 
-  const table = {
-    headers: [
-      "Order ID",
-      "User ID",
-      "Total Price",
-      "Final Amount",
-      "Discount",
-      "Status",
-      "Payment",
-      "Created On",
-    ],
-    rows: reportData.map((order) => [
-      truncate(order.orderId.toString(), 8),
-      truncate(order.userId.toString(), 8),
-      order.totalPrice.toFixed(2),
-      order.finalAmount.toFixed(2),
-      order.discount.toFixed(2),
-      truncate(order.status, 10),
-      truncate(order.paymentMethod, 10),
-      new Date(order.createdOn).toLocaleDateString(),
-    ]),
-  };
+  const tableTop = doc.y;
+  const tableHeaders = [
+    "Order ID",
+    "User Name",
+    "Total Price",
+    "Final Amount",
+    "Discount",
+    "Status",
+    "Payment",
+    "Date",
+  ];
+  const columnWidths = [60, 60, 70, 70, 60, 70, 70, 80];
 
-  const tableTop = 100;
-  const tableLeft = 50;
-  const columnWidths = [70, 70, 80, 80, 70, 80, 80, 90];
-
-  doc.font("Helvetica-Bold").fontSize(12);
-  table.headers.forEach((header, i) => {
+  doc.font("Helvetica-Bold");
+  tableHeaders.forEach((header, i) => {
     doc.text(
       header,
-      tableLeft + columnWidths.slice(0, i).reduce((sum, w) => sum + w, 0),
+      50 + columnWidths.slice(0, i).reduce((sum, w) => sum + w, 0),
       tableTop,
       {
         width: columnWidths[i],
@@ -618,57 +649,86 @@ async function generatePdf(res, reportData) {
     );
   });
 
-  doc.font("Helvetica").fontSize(10);
-  table.rows.forEach((row, rowIndex) => {
-    const rowTop = tableTop + 25 + rowIndex * 20;
-    row.forEach((cell, columnIndex) => {
+  doc.font("Helvetica");
+  let yPosition = tableTop + 20;
+
+  reportData.forEach((order, index) => {
+    if (yPosition + 20 > doc.page.height - 50) {
+      doc.addPage();
+      yPosition = 50;
+
+      doc.font("Helvetica-Bold");
+      tableHeaders.forEach((header, i) => {
+        doc.text(
+          header,
+          50 + columnWidths.slice(0, i).reduce((sum, w) => sum + w, 0),
+          yPosition,
+          {
+            width: columnWidths[i],
+            align: "left",
+          }
+        );
+      });
+      doc.font("Helvetica");
+      yPosition += 20;
+    }
+
+    const row = [
+      order.orderId,
+      order.userName,
+      order.totalPrice.toFixed(2),
+      order.finalAmount.toFixed(2),
+      order.discount.toFixed(2),
+      order.status,
+      order.paymentMethod,
+      new Date(order.createdOn).toLocaleDateString(),
+    ];
+
+    row.forEach((cell, i) => {
       doc.text(
         cell.toString(),
-        tableLeft +
-          columnWidths.slice(0, columnIndex).reduce((sum, w) => sum + w, 0),
-        rowTop,
+        50 + columnWidths.slice(0, i).reduce((sum, w) => sum + w, 0),
+        yPosition,
         {
-          width: columnWidths[columnIndex],
-          align: columnIndex > 1 && columnIndex < 5 ? "right" : "left",
+          width: columnWidths[i],
+          align: i > 1 && i < 5 ? "right" : "left",
         }
       );
     });
-  });
 
-  table.rows.forEach((row, rowIndex) => {
-    const rowTop = tableTop + 25 + rowIndex * 20;
-    doc
-      .rect(
-        tableLeft,
-        rowTop,
-        columnWidths.reduce((sum, w) => sum + w, 0),
-        20
-      )
-      .stroke();
+    yPosition += 20;
   });
 
   doc.end();
 }
 
-async function generateExcel(res, reportData) {
+async function generateExcel(res, reportData, summary) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Sales Report");
 
+  worksheet.addRow(["Summary"]);
+  worksheet.addRow(["Total Orders", summary.totalOrders]);
+  worksheet.addRow(["Total Sales", `₹${summary.totalSales.toFixed(2)}`]);
+  worksheet.addRow(["Total Discount", `₹${summary.totalDiscount.toFixed(2)}`]);
+  worksheet.addRow([]);
+
   worksheet.columns = [
-    { header: "Order ID", key: "orderId", width: 15 },
-    { header: "User ID", key: "userId", width: 15 },
+    { header: "Order ID", key: "orderId", width: 10 },
+    { header: "User Name", key: "userName", width: 20 },
+    { header: "Ordered Items", key: "orderedItems", width: 30 },
     { header: "Total Price", key: "totalPrice", width: 12 },
     { header: "Final Amount", key: "finalAmount", width: 12 },
     { header: "Discount", key: "discount", width: 10 },
     { header: "Status", key: "status", width: 15 },
     { header: "Payment Method", key: "paymentMethod", width: 15 },
-    { header: "Created On", key: "createdOn", width: 20 },
+    { header: "Date", key: "createdOn", width: 20 },
   ];
 
   reportData.forEach((order) => {
     worksheet.addRow({
       orderId: order.orderId,
-      userId: order.userId,
+      userName: order.userName,
+      orderedItems: order.orderedItems,
       totalPrice: order.totalPrice,
       finalAmount: order.finalAmount,
       discount: order.discount,
