@@ -24,7 +24,7 @@
         <tr>
           <td><%= order._id %></td>
           <td><%= order.userId.name %> (<%= order.userId.email %>)</td>
-          <td>$<%= order.totalPrice.toFixed(2) %></td>
+          <td>₹<%= order.totalPrice.toFixed(2) %></td>
           <td>
             <form action="/admin/orderList/change-status" method="POST">
               <input type="hidden" name="orderId" value="<%= order._id %>">
@@ -82,10 +82,10 @@
                 <h6>Order Items:</h6>
                 <ul>
                   <% order.orderedItems.forEach(item => { %>
-                    <li><%= item.product.name %> - Quantity: <%= item.quantity %>, Price: $<%= item.price.toFixed(2) %></li>
+                    <li><%= item.product.name %> - Quantity: <%= item.quantity %>, Price: ₹<%= item.price.toFixed(2) %></li>
                   <% }) %>
                 </ul>
-                <p><strong>Total:</strong> $<%= order.totalPrice.toFixed(2) %></p>
+                <p><strong>Total:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
                 <p><strong>Status:</strong> <%= order.status %></p>
                 <p><strong>Date:</strong> <%= order.createdOn.toLocaleDateString() %></p>
               </div>

@@ -30,16 +30,16 @@ function generateInvoice(order, stream) {
   order.orderedItems.forEach((item) => {
     doc.text(item.product.productName, 50, y);
     doc.text(item.quantity.toString(), 200, y);
-    doc.text(`$${item.price.toFixed(2)}`, 300, y);
-    doc.text(`$${(item.quantity * item.price).toFixed(2)}`, 400, y);
+    doc.text(`₹${item.price.toFixed(2)}`, 300, y);
+    doc.text(`₹${(item.quantity * item.price).toFixed(2)}`, 400, y);
     y += 20;
   });
 
   doc.moveDown();
   doc.font("Helvetica-Bold");
-  doc.text(`Subtotal: $${order.totalPrice.toFixed(2)}`, { align: "right" });
-  doc.text(`Discount: $${order.discount.toFixed(2)}`, { align: "right" });
-  doc.text(`Total: $${order.finalAmount.toFixed(2)}`, { align: "right" });
+  doc.text(`Subtotal: ₹${order.totalPrice.toFixed(2)}`, { align: "right" });
+  doc.text(`Discount: ₹${order.discount.toFixed(2)}`, { align: "right" });
+  doc.text(`Total: ₹${order.finalAmount.toFixed(2)}`, { align: "right" });
 
   doc.end();
 }
