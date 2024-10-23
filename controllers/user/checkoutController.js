@@ -149,6 +149,13 @@ const removeCoupon = async (req, res) => {
   }
 };
 
+const STATIC_EXCHANGE_RATE = 84;
+
+const convertINRtoUSD = (inrAmount) => {
+  const usdAmount = (inrAmount / STATIC_EXCHANGE_RATE).toFixed(2);
+  return usdAmount;
+};
+
 const initiatePayPalPayment = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -166,6 +173,8 @@ const initiatePayPalPayment = async (req, res) => {
 
     const finalAmount = req.body.finalAmount || totalPrice - discount;
 
+    const finalAmountInUSD = convertINRtoUSD(finalAmount);
+
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -174,7 +183,7 @@ const initiatePayPalPayment = async (req, res) => {
         {
           amount: {
             currency_code: "USD",
-            value: finalAmount.toFixed(2),
+            value: finalAmountInUSD,
           },
         },
       ],

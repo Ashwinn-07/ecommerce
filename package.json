@@ -11,6 +11,7 @@
   "dependencies": {
     "@paypal/checkout-server-sdk": "^1.0.3",
     "@paypal/paypal-js": "^8.1.2",
+    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "chart.js": "^3.9.1",
     "chartjs-node-canvas": "^4.1.6",
