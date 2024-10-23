@@ -488,6 +488,7 @@ const checkout = async (req, res) => {
         req.body.appliedCouponId = couponSelect;
         req.body.totalPrice = totalPrice;
         req.body.finalAmount = finalAmount;
+        req.body.selectedAddress = selectedAddress;
         const paypalResult = await initiatePayPalPayment(req, res);
         if (paypalResult.success) {
           return res.redirect(paypalResult.approvalUrl);
