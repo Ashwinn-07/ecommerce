@@ -169,6 +169,27 @@
           transform: translateY(-5px);
         }
       }
+      .server-message {
+        background-color: #ff5f5f;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        text-align: center;
+        font-size: 0.9rem;
+        display: none;
+      }
+
+      .server-message.show {
+        display: block;
+      }
+
+      .error-message {
+        color: #dc143c;
+        font-size: 0.75rem;
+        margin-top: 4px;
+        display: none;
+      }
 
       @media (min-width: 768px) {
         .container {
@@ -242,6 +263,12 @@
         </div>
         <div class="form-section">
           <h2>ADMIN LOGIN</h2>
+          <div
+            id="serverMessage"
+            class="server-message <%= message ? 'show' : '' %>"
+          >
+            <%= message %>
+          </div>
 
           <form id="adminSignform" method="POST" action="/admin/login">
             <div class="form-group">
@@ -276,6 +303,7 @@
       const error2 = document.getElementById("error2");
       const error3 = document.getElementById("error3");
       const adminSignform = document.getElementById("adminSignform");
+      const serverMessage = document.getElementById("serverMessage");
 
       function emailValidateChecking() {
         const emailVal = adminEmailId.value;
@@ -285,14 +313,18 @@
         if (emailVal === "") {
           error2.style.display = "block";
           error2.innerHTML = "Please enter your email address";
+          return false;
         } else if (!emailPattern.test(emailVal)) {
           error2.style.display = "block";
           error2.innerHTML = "Invalid format";
+          return false;
         } else {
           error2.style.display = "none";
           error2.innerHTML = "";
+          return true;
         }
       }
+
       function passValidateChecking() {
         const passVal = adminPassId.value;
         const alpha = /[a-zA-z]/;
@@ -300,25 +332,34 @@
 
         if (passVal.length < 8) {
           error3.style.display = "block";
-          error3.innerHTML = "Password must contain atleast 8 characters";
+          error3.innerHTML = "Password must contain at least 8 characters";
+          return false;
         } else if (!alpha.test(passVal) || !digit.test(passVal)) {
           error3.style.display = "block";
-          error3.innerHTML = "passsword should contain alphabets and letters";
+          error3.innerHTML =
+            "Password should contain both alphabets and numbers";
+          return false;
         } else {
           error3.style.display = "none";
-          error3.style.display = "";
+          error3.innerHTML = "";
+          return true;
         }
       }
 
+      adminEmailId.addEventListener("input", () => {
+        serverMessage.classList.remove("show");
+      });
+
+      adminPassId.addEventListener("input", () => {
+        serverMessage.classList.remove("show");
+      });
+
       document.addEventListener("DOMContentLoaded", function () {
         adminSignform.addEventListener("submit", function (e) {
-          emailValidateChecking();
-          passValidateChecking();
+          const isEmailValid = emailValidateChecking();
+          const isPasswordValid = passValidateChecking();
 
-          if (!emailId || !passId || !error2 || !error3 || !signform) {
-            console.error("one or more elements not found");
-          }
-          if (error2.innerHTML || error3.innerHTML) {
+          if (!isEmailValid || !isPasswordValid) {
             e.preventDefault();
           }
         });
