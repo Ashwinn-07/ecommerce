@@ -14,7 +14,7 @@ const getUserOrders = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    const totalOrders = await Order.countDocuments();
+    const totalOrders = await Order.countDocuments({ userId });
     const totalPages = Math.ceil(totalOrders / limit);
 
     res.render("orders", {
