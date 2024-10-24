@@ -102,6 +102,11 @@ router.post(
 router.get("/orders", userAuth, orderController.getUserOrders);
 router.post("/orders/:orderId/cancel", userAuth, orderController.cancelOrder);
 router.post("/orders/:orderId/return", userAuth, orderController.returnOrder);
+router.get(
+  "/orders/:orderId/details",
+  userAuth,
+  orderController.getOrderDetails
+);
 
 router.get("/change-password", userAuth, profileController.getChangePassword);
 router.post("/change-password", userAuth, profileController.changePassword);

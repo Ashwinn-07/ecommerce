@@ -110,8 +110,30 @@ const returnOrder = async (req, res) => {
   }
 };
 
+const getOrderDetails = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const userId = req.session.user;
+
+    const order = await Order.findOne({ _id: orderId, userId })
+      .populate("orderedItems.product")
+      .populate("userId", "name email")
+      .exec();
+
+    if (!order) {
+      return res.status(404).redirect("/orders");
+    }
+
+    res.render("order-details", { order });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getUserOrders,
   cancelOrder,
   returnOrder,
+  getOrderDetails,
 };
