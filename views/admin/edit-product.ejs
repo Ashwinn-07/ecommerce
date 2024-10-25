@@ -181,36 +181,82 @@
               <div class="card-header">
                 <h4>Choose images</h4>
               </div>
-              <% for(let i = 0;i < product.productImage.length;i++) {%>
-              <div class="col-md-12">
-                <div class="mb-4">
-                  <div class="col-12">
-                    <td>
-                      <input
-                        type="hidden"
-                        value="<%= product.productImage[i]  %>"
-                        id="imageDatas"
-                      />
+              <div class="existing-images-container p-3">
+                <div class="row" id="existingImagesGrid">
+                  <% let imageCount = product.productImage.length; %> <% for(let
+                  i = 0; i < product.productImage.length; i++) { %>
+                  <div
+                    class="col-md-3 mb-3 existing-image"
+                    data-image="<%= product.productImage[i] %>"
+                  >
+                    <div class="position-relative">
                       <img
-                        class="rounded"
-                        style="width: 50px; height: 60px"
-                        src="/uploads/re-image/<%= product.productImage[i]  %>"
-                        alt=""
+                        class="rounded img-fluid"
+                        src="/uploads/re-image/<%= product.productImage[i] %>"
+                        alt="Product image"
                       />
-                      <i
-                        onclick="deleteSingleImage('<%= product.productImage[i]%>','<%= product._id%>')"
-                        style="
-                          position: absolute;
-                          margin-left: 0.5rem;
-                          cursor: pointer;
-                        "
-                        class="fa-thin fa-x"
-                      ></i>
-                    </td>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                        onclick="deleteExistingImage('<%= product.productImage[i] %>', '<%= product._id %>', this)"
+                      >
+                        <i class="fa-thin fa-x"></i>
+                      </button>
+                    </div>
                   </div>
+                  <% } %>
                 </div>
               </div>
-              <% } %>
+              <div class="new-images-container p-3">
+                <div class="row" id="newImagesGrid">
+                  <% for(let i = 0; i < 4 - imageCount; i++) { %>
+                  <div class="col-md-3 mb-3">
+                    <div class="new-image-slot">
+                      <div class="image-preview">
+                        <img
+                          id="imgView<%= i+1 %>"
+                          src=""
+                          alt=""
+                          class="img-fluid rounded"
+                          style="display: none"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        name="images"
+                        id="input<%= i+1 %>"
+                        accept="image/png, image/jpeg, image/jpg"
+                        class="form-control"
+                        onchange="handleNewImage(event,  i+1)"
+                      />
+                    </div>
+                    <!-- Cropper container -->
+                    <div
+                      class="cropper-container"
+                      id="cropperContainer<%= i+1 %>"
+                      style="display: none"
+                    >
+                      <div class="mt-2">
+                        <button
+                          type="button"
+                          class="btn btn-primary btn-sm"
+                          onclick="saveCroppedImage( i+1)"
+                        >
+                          Save Crop
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          onclick="cancelCrop( i+1 )"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <% } %>
+                </div>
+              </div>
             </div>
             <div>
               <button
@@ -230,6 +276,152 @@
 </section>
 <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
 <script>
+  let croppers = {};
+  let uploadedImages = {};
+
+  function handleNewImage(event, index) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (croppers[index]) {
+      croppers[index].destroy();
+      delete croppers[index];
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const imgView = document.getElementById(`imgView${index}`);
+      imgView.src = e.target.result;
+      imgView.style.display = "block";
+
+      croppers[index] = new Cropper(imgView, {
+        aspectRatio: 1,
+        viewMode: 1,
+        guides: true,
+        background: false,
+        autoCropArea: 1,
+        zoomable: true,
+      });
+
+      document.getElementById(`cropperContainer${index}`).style.display =
+        "block";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveCroppedImage(index) {
+    const cropper = croppers[index];
+    if (!cropper) return;
+
+    const canvas = cropper.getCroppedCanvas();
+    const timestamp = new Date().getTime();
+    const fileName = `cropped-img-${timestamp}-${index}.png`;
+
+    canvas.toBlob((blob) => {
+      const imgFile = new File([blob], fileName, { type: "image/png" });
+      uploadedImages[index] = imgFile;
+
+      const input = document.getElementById(`input${index}`);
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(imgFile);
+      input.files = dataTransfer.files;
+
+      const imgView = document.getElementById(`imgView${index}`);
+      imgView.src = URL.createObjectURL(blob);
+      imgView.style.display = "block";
+
+      cropper.destroy();
+      delete croppers[index];
+      document.getElementById(`cropperContainer${index}`).style.display =
+        "none";
+    }, "image/png");
+  }
+
+  function cancelCrop(index) {
+    if (croppers[index]) {
+      croppers[index].destroy();
+      delete croppers[index];
+    }
+
+    const input = document.getElementById(`input${index}`);
+    input.value = "";
+
+    document.getElementById(`imgView${index}`).style.display = "none";
+    document.getElementById(`cropperContainer${index}`).style.display = "none";
+  }
+
+  async function deleteExistingImage(imageId, productId, element) {
+    try {
+      const response = await fetch("/admin/deleteImage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageNameToServer: imageId,
+          productIdToServer: productId,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.status === true) {
+        const imageContainer = element.closest(".existing-image");
+        imageContainer.remove();
+
+        updateNewImageSlots();
+      }
+    } catch (error) {
+      console.error("Error deleting image:", error);
+    }
+  }
+
+  function updateNewImageSlots() {
+    const existingImages = document.querySelectorAll(".existing-image");
+    const newImagesGrid = document.getElementById("newImagesGrid");
+    const currentNewSlots = newImagesGrid.children.length;
+    const totalAllowedImages = 4;
+
+    const neededNewSlots = totalAllowedImages - existingImages.length;
+
+    if (neededNewSlots > currentNewSlots) {
+      for (let i = currentNewSlots; i < neededNewSlots; i++) {
+        const newSlot = createNewImageSlot(i + 1);
+        newImagesGrid.appendChild(newSlot);
+      }
+    }
+  }
+
+  function createNewImageSlot(index) {
+    const div = document.createElement("div");
+    div.className = "col-md-3 mb-3";
+    div.innerHTML = `
+    <div class="new-image-slot">
+      <div class="image-preview">
+        <img id="imgView${index}" src="" alt="" class="img-fluid rounded" style="display: none;"/>
+      </div>
+      <input
+        type="file"
+        name="images"
+        id="input${index}"
+        accept="image/png, image/jpeg, image/jpg"
+        class="form-control"
+        onchange="handleNewImage(event, ${index})"
+      />
+    </div>
+    <div class="cropper-container" id="cropperContainer${index}" style="display: none;">
+      <div class="mt-2">
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveCroppedImage(${index})">
+          Save Crop
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="cancelCrop(${index})">
+          Cancel
+        </button>
+      </div>
+    </div>
+  `;
+    return div;
+  }
+
   function addSizeInput() {
     const container = document.getElementById("sizesContainer");
     const newInput = document.createElement("div");
@@ -258,7 +450,7 @@
     const saleprice = document.getElementsByName("salePrice")[0].value;
     const color = document.getElementsByName("color")[0].value;
     const category = document.getElementsByName("category")[0].value;
-    const images = document.getElementById("input1");
+    // const images = document.getElementById("input1");
     const sizeInputs = document.getElementsByName("sizes[]");
     const quantityInputs = document.getElementsByName("quantities[]");
     imageDatas = document.getElementById("imageDatas")?.value;
@@ -326,10 +518,35 @@
       displayErrorMessage("color-error", "Please enter a color.");
       isValid = false;
     }
-    if (!imageDatas && images.files.length === 0) {
-      displayErrorMessage("images-error", "Please select an image.");
+    // if (!imageDatas && images.files.length === 0) {
+    //   displayErrorMessage("images-error", "Please select an image.");
+    //   isValid = false;
+    // }
+    const existingImages = document.querySelectorAll(".existing-image");
+    const newImageInputs = document.querySelectorAll(
+      'input[type="file"][name="images"]'
+    );
+    const hasNewImages = Array.from(newImageInputs).some(
+      (input) => input.files.length > 0
+    );
+
+    if (existingImages.length === 0 && !hasNewImages) {
+      displayErrorMessage(
+        "images-error",
+        "Please add at least one product image."
+      );
       isValid = false;
     }
+
+    const totalNewImages = Array.from(newImageInputs).reduce(
+      (count, input) => count + (input.files.length > 0 ? 1 : 0),
+      0
+    );
+    if (existingImages.length + totalNewImages > 4) {
+      displayErrorMessage("images-error", "Maximum 4 images allowed.");
+      isValid = false;
+    }
+
     return isValid;
   }
 
@@ -345,119 +562,6 @@
       element.innerText = "";
     });
     const errorMessage = document.getElementById("errorMessage");
-  }
-
-  function viewImage1(event) {
-    document.getElementById("imgView1").src = URL.createObjectURL(
-      event.target.files[0]
-    );
-  }
-
-  function viewImage2(event) {
-    document.getElementById("imgView2").src = URL.createObjectURL(
-      event.target.files[0]
-    );
-  }
-
-  function viewImage3(event) {
-    document.getElementById("imgView3").src = URL.createObjectURL(
-      event.target.files[0]
-    );
-  }
-
-  function viewImage4(event) {
-    document.getElementById("imgView4").src = URL.createObjectURL(
-      event.target.files[0]
-    );
-  }
-
-  function viewImage(event, index) {
-    let input = event.target;
-    let reader = new FileReader();
-    reader.onload = function () {
-      let dataURL = reader.result;
-      let image = document.getElementById("imgView" + index);
-      image.src = dataURL;
-      let cropper = new Cropper(image, {
-        aspectRatio: 1,
-        viewMode: 1,
-        guides: true,
-        background: false,
-        autoCropArea: 1,
-        zoomable: true,
-      });
-      let cropperContainer = document.querySelector(
-        "#croppedImg" + index
-      ).parentNode;
-      cropperContainer.style.display = "block";
-      let saveButton = document.querySelector("#saveButton" + index);
-      saveButton.addEventListener("click", async function () {
-        let croppedCanvas = cropper.getCroppedCanvas();
-        let croppedImage = document.getElementById("croppedImg" + index);
-        croppedImage.src = croppedCanvas.toDataURL("image/jpeg", 1.0);
-        let timestamp = new Date().getTime();
-        let fileName = `cropped-img-${timestamp}-${index}.png`;
-        await croppedCanvas.toBlob((blob) => {
-          let input = document.getElementById("input" + index);
-          let imgFile = new File([blob], fileName, blob);
-          const fileList = new DataTransfer();
-          fileList.items.add(imgFile);
-          input.files = fileList.files;
-        });
-        cropperContainer.style.display = "none";
-      });
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-
-  const selectedImages = [];
-  document
-    .getElementById("imageInput")
-    .addEventListener("change", handleFileSelect);
-
-  function handleFileSelect(event) {
-    const addedImagesContainer = document.getElementById(
-      "addedImagesContainer"
-    );
-    addedImagesContainer.innerHTML = "";
-    const files = event.target.files;
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      selectedImages.push(file);
-      const thumbnail = document.createElement("div");
-      thumbnail.classList.add("thumbnail");
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      img.alt = "thumbnail";
-      img.style.width = "50px";
-      img.style.height = "auto";
-      const removeIcon = document.createElement("span");
-      removeIcon.classList.add("remove-icon");
-      removeIcon.innerHTML = "&times;";
-      removeIcon.addEventListener("click", function () {
-        const index = selectedImages.indexOf(file);
-        if (index !== -1) {
-          selectedImages.splice(index, 1);
-        }
-        thumbnail.remove();
-      });
-      thumbnail.appendChild(img);
-      thumbnail.appendChild(removeIcon);
-      addedImagesContainer.appendChild(thumbnail);
-    }
-  }
-
-  function deleteSingleImage(imageId, productId) {
-    $.ajax({
-      url: "/admin/deleteImage",
-      method: "post",
-      data: { imageNameToServer: imageId, productIdToServer: productId },
-      success: (response) => {
-        if (response.status === true) {
-          window.location.reload();
-        }
-      },
-    });
   }
 </script>
 

@@ -202,7 +202,8 @@ const editProduct = async (req, res) => {
       sizes: sizes,
       color: data.color,
     };
-    if (req.files.length > 0) {
+    if (req.files && req.files.length > 0) {
+      const images = req.files.map((file) => file.filename);
       updateFields.$push = { productImage: { $each: images } };
     }
     await Product.findByIdAndUpdate(id, updateFields, { new: true });
