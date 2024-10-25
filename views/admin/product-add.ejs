@@ -552,10 +552,10 @@
       isValid = false;
     }
 
-    if (parseFloat(price) <= parseFloat(saleprice)) {
+    if (parseFloat(price) < parseFloat(saleprice)) {
       displayErrorMessage(
         "regularPrice-error",
-        "Regular price must be greater than sale price."
+        "Regular price must be greater than or equal to sale price."
       );
       isValid = false;
     }
