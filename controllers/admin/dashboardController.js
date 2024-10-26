@@ -7,15 +7,20 @@ const ExcelJS = require("exceljs");
 const width = 800;
 const height = 400;
 
-const chartCallBack = (ChartJs) => {
-  ChartJs.default.responsive = true;
-  ChartJs.default.maintainAspectRatio = false;
+const chartCallBack = (ChartJS) => {
+  ChartJS.defaults.font.family =
+    "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+  ChartJS.defaults.responsive = true;
+  ChartJS.defaults.maintainAspectRatio = false;
 };
 
 const chartJSNodeCanvas = new ChartJSNodeCanvas({
   width,
   height,
   chartCallBack,
+  plugins: {
+    globalRegistration: true,
+  },
 });
 
 const generateChart = async (labels, data) => {
@@ -52,6 +57,7 @@ const generateChart = async (labels, data) => {
           position: "top",
           labels: {
             font: {
+              family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
               size: 14,
               weight: "bold",
             },
@@ -64,6 +70,7 @@ const generateChart = async (labels, data) => {
           display: true,
           text: "Sales Performance",
           font: {
+            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
             size: 20,
             weight: "bold",
           },
@@ -71,6 +78,7 @@ const generateChart = async (labels, data) => {
             top: 10,
             bottom: 30,
           },
+          color: "#333",
         },
       },
       scales: {
@@ -80,9 +88,14 @@ const generateChart = async (labels, data) => {
           },
           ticks: {
             font: {
+              family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
               size: 12,
             },
             padding: 10,
+            color: "#333",
+          },
+          border: {
+            color: "#333",
           },
         },
         y: {
@@ -93,12 +106,17 @@ const generateChart = async (labels, data) => {
           },
           ticks: {
             font: {
+              family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
               size: 12,
             },
             padding: 10,
+            color: "#333",
             callback: function (value) {
               return "₹" + value.toLocaleString();
             },
+          },
+          border: {
+            color: "#333",
           },
         },
       },
