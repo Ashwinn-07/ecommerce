@@ -112,7 +112,7 @@ const generateChart = async (labels, data) => {
             padding: 10,
             color: "#333",
             callback: function (value) {
-              return "₹" + value.toLocaleString();
+              return value.toLocaleString();
             },
           },
           border: {
