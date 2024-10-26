@@ -21,24 +21,101 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
 const generateChart = async (labels, data) => {
   const configuration = {
     type: "line",
-
     data: {
       labels: labels,
       datasets: [
         {
           label: "Sales",
           data: data,
-          fill: false,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
+          fill: true,
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 2,
+          pointBackgroundColor: "rgba(54, 162, 235, 1)",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: "rgba(54, 162, 235, 1)",
+          pointHoverBorderColor: "#fff",
+          pointHoverBorderWidth: 2,
+          tension: 0.4,
+          shadowColor: "rgba(0, 0, 0, 0.1)",
+          shadowBlur: 10,
         },
       ],
     },
-
     options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: {
+            font: {
+              size: 14,
+              weight: "bold",
+            },
+            padding: 20,
+            usePointStyle: true,
+            pointStyle: "circle",
+          },
+        },
+        title: {
+          display: true,
+          text: "Sales Performance",
+          font: {
+            size: 20,
+            weight: "bold",
+          },
+          padding: {
+            top: 10,
+            bottom: 30,
+          },
+        },
+      },
       scales: {
+        x: {
+          grid: {
+            display: false,
+          },
+          ticks: {
+            font: {
+              size: 12,
+            },
+            padding: 10,
+          },
+        },
         y: {
           beginAtZero: true,
+          grid: {
+            color: "rgba(0, 0, 0, 0.05)",
+            lineWidth: 1,
+          },
+          ticks: {
+            font: {
+              size: 12,
+            },
+            padding: 10,
+            callback: function (value) {
+              return "₹" + value.toLocaleString();
+            },
+          },
+        },
+      },
+      interaction: {
+        intersect: false,
+        mode: "index",
+      },
+      animation: {
+        duration: 1000,
+        easing: "easeInOutQuart",
+      },
+      layout: {
+        padding: {
+          left: 10,
+          right: 20,
+          top: 20,
+          bottom: 10,
         },
       },
     },
@@ -588,20 +665,63 @@ async function generateChartImage(labels, salesData) {
         {
           label: "Sales",
           data: salesData,
-          borderColor: "rgb(75,192,192)",
-          tension: 0.1,
+          fill: true,
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 2,
+          pointBackgroundColor: "rgba(54, 162, 235, 1)",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: "rgba(54, 162, 235, 1)",
+          pointHoverBorderColor: "#fff",
+          pointHoverBorderWidth: 2,
+          tension: 0.4,
         },
       ],
     },
     options: {
       responsive: true,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: {
+            font: {
+              size: 12,
+              weight: "bold",
+            },
+            usePointStyle: true,
+            pointStyle: "circle",
+          },
+        },
+      },
       scales: {
+        x: {
+          grid: {
+            display: false,
+          },
+        },
         y: {
           beginAtZero: true,
+          grid: {
+            color: "rgba(0, 0, 0, 0.05)",
+            lineWidth: 1,
+          },
+          ticks: {
+            callback: function (value) {
+              return "₹" + value.toLocaleString();
+            },
+          },
         },
+      },
+      interaction: {
+        intersect: false,
+        mode: "index",
       },
     },
   };
+
   const image = await chartJSNodeCanvas.renderToBuffer(configuration);
   return `data:image/png;base64,${image.toString("base64")}`;
 }
