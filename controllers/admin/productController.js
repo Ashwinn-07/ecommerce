@@ -186,6 +186,11 @@ const editProduct = async (req, res) => {
       return res.status(400).json("Invalid brand name");
     }
 
+    const categoryId = await Category.findOne({ name: data.category });
+    if (!categoryId) {
+      return res.status(400).json("Invalid category name");
+    }
+
     const sizes = data.sizes.map((size, index) => ({
       size: size,
       quantity: data.quantities[index],
@@ -193,8 +198,8 @@ const editProduct = async (req, res) => {
 
     const updateFields = {
       productName: data.productName,
-      description: data.description,
-      category: product.category,
+      description: data.descriptionData,
+      category: categoryId._id,
       brand: brandId._id,
       regularPrice: data.regularPrice,
       salePrice: data.salePrice,
