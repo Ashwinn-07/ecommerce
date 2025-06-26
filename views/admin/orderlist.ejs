@@ -65,6 +65,7 @@
               <option value="Return Pending" <%= order.status === 'Return Pending' ? 'selected' : '' %>>Return Pending</option>
               <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
             </select>
+            <a href="/admin/order/<%= order._id %>" class="btn btn-sm btn-primary">View Details</a>
           </td>
         </tr>
         

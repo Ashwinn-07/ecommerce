@@ -98,6 +98,24 @@ router.post(
   orderlistController.cancelReturnRequest
 );
 
+router.get("/order/:orderId", orderlistController.getOrderDetails);
+router.post(
+  "/order/:orderId/item/:itemId/cancel",
+  orderlistController.cancelOrderItem
+);
+router.post(
+  "/order/:orderId/item/:itemId/status",
+  orderlistController.updateOrderItemStatus
+);
+router.post(
+  "/order/:orderId/item/:itemId/approve-return",
+  orderlistController.approveItemReturn
+);
+router.post(
+  "/order/:orderId/item/:itemId/reject-return",
+  orderlistController.rejectItemReturn
+);
+
 router.get("/coupons", adminAuth, couponController.getCouponManagementPage);
 router.post("/addCoupon", adminAuth, couponController.addCoupon);
 router.post(

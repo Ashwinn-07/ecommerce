@@ -31,6 +31,35 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+
+      status: {
+        type: String,
+        required: true,
+        enum: [
+          "Pending",
+          "Processing",
+          "Shipped",
+          "Delivered",
+          "Cancelled",
+          "Return Pending",
+          "Returned",
+        ],
+        default: "Pending",
+      },
+
+      cancelledAt: {
+        type: Date,
+      },
+      returnedAt: {
+        type: Date,
+      },
+
+      cancellationReason: {
+        type: String,
+      },
+      returnReason: {
+        type: String,
+      },
     },
   ],
   totalPrice: {
@@ -53,17 +82,18 @@ const orderSchema = new mongoose.Schema({
     pincode: Number,
     phone: String,
   },
+
   status: {
     type: String,
     required: true,
     enum: [
       "Pending",
-      "Return Pending",
+      "Partially Cancelled",
       "Processing",
       "Shipped",
       "Delivered",
       "Cancelled",
-      "Return Request",
+      "Partially Returned",
       "Returned",
       "Payment Pending",
     ],
@@ -83,6 +113,35 @@ const orderSchema = new mongoose.Schema({
     default: false,
   },
 });
+
+orderSchema.methods.updateOrderStatus = function () {
+  const itemStatuses = this.orderedItems.map((item) => item.status);
+  const uniqueStatuses = [...new Set(itemStatuses)];
+
+  if (uniqueStatuses.length === 1 && uniqueStatuses[0] === "Cancelled") {
+    this.status = "Cancelled";
+  } else if (uniqueStatuses.length === 1 && uniqueStatuses[0] === "Delivered") {
+    this.status = "Delivered";
+  } else if (uniqueStatuses.length === 1 && uniqueStatuses[0] === "Returned") {
+    this.status = "Returned";
+  } else if (itemStatuses.includes("Cancelled")) {
+    this.status = "Partially Cancelled";
+  } else if (itemStatuses.includes("Returned")) {
+    this.status = "Partially Returned";
+  } else {
+    const statusPriority = ["Pending", "Processing", "Shipped", "Delivered"];
+    let highestStatus = "Pending";
+
+    for (const status of itemStatuses) {
+      if (
+        statusPriority.indexOf(status) > statusPriority.indexOf(highestStatus)
+      ) {
+        highestStatus = status;
+      }
+    }
+    this.status = highestStatus;
+  }
+};
 
 const Order = mongoose.model("Order", orderSchema);
 

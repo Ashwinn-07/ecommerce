@@ -1,0 +1,595 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .order-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .order-header {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .order-body {
+    padding: 20px;
+  }
+
+  .status-badge {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+  }
+
+  .item-card {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.2s;
+  }
+
+  .item-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .btn-group-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-row {
+    margin-bottom: 10px;
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .back-button {
+    margin-bottom: 20px;
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+
+  .dropdown-item.active {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .dropdown-item.active:hover {
+    background-color: #0056b3;
+    color: white;
+  }
+
+  .dropdown-divider {
+    margin: 0.5rem 0;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="back-button">
+    <a href="/admin/orderList" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Orders
+    </a>
+  </div>
+
+  <div class="page-header">
+    <h2 class="mb-0">Order Details</h2>
+    <p class="mb-0 mt-2">Manage individual order items and status</p>
+  </div>
+
+  <div class="order-card">
+    <div class="order-header">
+      <h5 class="mb-0"><i class="fas fa-info-circle"></i> Order Information</h5>
+    </div>
+    <div class="order-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="info-row">
+            <span class="info-label">Order ID:</span> <%= order.orderId %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Customer:</span> <%= order.userId.name %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span> <%= order.userId.email %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Order Date:</span> <%= new
+            Date(order.createdOn).toLocaleDateString() %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <span class="info-label">Status:</span>
+            <span
+              class="badge status-badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' ? 'danger' : order.status.includes('Pending') ? 'warning' : 'info' %>"
+            >
+              <%= order.status %>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Payment Method:</span> <%=
+            order.paymentMethod %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Total Amount:</span>
+            <strong>₹<%= order.finalAmount %></strong>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Discount:</span> ₹<%= order.discount %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="order-card">
+    <div class="order-header">
+      <h5 class="mb-0">
+        <i class="fas fa-map-marker-alt"></i> Shipping Address
+      </h5>
+    </div>
+    <div class="order-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="info-row">
+            <span class="info-label">Name:</span> <%= order.address.name %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Address Type:</span> <%=
+            order.address.addressType %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phone:</span> <%= order.address.phone %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-row">
+            <span class="info-label">City:</span> <%= order.address.city %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">State:</span> <%= order.address.state %>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Pincode:</span> <%= order.address.pincode
+            %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="order-card">
+    <div class="order-header">
+      <h5 class="mb-0">
+        <i class="fas fa-box"></i> Order Items (<%= order.orderedItems.length
+        %>)
+      </h5>
+    </div>
+    <div class="order-body">
+      <% order.orderedItems.forEach((item, index) => { %>
+      <div class="item-card" id="item-<%= item._id %>">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <!-- Product Image -->
+            <div class="col-md-2 col-sm-3">
+              <img
+                src="<%= item.product.productImage[0] %>"
+                alt="<%= item.product.productName %>"
+                class="product-image"
+              />
+            </div>
+
+            <div class="col-md-4 col-sm-5">
+              <h6 class="mb-2"><%= item.product.productName %></h6>
+              <div class="text-muted small">
+                <div>
+                  <i class="fas fa-tag"></i> Size:
+                  <strong><%= item.size %></strong>
+                </div>
+                <div>
+                  <i class="fas fa-sort-numeric-up"></i> Quantity:
+                  <strong><%= item.quantity %></strong>
+                </div>
+                <div>
+                  <i class="fas fa-rupee-sign"></i> Price:
+                  <strong>₹<%= item.price %></strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3 col-sm-4">
+              <div class="mb-2">
+                <span
+                  class="badge status-badge bg-<%= item.status === 'Delivered' ? 'success' : item.status === 'Cancelled' ? 'danger' : item.status === 'Return Pending' ? 'warning' : item.status === 'Returned' ? 'secondary' : 'info' %>"
+                >
+                  <%= item.status %>
+                </span>
+              </div>
+
+              <% if (item.status === 'Cancelled') { %>
+              <div class="small text-muted">
+                <i class="fas fa-calendar"></i> Cancelled: <%= new
+                Date(item.cancelledAt).toLocaleDateString() %>
+              </div>
+              <% if (item.cancellationReason) { %>
+              <div class="small text-muted">
+                <i class="fas fa-comment"></i> Reason: <%=
+                item.cancellationReason %>
+              </div>
+              <% } %> <% } %> <% if (item.status === 'Returned') { %>
+              <div class="small text-muted">
+                <i class="fas fa-calendar"></i> Returned: <%= new
+                Date(item.returnedAt).toLocaleDateString() %>
+              </div>
+              <% } %> <% if (item.returnReason) { %>
+              <div class="small text-muted">
+                <i class="fas fa-undo"></i> Return Reason: <%= item.returnReason
+                %>
+              </div>
+              <% } %>
+            </div>
+
+            <div class="col-md-3">
+              <div class="btn-group-custom">
+                <% if (item.status !== 'Cancelled' && item.status !==
+                'Returned') { %>
+                <div class="dropdown">
+                  <button
+                    class="btn btn-outline-primary btn-sm dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="fas fa-edit"></i> Update Status
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a
+                        class="dropdown-item <%= item.status === 'Pending' ? 'active' : '' %>"
+                        href="#"
+                        onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Pending')"
+                      >
+                        <i class="fas fa-clock"></i> Pending
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item <%= item.status === 'Processing' ? 'active' : '' %>"
+                        href="#"
+                        onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Processing')"
+                      >
+                        <i class="fas fa-cog"></i> Processing
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item <%= item.status === 'Shipped' ? 'active' : '' %>"
+                        href="#"
+                        onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Shipped')"
+                      >
+                        <i class="fas fa-truck"></i> Shipped
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item <%= item.status === 'Delivered' ? 'active' : '' %>"
+                        href="#"
+                        onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Delivered')"
+                      >
+                        <i class="fas fa-check-circle"></i> Delivered
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                      <a
+                        class="dropdown-item <%= item.status === 'Return Pending' ? 'active' : '' %>"
+                        href="#"
+                        onclick="updateItemStatus('<%= order._id %>', '<%= item._id %>', 'Return Pending')"
+                      >
+                        <i class="fas fa-undo"></i> Return Pending
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                <% } %>
+
+                <!-- Cancel Item Button -->
+                <% if (item.status !== 'Cancelled' && item.status !==
+                'Delivered' && item.status !== 'Returned') { %>
+                <button
+                  class="btn btn-outline-danger btn-sm"
+                  onclick="cancelItem('<%= order._id %>', '<%= item._id %>')"
+                >
+                  <i class="fas fa-times"></i> Cancel Item
+                </button>
+                <% } %>
+
+                <!-- Return Management Buttons -->
+                <% if (item.status === 'Return Pending') { %>
+                <button
+                  class="btn btn-success btn-sm"
+                  onclick="approveReturn('<%= order._id %>', '<%= item._id %>')"
+                >
+                  <i class="fas fa-check"></i> Approve Return
+                </button>
+                <button
+                  class="btn btn-danger btn-sm"
+                  onclick="rejectReturn('<%= order._id %>', '<%= item._id %>')"
+                >
+                  <i class="fas fa-times"></i> Reject Return
+                </button>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Item Modal -->
+<div class="modal fade" id="cancelItemModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cancel Item</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to cancel this item?</p>
+        <div class="mb-3">
+          <label for="cancellationReason" class="form-label"
+            >Cancellation Reason (Optional)</label
+          >
+          <textarea
+            class="form-control"
+            id="cancellationReason"
+            rows="3"
+            placeholder="Enter reason for cancellation..."
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          onclick="confirmCancelItem()"
+        >
+          Confirm Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Return Modal -->
+<div class="modal fade" id="rejectReturnModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Return Request</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>Please provide a reason for rejecting this return request:</p>
+        <div class="mb-3">
+          <label for="rejectionReason" class="form-label"
+            >Rejection Reason *</label
+          >
+          <textarea
+            class="form-control"
+            id="rejectionReason"
+            rows="3"
+            required
+            placeholder="Enter reason for rejection..."
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          onclick="confirmRejectReturn()"
+        >
+          Confirm Reject
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentOrderId = "";
+  let currentItemId = "";
+
+  function updateItemStatus(orderId, itemId, newStatus) {
+    fetch(`/admin/order/${orderId}/item/${itemId}/status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newStatus }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showAlert("Status updated successfully!", "success");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showAlert("Error: " + data.message, "danger");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showAlert("An error occurred while updating status", "danger");
+      });
+  }
+
+  function cancelItem(orderId, itemId) {
+    currentOrderId = orderId;
+    currentItemId = itemId;
+    const modal = new bootstrap.Modal(
+      document.getElementById("cancelItemModal")
+    );
+    modal.show();
+  }
+
+  function confirmCancelItem() {
+    const reason = document.getElementById("cancellationReason").value;
+
+    fetch(`/admin/order/${currentOrderId}/item/${currentItemId}/cancel`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cancellationReason: reason }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showAlert("Item cancelled successfully!", "success");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showAlert("Error: " + data.message, "danger");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showAlert("An error occurred while cancelling item", "danger");
+      });
+
+    bootstrap.Modal.getInstance(
+      document.getElementById("cancelItemModal")
+    ).hide();
+  }
+
+  function approveReturn(orderId, itemId) {
+    if (confirm("Are you sure you want to approve this return request?")) {
+      fetch(`/admin/order/${orderId}/item/${itemId}/approve-return`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            showAlert(
+              `Return approved successfully! Refund amount: ₹${data.refundAmount}`,
+              "success"
+            );
+            setTimeout(() => location.reload(), 2000);
+          } else {
+            showAlert("Error: " + data.message, "danger");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          showAlert("An error occurred while approving return", "danger");
+        });
+    }
+  }
+
+  function rejectReturn(orderId, itemId) {
+    currentOrderId = orderId;
+    currentItemId = itemId;
+    const modal = new bootstrap.Modal(
+      document.getElementById("rejectReturnModal")
+    );
+    modal.show();
+  }
+
+  function confirmRejectReturn() {
+    const reason = document.getElementById("rejectionReason").value;
+
+    if (!reason.trim()) {
+      showAlert("Please provide a rejection reason", "warning");
+      return;
+    }
+
+    fetch(
+      `/admin/order/${currentOrderId}/item/${currentItemId}/reject-return`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ rejectionReason: reason }),
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showAlert("Return request rejected successfully!", "success");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showAlert("Error: " + data.message, "danger");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showAlert("An error occurred while rejecting return", "danger");
+      });
+
+    bootstrap.Modal.getInstance(
+      document.getElementById("rejectReturnModal")
+    ).hide();
+  }
+
+  function showAlert(message, type) {
+    // Create alert element
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText =
+      "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+      if (alertDiv.parentNode) {
+        alertDiv.remove();
+      }
+    }, 5000);
+  }
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

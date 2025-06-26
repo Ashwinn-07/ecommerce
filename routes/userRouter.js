@@ -107,6 +107,16 @@ router.get(
   userAuth,
   orderController.getOrderDetails
 );
+router.post(
+  "/orders/:orderId/items/:itemId/cancel",
+  userAuth,
+  orderController.cancelOrderItem
+);
+router.post(
+  "/orders/:orderId/items/:itemId/return",
+  userAuth,
+  orderController.returnOrderItem
+);
 
 router.get("/change-password", userAuth, profileController.getChangePassword);
 router.post("/change-password", userAuth, profileController.changePassword);
