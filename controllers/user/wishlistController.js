@@ -28,13 +28,23 @@ const addToWishlist = async (req, res) => {
     if (!productExists) {
       wishlist.products.push({ productId, size });
       await wishlist.save();
-      res.redirect(`/product/${productId}?wishlist=added`);
+      res.json({
+        success: true,
+        action: "added",
+        message: "Product added to wishlist",
+      });
     } else {
-      res.redirect(`/product/${productId}?wishlist=exists`);
+      res.json({
+        success: true,
+        action: "exists",
+        message: "Product already in wishlist",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.redirect(`/product/${productId}?wishlist=error`);
+    res
+      .status(500)
+      .json({ success: false, message: "Error adding to wishlist" });
   }
 };
 

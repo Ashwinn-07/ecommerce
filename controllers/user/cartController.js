@@ -37,24 +37,25 @@ const addToCart = async (req, res) => {
     const { productId, quantity, selectedSize } = req.body;
     const userId = req.session.user;
     const product = await Product.findById(productId);
-    const referer = req.get("Referer");
 
     if (!selectedSize) {
-      console.error("Size not found");
-      return res.status(400).json({ message: "Size is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Size is required" });
     }
 
     if (!product) {
-      return res.redirect(
-        `${referer}?action=addtocart&result=error&message=Product not found`
-      );
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
     const sizeObj = product.sizes.find((s) => s.size === selectedSize);
     if (!sizeObj || sizeObj.quantity < quantity) {
-      return res.redirect(
-        `${referer}?action=addtocart&result=error&message=Not enough stock for selected size`
-      );
+      return res.status(400).json({
+        success: false,
+        message: "Not enough stock for selected size",
+      });
     }
 
     let cart = await Cart.findOne({ userId });
@@ -72,9 +73,10 @@ const addToCart = async (req, res) => {
         cart.items[existingProductIndex].quantity + parseInt(quantity);
 
       if (sizeObj.quantity < newQuantity) {
-        return res.redirect(
-          `${referer}?action=addtocart&result=error&message=Not enough stock for selected size`
-        );
+        return res.status(400).json({
+          success: false,
+          message: "Not enough stock for selected size",
+        });
       }
 
       cart.items[existingProductIndex].quantity = newQuantity;
@@ -91,12 +93,12 @@ const addToCart = async (req, res) => {
     }
 
     await cart.save();
-    res.redirect(`${referer}?action=addtocart&result=success`);
+    res.json({ success: true, message: "Item added to cart successfully" });
   } catch (error) {
     console.error(error);
-    res.redirect(
-      `${referer}?action=addtocart&result=error&message=An unexpected error occurred`
-    );
+    res
+      .status(500)
+      .json({ success: false, message: "An unexpected error occurred" });
   }
 };
 

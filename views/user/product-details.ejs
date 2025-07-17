@@ -276,7 +276,7 @@
               <p>Available Sizes: <%= availableSizes.map(s => s.size).join(', ') %></p>
             <% } %>
 
-            <form id="add-to-cart-form" action="/add-to-cart" method="POST">
+            <form id="add-to-cart-form">
               <input type="hidden" name="productId" value="<%= product._id %>">
               <input type="hidden" name="selectedSize" id="selectedSize">
               <div class="product__details__cart__option">
@@ -293,8 +293,7 @@
 
             <div class="product__details__btns__option">
               <form
-  action="/wishlist/add/<%= product._id %>"
-  method="POST"
+  id="wishlist-form"
   style="display: inline"
 >
   <input type="hidden" name="size" id="wishlist-size">
@@ -474,6 +473,7 @@
   const sizeInputs = document.querySelectorAll('input[name="size"]');
   const selectedSizeInput = document.getElementById('selectedSize');
   const addToCartForm = document.getElementById('add-to-cart-form');
+  const wishlistForm = document.getElementById('wishlist-form');
   const quantityInput = document.querySelector('input[name="quantity"]');
   const wishlistSizeInput = document.getElementById('wishlist-size');
   const sizeContainer = document.querySelector('.product__details__option__size');
@@ -500,18 +500,106 @@ function updateMaxQuantity(size) {
   }
 }
 
+
 addToCartForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  
   if (!selectedSizeInput.value) {
-    e.preventDefault();
     Swal.fire({
       title: 'Oops...',
       text: 'Please select a size before adding to cart.',
       icon: 'error',
       confirmButtonText: 'OK'
     });
+    return;
   }
+
+   const formData = new URLSearchParams();
+  formData.append('productId', document.querySelector('input[name="productId"]').value);
+  formData.append('quantity', quantityInput.value);
+  formData.append('selectedSize', selectedSizeInput.value);
+
+  fetch('/add-to-cart', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      Swal.fire({
+        title: 'Added to Cart!',
+        text: 'Item has been added to your cart.',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
+    } else {
+      Swal.fire({
+        title: 'Oops...',
+        text: data.message || 'There was an error adding the item to your cart.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  })
+  .catch(error => {
+    Swal.fire({
+      title: 'Oops...',
+      text: 'There was an error adding the item to your cart. Please try again.',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+  });
+});
+
+
+wishlistForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData();
+  formData.append('size', wishlistSizeInput.value);
+
+  fetch(`/wishlist/add/<%= product._id %>`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      if (data.action === 'added') {
+        Swal.fire({
+          title: 'Success!',
+          text: 'Product added to your wishlist.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      } else if (data.action === 'exists') {
+        Swal.fire({
+          title: 'Already in Wishlist',
+          text: 'This product is already in your wishlist.',
+          icon: 'info',
+          confirmButtonText: 'OK'
+        });
+      }
+    } else {
+      Swal.fire({
+        title: 'Oops...',
+        text: 'There was an error adding the product to your wishlist. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  })
+  .catch(error => {
+    Swal.fire({
+      title: 'Oops...',
+      text: 'There was an error adding the product to your wishlist. Please try again.',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+  });
 });
 });
+  
   
   document.addEventListener("DOMContentLoaded", function () {
     function activateImageZoom() {
@@ -544,71 +632,6 @@ addToCartForm.addEventListener('submit', function(e) {
         }, 100);
       });
     });
-  });
-
-  document.addEventListener('DOMContentLoaded', function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const wishlistStatus = urlParams.get('wishlist');
-
-  if (wishlistStatus === 'added') {
-    Swal.fire({
-      title: 'Success!',
-      text: 'Product added to your wishlist.',
-      icon: 'success',
-      confirmButtonText: 'OK'
-    });
-  } else if (wishlistStatus === 'exists') {
-    Swal.fire({
-      title: 'Already in Wishlist',
-      text: 'This product is already in your wishlist.',
-      icon: 'info',
-      confirmButtonText: 'OK'
-    });
-  } else if (wishlistStatus === 'error') {
-    Swal.fire({
-      title: 'Oops...',
-      text: 'There was an error adding the product to your wishlist. Please try again.',
-      icon: 'error',
-      confirmButtonText: 'OK'
-    });
-  }
-});
-document.addEventListener("DOMContentLoaded", function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get("action");
-    const result = urlParams.get("result");
-    const message = urlParams.get("message");
-
-    if (action === "addtocart") {
-      switch (result) {
-        case "success":
-          Swal.fire({
-            title: "Added to Cart!",
-            text: "Item has been added to your cart.",
-            icon: "success",
-            confirmButtonText: "OK",
-          });
-          break;
-        case "updated":
-          Swal.fire({
-            title: "Cart Updated!",
-            text: "This item was already in your cart. We've updated the quantity.",
-            icon: "info",
-            confirmButtonText: "OK",
-          });
-          break;
-        case "error":
-          Swal.fire({
-            title: "Oops...",
-            text:
-              message ||
-              "There was an error adding the item to your cart. Please try again.",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-          break;
-      }
-    }
   });
 </script>
 
