@@ -315,7 +315,7 @@
         </div>
         <h3>Transaction History</h3>
         <ul class="transaction-list">
-          <% wallet.transactions.reverse().forEach(transaction => { %>
+          <% wallet.transactions.forEach(transaction => { %>
           <li class="transaction-item">
             <span
               class="transaction-type <%= transaction.type.toLowerCase() %>"
