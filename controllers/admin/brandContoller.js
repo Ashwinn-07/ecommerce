@@ -1,4 +1,5 @@
 const Brand = require("../../models/brandSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const getBrandPage = async (req, res) => {
   try {
@@ -25,7 +26,9 @@ const getBrandPage = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -43,7 +46,9 @@ const addBrand = async (req, res) => {
     res.redirect("/admin/brands");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 const blockBrand = async (req, res) => {
@@ -53,7 +58,9 @@ const blockBrand = async (req, res) => {
     res.redirect("/admin/brands");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -64,7 +71,9 @@ const unBlockBrand = async (req, res) => {
     res.redirect("/admin/brands");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -72,13 +81,17 @@ const deleteBrand = async (req, res) => {
   try {
     const { id } = req.query;
     if (!id) {
-      return res.status(400).json({ message: "no brand found" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.NO_BRAND_FOUND });
     }
     await Brand.deleteOne({ _id: id });
     res.redirect("/admin/brands");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

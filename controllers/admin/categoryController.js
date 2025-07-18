@@ -2,6 +2,7 @@ const Category = require("../../models/categorySchema");
 const Product = require("../../models/productSchema");
 const Cart = require("../../models/cartSchema");
 const { updateCartPrices } = require("../user/cartController");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const categoryInfo = async (req, res) => {
   try {
@@ -24,7 +25,9 @@ const categoryInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("An error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -32,7 +35,9 @@ const addCategory = async (req, res) => {
   const { name, description } = req.body;
 
   if (!name || !description) {
-    return res.status(400).json({ error: "name and description are required" });
+    return res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json({ error: MESSAGES.ERROR.REQUIRED_FIELDS });
   }
 
   try {
@@ -41,16 +46,20 @@ const addCategory = async (req, res) => {
       name: { $regex: new RegExp(`^${lowercaseName}$`, "i") },
     });
     if (existingCategory) {
-      return res.status(400).json({ error: "Category already exists" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: MESSAGES.ERROR.CATEGORY_EXISTS });
     }
     const newCategory = new Category({
       name,
       description,
     });
     await newCategory.save();
-    return res.json({ message: "Category added successfully" });
+    return res.json({ message: MESSAGES.SUCCESS.CATEGORY_ADDED });
   } catch (error) {
-    return res.status(500).json({ error: "server error" });
+    return res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: MESSAGES.ERROR.SERVER_ERROR });
   }
 };
 
@@ -61,8 +70,8 @@ const addCategoryOffer = async (req, res) => {
     const category = await Category.findById(categoryId);
     if (!category) {
       return res
-        .status(404)
-        .json({ status: false, message: "category not found" });
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ status: false, message: MESSAGES.ERROR.CATEGORY_NOT_FOUND });
     }
     const products = await Product.find({ category: category._id });
     const hasProductOffer = products.some(
@@ -71,7 +80,7 @@ const addCategoryOffer = async (req, res) => {
     if (hasProductOffer) {
       return res.json({
         status: false,
-        message: "products within this category already has product offer",
+        message: MESSAGES.ERROR.PRODUCT_OFFER_EXISTS,
       });
     }
     await Category.updateOne(
@@ -92,7 +101,9 @@ const addCategoryOffer = async (req, res) => {
     }
     res.json({ status: true });
   } catch (error) {
-    res.status(500).json({ status: false, message: "server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ status: false, message: MESSAGES.ERROR.SERVER_ERROR });
   }
 };
 
@@ -102,8 +113,8 @@ const removeCategoryOffer = async (req, res) => {
     const category = await Category.findById(categoryId);
     if (!category) {
       return res
-        .status(404)
-        .json({ status: false, message: "category not found" });
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ status: false, message: MESSAGES.ERROR.CATEGORY_NOT_FOUND });
     }
     const percentage = category.categoryOffer;
     const products = await Product.find({ category: category._id });
@@ -126,10 +137,12 @@ const removeCategoryOffer = async (req, res) => {
     }
     category.categoryOffer = 0;
     await category.save();
-    res.json({ status: true, message: "offer removed successfully" });
+    res.json({ status: true, message: MESSAGES.SUCCESS.OFFER_REMOVED });
   } catch (error) {
     console.error("Error removing category offer:", error);
-    res.status(500).json({ status: false, message: "Server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ status: false, message: MESSAGES.ERROR.SERVER_ERROR_CAPS });
   }
 };
 
@@ -140,7 +153,9 @@ const getListCategory = async (req, res) => {
     res.redirect("/admin/category");
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -151,7 +166,9 @@ const getUnlistCategory = async (req, res) => {
     res.redirect("/admin/category");
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -162,7 +179,9 @@ const getEditCategory = async (req, res) => {
     res.render("edit-category", { category: category });
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -178,7 +197,7 @@ const editCategory = async (req, res) => {
     if (existingCategory) {
       return res.render("edit-category", {
         category: { _id: id, name: categoryName, description },
-        error: "Category exists, please choose another name",
+        error: MESSAGES.ERROR.CATEGORY_EXISTS_EDIT,
       });
     }
 
@@ -193,10 +212,14 @@ const editCategory = async (req, res) => {
     if (updateCategory) {
       return res.redirect("/admin/category");
     } else {
-      return res.status(400).json({ error: "category not found" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: MESSAGES.ERROR.CATEGORY_NOT_FOUND_EDIT });
     }
   } catch (error) {
-    res.status(500).json({ error: "server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: MESSAGES.ERROR.SERVER_ERROR });
   }
 };
 
