@@ -1,5 +1,6 @@
 const User = require("../../models/userSchema");
 const bcrypt = require("bcrypt");
+const { MESSAGES } = require("../../utils/constants");
 
 const loadLogin = (req, res) => {
   if (req.session.admin) {
@@ -16,7 +17,7 @@ const login = async (req, res) => {
 
     if (!admin) {
       return res.render("admin-login", {
-        message: "Invalid email or password",
+        message: MESSAGES.ERROR.INVALID_CREDENTIALS,
       });
     }
 
@@ -27,13 +28,13 @@ const login = async (req, res) => {
       return res.redirect("/admin");
     } else {
       return res.render("admin-login", {
-        message: "Invalid email or password",
+        message: MESSAGES.ERROR.INVALID_CREDENTIALS,
       });
     }
   } catch (error) {
     console.error("Login error:", error);
     return res.render("admin-login", {
-      message: "An error occurred. Please try again later.",
+      message: MESSAGES.ERROR.GENERAL_ERROR,
     });
   }
 };
@@ -52,12 +53,12 @@ const logout = async (req, res) => {
   try {
     req.session.destroy((err) => {
       if (err) {
-        console.log("Error destroying session", err);
+        console.log(MESSAGES.ERROR.SESSION_DESTROY_ERROR, err);
       }
       res.redirect("/admin/login");
     });
   } catch (error) {
-    console.log("An error occured", error);
+    console.log(MESSAGES.ERROR.LOGOUT_ERROR, error);
   }
 };
 
