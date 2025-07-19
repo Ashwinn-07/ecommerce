@@ -1,4 +1,5 @@
 const Address = require("../../models/addressSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const getAddress = async (req, res) => {
   try {
@@ -63,7 +64,9 @@ const addAddress = async (req, res) => {
     res.redirect("/addresses");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -78,11 +81,15 @@ const getEditAddress = async (req, res) => {
         address: addressToEdit,
       });
     } else {
-      res.status(404).json({ message: "Address Not Found" });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ADDRESS_NOT_FOUND });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -105,12 +112,16 @@ const editAddress = async (req, res) => {
         await userAddress.save();
         res.redirect("/addresses");
       } else {
-        res.status(404).json({ message: "Adress Not Found" });
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .json({ message: MESSAGES.ERROR.ADDRESS_NOT_FOUND });
       }
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -129,7 +140,9 @@ const deleteAddress = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

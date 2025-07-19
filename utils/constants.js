@@ -36,6 +36,7 @@ const MESSAGES = {
     CATEGORY_EXISTS_EDIT: "Category exists, please choose another name",
     COUPON_EXISTS: "Coupon already exists",
     COUPON_NOT_FOUND: "Coupon not found",
+    ADDRESS_NOT_FOUND: "Address Not Found",
   },
 };
 
