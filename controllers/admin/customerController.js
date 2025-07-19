@@ -1,4 +1,5 @@
 const User = require("../../models/userSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const customerInfo = async (req, res) => {
   try {
@@ -34,7 +35,9 @@ const customerInfo = async (req, res) => {
 
     res.render("customers", { data: userData, totalPages, currentPage: page });
   } catch (error) {
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -45,7 +48,9 @@ const customerBlocked = async (req, res) => {
     res.redirect("/admin/users");
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -56,7 +61,9 @@ const customerUnblocked = async (req, res) => {
     res.redirect("/admin/users");
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

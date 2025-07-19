@@ -13,6 +13,9 @@ const MESSAGES = {
   SUCCESS: {
     CATEGORY_ADDED: "Category added successfully",
     OFFER_REMOVED: "offer removed successfully",
+    COUPON_CREATED: "Coupon created successfully",
+    COUPON_STATUS_UPDATED: "Coupon status updated successfully",
+    COUPON_UPDATED: "Coupon updated successfully",
   },
   ERROR: {
     INVALID_CREDENTIALS: "Invalid email or password",
@@ -31,6 +34,8 @@ const MESSAGES = {
     SERVER_ERROR_CAPS: "Server error",
     CATEGORY_NOT_FOUND_EDIT: "category not found",
     CATEGORY_EXISTS_EDIT: "Category exists, please choose another name",
+    COUPON_EXISTS: "Coupon already exists",
+    COUPON_NOT_FOUND: "Coupon not found",
   },
 };
 
