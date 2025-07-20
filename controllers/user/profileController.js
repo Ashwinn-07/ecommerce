@@ -2,11 +2,12 @@ const User = require("../../models/userSchema");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 dotenv.config();
 
 async function sendVerificationEmail(email, otp) {
   try {
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       port: 587,
       secure: false,
@@ -60,12 +61,15 @@ const forgotEmailValid = async (req, res) => {
         res.render("forgotPass-otp");
         console.log(otp);
       } else {
-        res.json({ success: false, message: "failed to send otp" });
+        res.json({
+          success: false,
+          message: MESSAGES.ERROR.FAILED_TO_SEND_OTP,
+        });
       }
     } else
       [
         res.render("forgot-password", {
-          message: "User with this email does not exist",
+          message: MESSAGES.ERROR.USER_NOT_EXISTS,
         }),
       ];
   } catch (error) {
@@ -79,10 +83,12 @@ const verifyForgotPassOtp = async (req, res) => {
     if (enteredOtp === req.session.userOtp) {
       res.json({ success: true, redirectUrl: "/reset-password" });
     } else {
-      res.json({ success: false, message: "OTP does not match" });
+      res.json({ success: false, message: MESSAGES.ERROR.OTP_NOT_MATCH });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: "An error occured" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.AN_ERROR_OCCURRED });
   }
 };
 
@@ -102,11 +108,15 @@ const resendOtp = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, otp);
     if (emailSent) {
       console.log("New OTP:", otp);
-      res.status(200).json({ success: true, message: "OTP Resent!" });
+      res
+        .status(STATUS_CODES.OK)
+        .json({ success: true, message: MESSAGES.SUCCESS.OTP_SENT });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.SERVER_ERROR });
   }
 };
 
@@ -131,7 +141,9 @@ const postNewPassword = async (req, res) => {
       );
       res.redirect("/login");
     } else {
-      res.render("reset-password", { message: "passwords do not match" });
+      res.render("reset-password", {
+        message: MESSAGES.ERROR.PASSWORDS_NOT_MATCH,
+      });
     }
   } catch (error) {
     console.error(error);
@@ -143,15 +155,19 @@ const getProfile = async (req, res) => {
     const userId = req.session.user;
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.USER_NOT_FOUND });
     } else {
       res.render("user-profile", {
         user,
       });
     }
   } catch (error) {
-    console.error("error fetching user profile", error);
-    res.status(500).json({ message: "internal server error" });
+    console.error(MESSAGES.ERROR.ERROR_FETCHING_USER_PROFILE, error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -165,12 +181,16 @@ const editProfile = async (req, res) => {
       { new: true }
     );
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.USER_NOT_FOUND });
     }
     res.redirect("/profile");
   } catch (error) {
-    console.error("Error updating profile details", error);
-    res.status(500).json({ message: "internal server error" });
+    console.error(MESSAGES.ERROR.ERROR_UPDATING_PROFILE, error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -184,7 +204,9 @@ const getChangePassword = async (req, res) => {
     res.render("change-password", { user });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -195,29 +217,31 @@ const changePassword = async (req, res) => {
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       return res.render("change-password", {
-        errorMessage: "All fields are required.",
+        errorMessage: MESSAGES.ERROR.ALL_FIELDS_REQUIRED,
       });
     }
 
     if (newPassword.length < 8) {
       return res.render("change-password", {
-        errorMessage: "New password must be atleast 8 characters long",
+        errorMessage: MESSAGES.ERROR.PASSWORD_MIN_LENGTH,
       });
     }
     if (newPassword !== confirmPassword) {
       return res.render("change-password", {
-        errorMessage: "Passwords do not match",
+        errorMessage: MESSAGES.ERROR.PASSWORDS_DO_NOT_MATCH,
       });
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.render("change-password", { errorMessage: "User not found" });
+      return res.render("change-password", {
+        errorMessage: MESSAGES.ERROR.USER_NOT_FOUND,
+      });
     }
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.render("change-password", {
-        errorMessage: "Incorrect current password",
+        errorMessage: MESSAGES.ERROR.INCORRECT_CURRENT_PASSWORD,
       });
     }
     const salt = await bcrypt.genSalt(10);
@@ -227,11 +251,13 @@ const changePassword = async (req, res) => {
     await user.save();
 
     return res.render("change-password", {
-      successMessage: "Password changed successfully",
+      successMessage: MESSAGES.SUCCESS.PASSWORD_CHANGED,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

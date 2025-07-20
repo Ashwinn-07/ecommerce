@@ -1,6 +1,7 @@
 const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
 const Wallet = require("../../models/walletSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const getUserOrders = async (req, res) => {
   try {
@@ -25,7 +26,9 @@ const getUserOrders = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -37,10 +40,14 @@ const cancelOrder = async (req, res) => {
       "orderedItems.product"
     );
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
     if (order.status === "Cancelled" || order.status === "Delivered") {
-      return res.status(400).json({ message: "Cannot cancel this order" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.CANNOT_CANCEL_ORDER });
     }
 
     let refundAmount = 0;
@@ -80,7 +87,9 @@ const cancelOrder = async (req, res) => {
     res.redirect("/orders");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -94,20 +103,28 @@ const cancelOrderItem = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const item = order.orderedItems.id(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found in order" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND });
     }
 
     if (item.status === "Cancelled") {
-      return res.status(400).json({ message: "Item is already cancelled" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ITEM_ALREADY_CANCELLED });
     }
 
     if (item.status === "Delivered") {
-      return res.status(400).json({ message: "Cannot cancel delivered item" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.CANNOT_CANCEL_DELIVERED_ITEM });
     }
 
     await Product.findOneAndUpdate(
@@ -137,12 +154,14 @@ const cancelOrderItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Item cancelled successfully",
+      message: MESSAGES.SUCCESS.ITEM_CANCELLED,
       refundAmount: item.price,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -157,18 +176,22 @@ const returnOrderItem = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const item = order.orderedItems.id(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found in order" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND });
     }
 
     if (item.status !== "Delivered") {
       return res
-        .status(400)
-        .json({ message: "Item cannot be returned unless delivered" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ITEM_CANNOT_BE_RETURNED });
     }
 
     item.status = "Return Pending";
@@ -184,11 +207,13 @@ const returnOrderItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Return request submitted successfully",
+      message: MESSAGES.SUCCESS.RETURN_REQUEST_SUBMITTED,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -202,13 +227,15 @@ const returnOrder = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     if (order.status !== "Delivered") {
       return res
-        .status(400)
-        .json({ message: "Order cannot be returned unless delivered" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ORDER_CANNOT_BE_RETURNED });
     }
 
     for (const item of order.orderedItems) {
@@ -227,7 +254,9 @@ const returnOrder = async (req, res) => {
     res.redirect("/orders");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -242,13 +271,15 @@ const getOrderDetails = async (req, res) => {
       .exec();
 
     if (!order) {
-      return res.status(404).redirect("/orders");
+      return res.status(STATUS_CODES.NOT_FOUND).redirect("/orders");
     }
 
     res.render("order-details", { order });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

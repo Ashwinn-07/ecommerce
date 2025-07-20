@@ -1,5 +1,6 @@
 const Cart = require("../../models/cartSchema");
 const Product = require("../../models/productSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const updateCartPrices = async (userId) => {
   try {
@@ -40,21 +41,21 @@ const addToCart = async (req, res) => {
 
     if (!selectedSize) {
       return res
-        .status(400)
-        .json({ success: false, message: "Size is required" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ success: false, message: MESSAGES.ERROR.SIZE_REQUIRED });
     }
 
     if (!product) {
       return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ success: false, message: MESSAGES.ERROR.PRODUCT_NOT_FOUND });
     }
 
     const sizeObj = product.sizes.find((s) => s.size === selectedSize);
     if (!sizeObj || sizeObj.quantity < quantity) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        message: "Not enough stock for selected size",
+        message: MESSAGES.ERROR.NOT_ENOUGH_STOCK,
       });
     }
 
@@ -73,9 +74,9 @@ const addToCart = async (req, res) => {
         cart.items[existingProductIndex].quantity + parseInt(quantity);
 
       if (sizeObj.quantity < newQuantity) {
-        return res.status(400).json({
+        return res.status(STATUS_CODES.BAD_REQUEST).json({
           success: false,
-          message: "Not enough stock for selected size",
+          message: MESSAGES.ERROR.NOT_ENOUGH_STOCK,
         });
       }
 
@@ -93,12 +94,12 @@ const addToCart = async (req, res) => {
     }
 
     await cart.save();
-    res.json({ success: true, message: "Item added to cart successfully" });
+    res.json({ success: true, message: MESSAGES.SUCCESS.ITEM_ADDED_TO_CART });
   } catch (error) {
     console.error(error);
     res
-      .status(500)
-      .json({ success: false, message: "An unexpected error occurred" });
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.UNEXPECTED_ERROR });
   }
 };
 
@@ -121,9 +122,10 @@ const getCart = async (req, res) => {
     res.render("cart", { cart, total, products });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error fetching cart", error: error.message });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      message: MESSAGES.ERROR.ERROR_FETCHING_CART,
+      error: error.message,
+    });
   }
 };
 
@@ -138,15 +140,18 @@ const removeFromCart = async (req, res) => {
     );
 
     if (!result) {
-      return res.status(404).json({ message: "Cart not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.CART_NOT_FOUND });
     }
 
     res.redirect("/cart");
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error removing from cart", error: error.message });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      message: MESSAGES.ERROR.ERROR_REMOVING_FROM_CART,
+      error: error.message,
+    });
   }
 };
 
@@ -157,19 +162,23 @@ const updateCartQuantity = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.PRODUCT_NOT_FOUND });
     }
 
     const sizeObj = product.sizes.find((s) => s.size === size);
     if (!sizeObj || sizeObj.quantity < quantity) {
       return res
-        .status(400)
-        .json({ message: "Not enough stock for selected size" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.NOT_ENOUGH_STOCK });
     }
 
     const cart = await Cart.findOne({ userId });
     if (!cart) {
-      return res.status(404).json({ message: "Cart not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.CART_NOT_FOUND });
     }
 
     const itemIndex = cart.items.findIndex(
@@ -180,7 +189,9 @@ const updateCartQuantity = async (req, res) => {
       cart.items[itemIndex].quantity = quantity;
       cart.items[itemIndex].totalPrice = product.salePrice * quantity;
     } else {
-      return res.status(404).json({ message: "Item not found in cart" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND_IN_CART });
     }
 
     await cart.save();
@@ -192,16 +203,17 @@ const updateCartQuantity = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Cart updated successfully",
+      message: MESSAGES.SUCCESS.CART_UPDATED,
       newQuantity: quantity,
       newItemTotal: product.salePrice * quantity,
       newCartTotal: cartTotal,
     });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error updating cart", error: error.message });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      message: MESSAGES.ERROR.ERROR_UPDATING_CART,
+      error: error.message,
+    });
   }
 };
 
@@ -221,9 +233,10 @@ const getCartTotal = async (req, res) => {
     res.json({ total });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error calculating cart total", error: error.message });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      message: MESSAGES.ERROR.ERROR_CALCULATING_CART_TOTAL,
+      error: error.message,
+    });
   }
 };
 

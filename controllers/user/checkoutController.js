@@ -6,6 +6,7 @@ const Wallet = require("../../models/walletSchema");
 const Coupon = require("../../models/couponSchema");
 const paypal = require("@paypal/checkout-server-sdk");
 const CheckoutSession = require("../../models/checkoutSessionSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 let clientId = process.env.PAYPAL_CLIENT_ID;
 let clientSecret = process.env.PAYPAL_CLIENT_SECRET;
@@ -61,7 +62,9 @@ const getCheckoutPage = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -72,7 +75,9 @@ const applyCoupon = async (req, res) => {
 
     const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ success: false, message: "Cart is empty" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ success: false, message: MESSAGES.ERROR.CART_EMPTY });
     }
 
     const subtotal = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
@@ -83,13 +88,16 @@ const applyCoupon = async (req, res) => {
 
     const coupon = await Coupon.findById(couponSelect);
     if (!coupon) {
-      return res.json({ success: false, message: "Coupon not found" });
+      return res.json({
+        success: false,
+        message: MESSAGES.ERROR.COUPON_NOT_FOUND,
+      });
     }
 
     if (coupon.usedBy.includes(userId)) {
       return res.json({
         success: false,
-        message: "You have already used this coupon",
+        message: MESSAGES.ERROR.COUPON_ALREADY_USED,
         error: "coupon_already_used",
       });
     }
@@ -111,14 +119,19 @@ const applyCoupon = async (req, res) => {
     } else if (coupon.usedBy.includes(userId)) {
       return res.json({
         success: false,
-        message: "You have already used this coupon",
+        message: MESSAGES.ERROR.COUPON_ALREADY_USED,
       });
     } else {
-      return res.json({ success: false, message: "Coupon is not valid" });
+      return res.json({
+        success: false,
+        message: MESSAGES.ERROR.COUPON_INVALID,
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -140,12 +153,14 @@ const removeCoupon = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Coupon removed successfully",
+      message: MESSAGES.SUCCESS.COUPON_REMOVED,
       subtotal,
     });
   } catch (error) {
-    console.error("Error removing coupon:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error(MESSAGES.ERROR.ERROR_REMOVING_COUPON, error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -162,7 +177,9 @@ const initiatePayPalPayment = async (req, res) => {
     const cart = await Cart.findOne({ userId }).populate("items.productId");
 
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.CART_EMPTY });
     }
 
     let totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
@@ -200,7 +217,9 @@ const initiatePayPalPayment = async (req, res) => {
     const order = await client.execute(request);
     const selectedAddress = req.body.selectedAddress || req.body.addressId;
     if (!selectedAddress) {
-      return res.status(400).json({ message: "Address is required" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ADDRESS_REQUIRED });
     }
 
     const address = await Address.findOne({
@@ -209,7 +228,9 @@ const initiatePayPalPayment = async (req, res) => {
     });
 
     if (!address) {
-      return res.status(400).json({ message: "Address not found" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ADDRESS_NOT_FOUND });
     }
 
     const selectedAddressDetails = address.address.id(selectedAddress);
@@ -248,7 +269,9 @@ const paypalSuccess = async (req, res) => {
     const checkoutSession = await CheckoutSession.findOne({ paypalOrderId });
 
     if (!checkoutSession) {
-      return res.status(400).json({ message: "Checkout session not found" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.CHECKOUT_SESSION_NOT_FOUND });
     }
 
     const { checkoutDetails } = checkoutSession;
@@ -336,11 +359,15 @@ const paypalSuccess = async (req, res) => {
       req.session.lastOrderId = order._id;
       res.redirect("/order-confirmation");
     } else {
-      res.status(400).json({ message: "An error occurred" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.PAYMENT_ERROR });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 const paypalCancel = (req, res) => {
@@ -354,22 +381,24 @@ const checkout = async (req, res) => {
     const userId = req.session.user;
     const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.CART_EMPTY });
     }
 
     for (const item of cart.items) {
       const product = await Product.findById(item.productId);
       if (!product || product.quantity < item.quantity) {
-        return res.status(400).json({
-          message: `Product "${product.productName}" is out of stock or has insufficient quantity.`,
+        return res.status(STATUS_CODES.BAD_REQUEST).json({
+          message: `Product "${product.productName}" ${MESSAGES.ERROR.INSUFFICIENT_QUANTITY}.`,
         });
       }
     }
     for (const item of cart.items) {
       const product = await Product.findById(item.productId);
       if (!product) {
-        return res.status(400).json({
-          message: `Product "${item.productId.productName}" not found.`,
+        return res.status(STATUS_CODES.BAD_REQUEST).json({
+          message: `Product "${item.productId.productName}" ${MESSAGES.ERROR.PRODUCT_OUT_OF_STOCK}.`,
         });
       }
 
@@ -378,8 +407,8 @@ const checkout = async (req, res) => {
         sizeIndex === -1 ||
         product.sizes[sizeIndex].quantity < item.quantity
       ) {
-        return res.status(400).json({
-          message: `Product "${product.productName}" (${item.size}) is out of stock or has insufficient quantity.`,
+        return res.status(STATUS_CODES.BAD_REQUEST).json({
+          message: `Product "${product.productName}" (${item.size}) ${MESSAGES.ERROR.INSUFFICIENT_QUANTITY}.`,
         });
       }
     }
@@ -405,23 +434,25 @@ const checkout = async (req, res) => {
     const finalAmount = totalPrice - discount;
     if (paymentMethod === "COD" && finalAmount > 1000) {
       return res
-        .status(400)
-        .json({ message: "COD is not available for orders above Rs 1000" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.COD_LIMIT_EXCEEDED });
     }
 
     if (!paymentMethod) {
-      return res.status(400).json({ message: "payment method is required" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.PAYMENT_METHOD_REQUIRED });
     }
     const blockedProduct = cart.items.find((item) => item.productId.isBlocked);
     if (blockedProduct) {
-      return res.status(400).json({
-        message: `Product "${blockedProduct.productId.productName}" is blocked and cannot be ordered.`,
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        message: `Product "${blockedProduct.productId.productName}" ${MESSAGES.ERROR.PRODUCT_BLOCKED}.`,
       });
     }
     let selectedAddress;
     if (!addressId && (!newAddress || Object.keys(newAddress).length === 0)) {
-      return res.status(400).json({
-        message: "Please select an existing address or add a new one.",
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        message: MESSAGES.ERROR.ADDRESS_SELECTION_REQUIRED,
       });
     }
     if (addressId) {
@@ -430,7 +461,9 @@ const checkout = async (req, res) => {
         "address._id": addressId,
       });
       if (!addressDoc) {
-        return res.status(400).json({ message: " Address not found" });
+        return res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json({ message: MESSAGES.ERROR.ADDRESS_NOT_FOUND });
       }
       selectedAddress = addressDoc.address.id(addressId);
     } else if (newAddress && Object.keys(newAddress).length > 0) {
@@ -445,7 +478,9 @@ const checkout = async (req, res) => {
         selectedAddress = newAddressDoc.address[0];
       }
     } else {
-      return res.status(400).json({ message: "Address is required" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ADDRESS_REQUIRED });
     }
 
     if (paymentMethod === "COD") {
@@ -505,7 +540,7 @@ const checkout = async (req, res) => {
         if (paypalResult.success) {
           return res.redirect(paypalResult.approvalUrl);
         } else {
-          throw new Error("failed to initiate payment");
+          throw new Error(MESSAGES.ERROR.PAYMENT_INITIATION_FAILED);
         }
       } catch (error) {
         console.error(error);
@@ -536,7 +571,9 @@ const checkout = async (req, res) => {
     } else if (paymentMethod === "Wallet") {
       const wallet = await Wallet.findOne({ userId });
       if (!wallet || wallet.balance < finalAmount) {
-        return res.status(400).json({ message: "Insufficient wallet balance" });
+        return res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json({ message: MESSAGES.ERROR.INSUFFICIENT_WALLET_BALANCE });
       }
 
       wallet.balance -= finalAmount;
@@ -587,11 +624,15 @@ const checkout = async (req, res) => {
 
       return res.redirect("/order-confirmation");
     } else {
-      return res.status(400).json({ message: "Invalid payment method" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.INVALID_PAYMENT_METHOD });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -600,7 +641,9 @@ const getOrderConfirmation = async (req, res) => {
     const orderId = req.session.lastOrderId;
 
     if (!orderId) {
-      return res.status(404).render("error", { message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .render("error", { message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const order = await Order.findById(orderId)
@@ -609,7 +652,9 @@ const getOrderConfirmation = async (req, res) => {
 
     if (!order) {
       console.log("Order not found in database:", orderId);
-      return res.status(404).render("error", { message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .render("error", { message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
     if (!order.address) {
       console.log("Address not found for order:", orderId);
@@ -622,7 +667,9 @@ const getOrderConfirmation = async (req, res) => {
     res.render("order-confirmation", { order });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -631,19 +678,23 @@ const continuePayment = async (req, res) => {
     const order = await Order.findById(req.params.orderId);
     if (!order || order.status !== "Payment Pending") {
       return res
-        .status(400)
-        .json({ message: "Invalid order or payment already completed" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.INVALID_ORDER_PAYMENT });
     }
 
     const paypalResult = await initiatePayPalPayment(req, res);
     if (paypalResult.success) {
       return res.redirect(paypalResult.approvalUrl);
     } else {
-      return res.status(400).json({ message: "error initiating payment" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.PAYMENT_INITIATION_ERROR });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

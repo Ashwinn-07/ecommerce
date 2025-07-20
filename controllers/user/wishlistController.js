@@ -1,4 +1,5 @@
 const Wishlist = require("../../models/wishlistSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const getWishlist = async (req, res) => {
   try {
@@ -9,7 +10,9 @@ const getWishlist = async (req, res) => {
     res.render("wishlist", { wishlist });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -43,7 +46,7 @@ const addToWishlist = async (req, res) => {
   } catch (error) {
     console.error(error);
     res
-      .status(500)
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Error adding to wishlist" });
   }
 };
@@ -61,11 +64,15 @@ const removeFromWishlist = async (req, res) => {
       await wishlist.save();
       res.redirect("/wishlist?action=remove&result=success");
     } else {
-      res.status(404).json({ message: "wishlist not found" });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: "wishlist not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

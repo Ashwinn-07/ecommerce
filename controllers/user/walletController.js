@@ -1,5 +1,6 @@
 const Wallet = require("../../models/walletSchema");
 const Order = require("../../models/orderSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const getWalletPage = async (req, res) => {
   try {
@@ -32,7 +33,9 @@ const getWalletPage = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ messaage: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ messaage: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -41,7 +44,9 @@ const addMoney = async (req, res) => {
     const userId = req.session.user;
     const { amount } = req.body;
     if (!amount || amount <= 0) {
-      return res.status(400).json({ message: "Invalid amount" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: "Invalid amount" });
     }
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) {
@@ -56,13 +61,15 @@ const addMoney = async (req, res) => {
 
     await wallet.save();
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       message: "Money added successfully",
       newBalance: wallet.balance,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ messaage: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ messaage: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 const withdrawMoney = async (req, res) => {
@@ -71,12 +78,16 @@ const withdrawMoney = async (req, res) => {
     const { amount } = req.body;
 
     if (!amount || amount <= 0) {
-      return res.status(400).json({ message: "Invalid amount" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: "Invalid amount" });
     }
 
     let wallet = await Wallet.findOne({ userId });
     if (!wallet || wallet.balance < amount) {
-      return res.status(400).json({ message: "Insufficient balance" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.INSUFFICIENT_WALLET_BALANCE });
     }
 
     wallet.balance -= parseFloat(amount);
@@ -88,13 +99,15 @@ const withdrawMoney = async (req, res) => {
 
     await wallet.save();
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       message: "Money withdrawn successfully",
       newBalance: wallet.balance,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 const useWalletForOrder = async (req, res) => {
@@ -104,12 +117,16 @@ const useWalletForOrder = async (req, res) => {
 
     const order = await Order.findOne({ _id: orderId, userId });
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     let wallet = await Wallet.findOne({ userId });
     if (!wallet || wallet.balance < order.finalAmount) {
-      return res.status(400).json({ message: "Insufficient wallet balance" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.INSUFFICIENT_WALLET_BALANCE });
     }
 
     wallet.balance -= order.finalAmount;
@@ -128,7 +145,9 @@ const useWalletForOrder = async (req, res) => {
     res.redirect("/orders");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

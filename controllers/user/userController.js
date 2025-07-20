@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 dotenv.config();
 
 const loadHomepage = async (req, res) => {
@@ -20,7 +21,9 @@ const loadHomepage = async (req, res) => {
     res.render("home", { user, products });
   } catch (error) {
     console.log("homepage not found");
-    res.status(500).send("server error");
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .send(MESSAGES.ERROR.SERVER_ERROR);
   }
 };
 
@@ -29,7 +32,9 @@ const loadSignup = async (req, res) => {
     return res.render("signup");
   } catch (error) {
     console.log("page not found");
-    res.status(500).send("server error");
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .send(MESSAGES.ERROR.SERVER_ERROR);
   }
 };
 
@@ -38,7 +43,7 @@ function generateOtp() {
 }
 async function sendVerificationEmail(email, otp) {
   try {
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       port: 587,
       secure: false,
@@ -98,7 +103,9 @@ const signup = async (req, res) => {
     console.log("otp sent", otp);
   } catch (error) {
     console.error("signup error", error);
-    res.status(500).send("server error");
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .send(MESSAGES.ERROR.SERVER_ERROR);
   }
 };
 
@@ -148,11 +155,15 @@ const verifyOtp = async (req, res) => {
       req.session.user = saveUserData._id;
       res.json({ success: true, redirectUrl: "/" });
     } else {
-      res.status(400).json({ success: false, message: "Invalid OTP" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ success: false, message: "Invalid OTP" });
     }
   } catch (error) {
     console.error("Error verifying OTP", error);
-    res.status(500).json({ success: false, message: "An error occured" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.GENERAL_ERROR });
   }
 };
 
@@ -161,7 +172,7 @@ const resendOtp = async (req, res) => {
     const { email } = req.session.userData;
     if (!email) {
       return res
-        .status(400)
+        .status(STATUS_CODES.BAD_REQUEST)
         .json({ success: false, message: "email not found" });
     }
 
@@ -171,13 +182,19 @@ const resendOtp = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, otp);
     if (emailSent) {
       console.log("OTP Resent", otp);
-      res.status(200).json({ success: true, message: "OTP Resent" });
+      res
+        .status(STATUS_CODES.OK)
+        .json({ success: true, message: "OTP Resent" });
     } else {
-      res.status(500).json({ success: false, message: "failed to resend OTP" });
+      res
+        .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "failed to resend OTP" });
     }
   } catch (error) {
     console.error("error resending OTP", error);
-    res.status(500).json({ success: false, message: "An error occured" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: MESSAGES.ERROR.GENERAL_ERROR });
   }
 };
 
@@ -190,7 +207,9 @@ const loadLogin = async (req, res) => {
     }
   } catch (error) {
     console.log("page not found");
-    res.status(500).send("server error");
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .send(MESSAGES.ERROR.SERVER_ERROR);
   }
 };
 
@@ -215,7 +234,7 @@ const login = async (req, res) => {
     res.redirect("/");
   } catch (error) {
     console.error("login error", error);
-    res.render("login", { message: "An error occured while logging in" });
+    res.render("login", { message: MESSAGES.ERROR.GENERAL_ERROR });
   }
 };
 
@@ -223,12 +242,12 @@ const logout = async (req, res) => {
   try {
     req.session.destroy((err) => {
       if (err) {
-        console.log("error destroying session", err.message);
+        console.log(MESSAGES.ERROR.SESSION_DESTROY_ERROR, err.message);
       }
       return res.redirect("login");
     });
   } catch (error) {
-    console.log("logout error", error);
+    console.log(MESSAGES.ERROR.LOGOUT_ERROR, error);
   }
 };
 
@@ -317,7 +336,9 @@ const loadShopPage = async (req, res) => {
     });
   } catch (error) {
     console.error("error displaying products", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -331,7 +352,9 @@ const loadProductDetails = async (req, res) => {
     const id = req.params.id;
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: "Invalid product ID" });
     }
     const product = await Product.findById(id)
       .populate("category")
@@ -355,7 +378,9 @@ const loadProductDetails = async (req, res) => {
       .populate("category");
 
     if (!product) {
-      res.status(400).json({ message: "product not found" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.PRODUCT_NOT_FOUND });
     }
     res.render("product-details", {
       product: product,
@@ -365,7 +390,9 @@ const loadProductDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("error finding product", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 const addReview = async (req, res) => {
@@ -400,7 +427,9 @@ const addReview = async (req, res) => {
     res.redirect(`/product/${productId}`);
   } catch (error) {
     console.error("Error adding review", error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

@@ -1,5 +1,6 @@
 const Order = require("../../models/orderSchema");
 const PDFDocument = require("pdfkit");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 function generateInvoice(order, stream) {
   const doc = new PDFDocument();
@@ -53,7 +54,9 @@ const getInvoice = async (req, res) => {
       .populate("orderedItems.product", "productName");
 
     if (!order) {
-      res.status(404).json({ message: "Order Not Found" });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     res.setHeader("Content-Type", "application/pdf");
@@ -64,7 +67,9 @@ const getInvoice = async (req, res) => {
     generateInvoice(order, res);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
