@@ -3,6 +3,7 @@ const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
 const Cart = require("../../models/cartSchema");
 const { updateCartPrices } = require("../user/cartController");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -17,7 +18,9 @@ const getProductAddPage = async (req, res) => {
     });
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -48,11 +51,15 @@ const addProducts = async (req, res) => {
 
       const categoryId = await Category.findOne({ name: products.category });
       if (!categoryId) {
-        return res.status(400).json("Invalid category name");
+        return res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json(MESSAGES.ERROR.INVALID_CATEGORY_NAME);
       }
       const brandId = await Brand.findOne({ brandName: products.brand });
       if (!brandId) {
-        return res.status(400).json("Invalid brand name");
+        return res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json(MESSAGES.ERROR.INVALID_BRAND_NAME);
       }
 
       const sizes = products.sizes.map((size, index) => ({
@@ -78,11 +85,15 @@ const addProducts = async (req, res) => {
       await newProduct.save();
       return res.redirect("/admin/addProducts");
     } else {
-      return res.status(400).json("product already exists");
+      return res
+        .status(STATUS_CODES.CONFLICT)
+        .json(MESSAGES.ERROR.PRODUCT_EXISTS);
     }
   } catch (error) {
     console.error("error adding product", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -117,11 +128,15 @@ const getAllProducts = async (req, res) => {
         brand: brand,
       });
     } else {
-      res.status(400).json("cannot fetch products");
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(MESSAGES.ERROR.CANNOT_FETCH_PRODUCTS);
     }
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -132,7 +147,9 @@ const blockProduct = async (req, res) => {
     res.redirect("/admin/products");
   } catch (error) {
     console.error("an error blocking product", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 const unblockProduct = async (req, res) => {
@@ -142,7 +159,9 @@ const unblockProduct = async (req, res) => {
     res.redirect("/admin/products");
   } catch (error) {
     console.error("an error unblocking product", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -159,7 +178,9 @@ const getEditProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -173,7 +194,9 @@ const editProduct = async (req, res) => {
       _id: { $ne: id },
     });
     if (existingProduct) {
-      return res.status(400).json({ error: "product already exists" });
+      return res
+        .status(STATUS_CODES.CONFLICT)
+        .json({ error: MESSAGES.ERROR.PRODUCT_EXISTS });
     }
     const images = [];
     if (req.files && req.files.length > 0) {
@@ -183,12 +206,16 @@ const editProduct = async (req, res) => {
     }
     const brandId = await Brand.findOne({ brandName: data.brand });
     if (!brandId) {
-      return res.status(400).json("Invalid brand name");
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(MESSAGES.ERROR.INVALID_BRAND_NAME);
     }
 
     const categoryId = await Category.findOne({ name: data.category });
     if (!categoryId) {
-      return res.status(400).json("Invalid category name");
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(MESSAGES.ERROR.INVALID_CATEGORY_NAME);
     }
 
     const sizes = data.sizes.map((size, index) => ({
@@ -215,7 +242,9 @@ const editProduct = async (req, res) => {
     res.redirect("/admin/products");
   } catch (error) {
     console.error("error editing product", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -240,7 +269,9 @@ const deleteSingleImage = async (req, res) => {
     res.send({ status: true });
   } catch (error) {
     console.error("an error occured", error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -250,9 +281,9 @@ const addProductOffer = async (req, res) => {
     const findProduct = await Product.findOne({ _id: productId });
     const findCategory = await Category.findOne({ _id: findProduct.category });
     if (findCategory.categoryOffer > percentage) {
-      return res.josn({
-        status: fales,
-        message: "This product already has category offer applied",
+      return res.json({
+        status: false,
+        message: MESSAGES.ERROR.CATEGORY_OFFER_EXISTS,
       });
     }
     findProduct.salePrice =
@@ -269,7 +300,9 @@ const addProductOffer = async (req, res) => {
     }
     res.json({ status: true });
   } catch (error) {
-    res.status(500).json({ status: false, message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ status: false, message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

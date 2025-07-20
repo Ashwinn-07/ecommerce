@@ -3,6 +3,7 @@ const User = require("../../models/userSchema");
 const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const PDFDocument = require("pdfkit");
 const ExcelJS = require("exceljs");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const width = 800;
 const height = 400;
@@ -190,7 +191,7 @@ const getSalesData = async (period) => {
       };
       break;
     default:
-      throw new Error("Invalid period");
+      throw new Error(MESSAGES.ERROR.INVALID_PERIOD);
   }
 
   const salesData = await Order.aggregate([
@@ -389,7 +390,9 @@ const getDashboardData = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 const generateSalesReport = async (req, res) => {
@@ -544,7 +547,9 @@ const generateSalesReport = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -559,11 +564,15 @@ const downloadReport = async (req, res) => {
     } else if (type === "excel") {
       await generateExcel(res, reportData, summary);
     } else {
-      res.status(400).json({ message: "Invalid download type" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.INVALID_DOWNLOAD_TYPE });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 

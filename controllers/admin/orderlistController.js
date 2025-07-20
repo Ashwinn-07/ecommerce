@@ -1,6 +1,7 @@
 const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
 const Wallet = require("../../models/walletSchema");
+const { STATUS_CODES, MESSAGES } = require("../../utils/constants");
 
 const listOrders = async (req, res) => {
   try {
@@ -24,7 +25,9 @@ const listOrders = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -33,7 +36,9 @@ const changeOrderStatus = async (req, res) => {
     const { orderId, newStatus } = req.body;
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ message: "order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     order.status = newStatus;
@@ -42,7 +47,9 @@ const changeOrderStatus = async (req, res) => {
     res.redirect("/admin/orderList");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -54,7 +61,9 @@ const cancelOrder = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     if (order.status !== "Cancelled") {
@@ -71,7 +80,9 @@ const cancelOrder = async (req, res) => {
     res.redirect("/admin/orderList");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR_LOWER });
   }
 };
 
@@ -85,20 +96,28 @@ const cancelOrderItem = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const item = order.orderedItems.id(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found in order" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND });
     }
 
     if (item.status === "Cancelled") {
-      return res.status(400).json({ message: "Item is already cancelled" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ITEM_ALREADY_CANCELLED });
     }
 
     if (item.status === "Delivered") {
-      return res.status(400).json({ message: "Cannot cancel delivered item" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.CANNOT_CANCEL_DELIVERED });
     }
 
     await Product.findOneAndUpdate(
@@ -133,12 +152,14 @@ const cancelOrderItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Item cancelled successfully",
+      message: MESSAGES.SUCCESS.ITEM_CANCELLED,
       refundAmount: order.paymentMethod !== "COD" ? item.price : 0,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -152,12 +173,16 @@ const updateOrderItemStatus = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const item = order.orderedItems.id(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found in order" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND });
     }
 
     const validStatuses = [
@@ -171,7 +196,9 @@ const updateOrderItemStatus = async (req, res) => {
     ];
 
     if (!validStatuses.includes(newStatus)) {
-      return res.status(400).json({ message: "Invalid status" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.INVALID_STATUS });
     }
 
     item.status = newStatus;
@@ -187,11 +214,13 @@ const updateOrderItemStatus = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Item status updated successfully",
+      message: MESSAGES.SUCCESS.ITEM_STATUS_UPDATED,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -201,13 +230,15 @@ const approveReturn = async (req, res) => {
     const order = await Order.findById(orderId).populate("userId");
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     if (order.status !== "Return Pending") {
       return res
-        .status(400)
-        .json({ message: "This order is not pending return approval" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.NOT_PENDING_RETURN });
     }
 
     for (const item of order.orderedItems) {
@@ -236,7 +267,9 @@ const approveReturn = async (req, res) => {
     res.redirect("/admin/orderList");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -249,18 +282,22 @@ const approveItemReturn = async (req, res) => {
       .populate("orderedItems.product");
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const item = order.orderedItems.id(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found in order" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND });
     }
 
     if (item.status !== "Return Pending") {
       return res
-        .status(400)
-        .json({ message: "This item is not pending return approval" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_PENDING_RETURN });
     }
 
     item.status = "Returned";
@@ -290,12 +327,14 @@ const approveItemReturn = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Return approved successfully",
+      message: MESSAGES.SUCCESS.RETURN_APPROVED,
       refundAmount: item.price,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -309,18 +348,22 @@ const rejectItemReturn = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     const item = order.orderedItems.id(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found in order" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_FOUND });
     }
 
     if (item.status !== "Return Pending") {
       return res
-        .status(400)
-        .json({ message: "This item is not pending return approval" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.ITEM_NOT_PENDING_RETURN });
     }
 
     item.status = "Delivered";
@@ -336,11 +379,13 @@ const rejectItemReturn = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Return request rejected successfully",
+      message: MESSAGES.SUCCESS.RETURN_REJECTED,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -350,13 +395,15 @@ const cancelReturnRequest = async (req, res) => {
     const order = await Order.findById(orderId);
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: MESSAGES.ERROR.ORDER_NOT_FOUND });
     }
 
     if (order.status !== "Return Pending") {
       return res
-        .status(400)
-        .json({ message: "This order is not pending return approval" });
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: MESSAGES.ERROR.NOT_PENDING_RETURN });
     }
 
     order.status = "Delivered";
@@ -365,7 +412,9 @@ const cancelReturnRequest = async (req, res) => {
     res.redirect("/admin/orderList");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -379,13 +428,15 @@ const getOrderDetails = async (req, res) => {
       .exec();
 
     if (!order) {
-      return res.status(404).redirect("/admin/orderList");
+      return res.status(STATUS_CODES.NOT_FOUND).redirect("/admin/orderList");
     }
 
     res.render("admin-order-details", { order });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: MESSAGES.ERROR.INTERNAL_SERVER_ERROR });
   }
 };
 
