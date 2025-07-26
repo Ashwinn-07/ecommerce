@@ -221,26 +221,23 @@
 <%- include("../../views/partials/user/footer") %>
 <!-- Footer Section End -->
 
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('#filter-form');
-    const sortSelect = document.querySelector('#sort-select');
+    const form = document.getElementById('filter-form');
+    if (!form) return;
 
-    
-    const filterInputs = form.querySelectorAll('input[type="radio"], input[type="checkbox"]');
-    filterInputs.forEach(input => {
-      input.removeEventListener('change', () => form.submit());
-    });
+    const sortSelect = form.querySelector('select[name="sort"]');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => form.submit());
+    }
 
-    
-    sortSelect.addEventListener('change', () => form.submit());
-
-  
-    const applyFiltersBtn = document.querySelector('.apply-filters-btn');
-    applyFiltersBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      form.submit();
-    });
+    const applyFiltersBtn = form.querySelector('.apply-filters-btn');
+    if (applyFiltersBtn) {
+      applyFiltersBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        form.submit();
+      });
+    }
   });
- 
 </script>
