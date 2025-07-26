@@ -483,14 +483,19 @@
     wishlistSizeInput.value = availableSizes[0].size;
   }
 
-  sizeInputs.forEach(input => {
-    input.addEventListener('change', function() {
-      const selectedSizeObj = availableSizes.find(s => s.size === this.value);
-      selectedSizeInput.value = this.value.toString();
-      wishlistSizeInput.value = this.value.toString();
-      updateMaxQuantity(this.value);
-    });
+ sizeInputs.forEach(input => {
+  input.addEventListener('change', function() {
+    const selectedSizeObj = availableSizes.find(s => s.size === this.value);
+    selectedSizeInput.value = this.value.toString();
+    
+    
+    wishlistSizeInput.value = this.value.toString();
+    
+    updateMaxQuantity(this.value);
+    
+    
   });
+});
 
 function updateMaxQuantity(size) {
   const selectedSizeObj = availableSizes.find(s => s.size === size);
@@ -555,13 +560,16 @@ addToCartForm.addEventListener('submit', function(e) {
 wishlistForm.addEventListener('submit', function(e) {
   e.preventDefault();
   
-  const formData = new FormData();
-  formData.append('size', wishlistSizeInput.value);
+  const formData = new URLSearchParams();
+formData.append('size', wishlistSizeInput.value);
 
-  fetch(`/wishlist/add/<%= product._id %>`, {
-    method: 'POST',
-    body: formData
-  })
+fetch(`/wishlist/add/<%= product._id %>`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  body: formData
+})
   .then(response => response.json())
   .then(data => {
     if (data.success) {
