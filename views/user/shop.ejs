@@ -49,6 +49,24 @@
 .apply-filters-btn i {
   margin-right: 10px;
 }
+
+
+.product__item__pic {
+  position: relative;
+  overflow: hidden;
+  height: 270px; 
+}
+
+.product__item__pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  transition: transform 0.3s ease;
+}
+
+.product__item__pic:hover img {
+  transform: scale(1.05); 
+}
  </style>
  
 
@@ -145,7 +163,8 @@
           <% products.forEach(product => { %>
             <div class="col-lg-4 col-md-6 col-sm-6">
               <div class="product__item <%= product.salePrice < product.regularPrice ? 'sale' : '' %>">
-                <div class="product__item__pic set-bg" data-setbg="/uploads/re-image/<%= product.productImage[0] %>">
+                <div class="product__item__pic">
+                  <img src="/uploads/re-image/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                   <ul class="product__hover">
                     <li>
                       <a href="#"><img src="/img/icon/heart.png" alt="" /></a>
