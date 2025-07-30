@@ -66,6 +66,12 @@ const cancelOrder = async (req, res) => {
     }
 
     if (refundAmount > 0) {
+      if (order.discount > 0) {
+        const discountProportion = order.discount / order.totalPrice;
+        const discountToDeduct = refundAmount * discountProportion;
+        refundAmount = Math.max(0, refundAmount - discountToDeduct);
+      }
+
       let wallet = await Wallet.findOne({ userId });
       if (!wallet) {
         wallet = new Wallet({ userId });
@@ -135,15 +141,22 @@ const cancelOrderItem = async (req, res) => {
     item.status = "Cancelled";
     item.cancelledAt = new Date();
 
+    let refundAmount = item.price;
+    if (order.discount > 0) {
+      const itemProportion = item.price / order.totalPrice;
+      const itemDiscountShare = order.discount * itemProportion;
+      refundAmount = Math.max(0, item.price - itemDiscountShare);
+    }
+
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       wallet = new Wallet({ userId });
     }
 
-    wallet.balance += item.price;
+    wallet.balance += refundAmount;
     wallet.transactions.push({
       type: "CREDIT",
-      amount: item.price,
+      amount: refundAmount,
       description: `Refund for cancelled item: ${item.product.productName}`,
     });
 
@@ -155,7 +168,7 @@ const cancelOrderItem = async (req, res) => {
     res.json({
       success: true,
       message: MESSAGES.SUCCESS.ITEM_CANCELLED,
-      refundAmount: item.price,
+      refundAmount: refundAmount,
     });
   } catch (error) {
     console.error(error);
@@ -197,6 +210,27 @@ const returnOrderItem = async (req, res) => {
     item.status = "Return Pending";
     item.returnReason = returnReason;
 
+    let refundAmount = item.price;
+    if (order.discount > 0) {
+      const itemProportion = item.price / order.totalPrice;
+      const itemDiscountShare = order.discount * itemProportion;
+      refundAmount = Math.max(0, item.price - itemDiscountShare);
+    }
+
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId });
+    }
+
+    wallet.balance += refundAmount;
+    wallet.transactions.push({
+      type: "CREDIT",
+      amount: refundAmount,
+      description: `Refund for returned item: ${item.product.productName}`,
+    });
+
+    await wallet.save();
+
     await Product.findOneAndUpdate(
       { _id: item.product, "sizes.size": item.size },
       { $inc: { "sizes.$.quantity": item.quantity } }
@@ -236,6 +270,38 @@ const returnOrder = async (req, res) => {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ message: MESSAGES.ERROR.ORDER_CANNOT_BE_RETURNED });
+    }
+
+    let totalRefundAmount = 0;
+    let returnedItemsPrice = 0;
+
+    for (const item of order.orderedItems) {
+      if (item.status === "Delivered") {
+        returnedItemsPrice += item.price;
+      }
+    }
+
+    totalRefundAmount = returnedItemsPrice;
+    if (order.discount > 0 && returnedItemsPrice > 0) {
+      const returnProportion = returnedItemsPrice / order.totalPrice;
+      const returnDiscountShare = order.discount * returnProportion;
+      totalRefundAmount = Math.max(0, returnedItemsPrice - returnDiscountShare);
+    }
+
+    if (totalRefundAmount > 0) {
+      let wallet = await Wallet.findOne({ userId });
+      if (!wallet) {
+        wallet = new Wallet({ userId });
+      }
+
+      wallet.balance += totalRefundAmount;
+      wallet.transactions.push({
+        type: "CREDIT",
+        amount: totalRefundAmount,
+        description: "Refund for returned order",
+      });
+
+      await wallet.save();
     }
 
     for (const item of order.orderedItems) {
