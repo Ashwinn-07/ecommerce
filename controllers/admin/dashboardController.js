@@ -198,12 +198,22 @@ const getSalesData = async (period) => {
     {
       $match: {
         createdOn: { $lte: new Date() },
+        status: {
+          $nin: ["Cancelled", "Returned"],
+        },
+      },
+    },
+
+    { $unwind: "$orderedItems" },
+    {
+      $match: {
+        "orderedItems.status": "Delivered",
       },
     },
     {
       $group: {
         _id: groupBy,
-        sales: { $sum: "$totalPrice" },
+        sales: { $sum: "$orderedItems.price" },
       },
     },
     { $sort: { _id: 1 } },
@@ -259,14 +269,46 @@ const getSalesData = async (period) => {
 const getDashboardData = async (req, res) => {
   try {
     const totalSales = await Order.aggregate([
-      { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$orderedItems.price" },
+        },
+      },
     ]);
 
-    const totalOrders = await Order.countDocuments();
+    const totalOrders = await Order.aggregate([
+      { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+        },
+      },
+      {
+        $count: "totalOrders",
+      },
+    ]);
+
     const totalCustomers = await User.countDocuments({ isAdmin: "false" });
 
     const topProducts = await Order.aggregate([
       { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
       {
         $group: {
           _id: "$orderedItems.product",
@@ -295,6 +337,11 @@ const getDashboardData = async (req, res) => {
     const topCategories = await Order.aggregate([
       { $unwind: "$orderedItems" },
       {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
+      {
         $lookup: {
           from: "products",
           localField: "orderedItems.product",
@@ -322,8 +369,14 @@ const getDashboardData = async (req, res) => {
       { $sort: { totalSales: -1 } },
       { $limit: 10 },
     ]);
+
     const topBrands = await Order.aggregate([
       { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
       {
         $lookup: {
           from: "products",
@@ -352,6 +405,7 @@ const getDashboardData = async (req, res) => {
       { $sort: { totalSales: -1 } },
       { $limit: 10 },
     ]);
+
     const yearlySalesData = await getSalesData("yearly");
     const monthlySalesData = await getSalesData("monthly");
     const weeklySalesData = await getSalesData("weekly");
@@ -373,7 +427,7 @@ const getDashboardData = async (req, res) => {
 
     res.render("dashboard", {
       totalSales: totalSales[0]?.total || 0,
-      totalOrders,
+      totalOrders: totalOrders[0]?.totalOrders || 0,
       totalCustomers,
       topProducts,
       topCategories: topCategories.map((category) => ({
@@ -400,13 +454,46 @@ const generateSalesReport = async (req, res) => {
     const { reportType, startDate, endDate } = req.body;
 
     const totalSales = await Order.aggregate([
-      { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$orderedItems.price" },
+        },
+      },
     ]);
-    const totalOrders = await Order.countDocuments();
+
+    const totalOrders = await Order.aggregate([
+      { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+        },
+      },
+      {
+        $count: "totalOrders",
+      },
+    ]);
+
     const totalCustomers = await User.countDocuments({ isAdmin: "false" });
 
     const topProducts = await Order.aggregate([
       { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
       {
         $group: {
           _id: "$orderedItems.product",
@@ -435,6 +522,11 @@ const generateSalesReport = async (req, res) => {
     const topCategories = await Order.aggregate([
       { $unwind: "$orderedItems" },
       {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
+      {
         $lookup: {
           from: "products",
           localField: "orderedItems.product",
@@ -462,8 +554,14 @@ const generateSalesReport = async (req, res) => {
       { $sort: { totalSales: -1 } },
       { $limit: 10 },
     ]);
+
     const topBrands = await Order.aggregate([
       { $unwind: "$orderedItems" },
+      {
+        $match: {
+          "orderedItems.status": "Delivered",
+        },
+      },
       {
         $lookup: {
           from: "products",
@@ -492,6 +590,7 @@ const generateSalesReport = async (req, res) => {
       { $sort: { totalSales: -1 } },
       { $limit: 10 },
     ]);
+
     const yearlySalesData = await getSalesData("yearly");
     const monthlySalesData = await getSalesData("monthly");
     const weeklySalesData = await getSalesData("weekly");
@@ -530,7 +629,7 @@ const generateSalesReport = async (req, res) => {
       summary,
       chartUrl,
       totalSales: totalSales[0]?.total || 0,
-      totalOrders,
+      totalOrders: totalOrders[0]?.totalOrders || 0,
       totalCustomers,
       topProducts,
       topCategories: topCategories.map((category) => ({
@@ -644,6 +743,8 @@ async function generateReportData(reportType, startDate, endDate) {
                 ],
               },
               quantity: "$$item.quantity",
+              status: "$$item.status",
+              price: "$$item.price",
             },
           },
         },
@@ -656,19 +757,41 @@ async function generateReportData(reportType, startDate, endDate) {
       },
     },
   ]);
-  const orders = result.map((order) => ({
-    orderId: order.orderId.substring(0, 6),
-    userName: order.userName,
-    orderedItems: order.orderedItems
-      .map((item) => `${item.productName} x ${item.quantity}`)
-      .join(", "),
-    totalPrice: order.totalPrice,
-    finalAmount: order.finalAmount,
-    discount: order.discount,
-    status: order.status,
-    paymentMethod: order.paymentMethod,
-    createdOn: order.createdOn,
-  }));
+
+  const orders = result
+    .map((order) => {
+      const deliveredItems = order.orderedItems.filter(
+        (item) => item.status === "Delivered"
+      );
+
+      const deliveredItemsRevenue = deliveredItems.reduce(
+        (sum, item) => sum + item.price,
+        0
+      );
+
+      let actualDiscount = 0;
+      if (order.discount > 0 && deliveredItemsRevenue > 0) {
+        const deliveredProportion = deliveredItemsRevenue / order.totalPrice;
+        actualDiscount = order.discount * deliveredProportion;
+      }
+
+      const actualFinalAmount = deliveredItemsRevenue - actualDiscount;
+
+      return {
+        orderId: order.orderId.substring(0, 6),
+        userName: order.userName,
+        orderedItems: deliveredItems
+          .map((item) => `${item.productName} x ${item.quantity}`)
+          .join(", "),
+        totalPrice: deliveredItemsRevenue,
+        finalAmount: actualFinalAmount,
+        discount: actualDiscount,
+        status: order.status,
+        paymentMethod: order.paymentMethod,
+        createdOn: order.createdOn,
+      };
+    })
+    .filter((order) => order.orderedItems.length > 0);
 
   const summary = {
     totalOrders: orders.length,
