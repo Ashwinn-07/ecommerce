@@ -390,6 +390,41 @@
   </div>
 </div>
 
+<!-- Approve Return Modal -->
+<div class="modal fade" id="approveReturnModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Approve Return Request</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to approve this return request?</p>
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          This action will process the refund and mark the item as returned.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-success"
+          onclick="confirmApproveReturn()"
+        >
+          Confirm Approve
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Reject Return Modal -->
 <div class="modal fade" id="rejectReturnModal" tabindex="-1">
   <div class="modal-dialog">
@@ -499,30 +534,44 @@
   }
 
   function approveReturn(orderId, itemId) {
-    if (confirm("Are you sure you want to approve this return request?")) {
-      fetch(`/admin/order/${orderId}/item/${itemId}/approve-return`, {
+    currentOrderId = orderId;
+    currentItemId = itemId;
+    const modal = new bootstrap.Modal(
+      document.getElementById("approveReturnModal")
+    );
+    modal.show();
+  }
+
+  function confirmApproveReturn() {
+    fetch(
+      `/admin/order/${currentOrderId}/item/${currentItemId}/approve-return`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showAlert(
+            `Return approved successfully! Refund amount: ₹${data.refundAmount}`,
+            "success"
+          );
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          showAlert("Error: " + data.message, "danger");
+        }
       })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            showAlert(
-              `Return approved successfully! Refund amount: ₹${data.refundAmount}`,
-              "success"
-            );
-            setTimeout(() => location.reload(), 2000);
-          } else {
-            showAlert("Error: " + data.message, "danger");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          showAlert("An error occurred while approving return", "danger");
-        });
-    }
+      .catch((error) => {
+        console.error("Error:", error);
+        showAlert("An error occurred while approving return", "danger");
+      });
+
+    bootstrap.Modal.getInstance(
+      document.getElementById("approveReturnModal")
+    ).hide();
   }
 
   function rejectReturn(orderId, itemId) {
