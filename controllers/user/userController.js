@@ -43,7 +43,7 @@ function generateOtp() {
 }
 async function sendVerificationEmail(email, otp) {
   try {
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       port: 587,
       secure: false,
