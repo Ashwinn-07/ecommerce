@@ -210,32 +210,6 @@ const returnOrderItem = async (req, res) => {
     item.status = "Return Pending";
     item.returnReason = returnReason;
 
-    let refundAmount = item.price;
-    if (order.discount > 0) {
-      const itemProportion = item.price / order.totalPrice;
-      const itemDiscountShare = order.discount * itemProportion;
-      refundAmount = Math.max(0, item.price - itemDiscountShare);
-    }
-
-    let wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      wallet = new Wallet({ userId });
-    }
-
-    wallet.balance += refundAmount;
-    wallet.transactions.push({
-      type: "CREDIT",
-      amount: refundAmount,
-      description: `Refund for returned item: ${item.product.productName}`,
-    });
-
-    await wallet.save();
-
-    await Product.findOneAndUpdate(
-      { _id: item.product, "sizes.size": item.size },
-      { $inc: { "sizes.$.quantity": item.quantity } }
-    );
-
     order.updateOrderStatus();
     await order.save();
 
